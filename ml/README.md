@@ -6,9 +6,14 @@ pip install --upgrade pip
 pip install uv
 ```
 
-Sync project
+create venv via uv inside ml:
 ```bash
 cd ml
+uv venv
+```
+
+Sync project
+```bash
 source .venv/bin/activate
 uv sync
 ```
