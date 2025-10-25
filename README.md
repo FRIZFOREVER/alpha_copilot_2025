@@ -1,5 +1,7 @@
 ## Setting up for dev:
 
+For windows: make sure you are running git bash terminal inside VS Code, not powershell
+
 update pip and install uv 
 ```bash
 pip install --upgrade pip
@@ -14,9 +16,23 @@ uv venv
 
 Sync project
 ```bash
-source .venv/bin/activate
 uv sync
 ```
+
+VS code exclude cache setup + quicks:
+Open File -> Preferences -> Settings -> Search: exclude
+Inside "files: exclude" -> add patterns: 
+1. `**/__pycache__` - python cache
+2. `**/*.pyc` - python runtime cache
+3. `**/.pytest_cache` - pytest cache
+4. (OPTIONAL) `/.venv` - local environment
+5. (OPTIONAL) `/.git` - git folder (can be excluded via other setting, search git instead RECOMMENDED)
+
+
+Setup current local environment to make Pylance Shut up:
+ctrl+shift+P -> Python: Select Interpreter -> Enter Interpreter path -> navigate according to OS:
+- linux: agent-base/ml/.venv/bin/activate
+- windows: agent-base/ml/.venv/scripts/python.exe
 
 ## Running the API
 
@@ -24,7 +40,7 @@ Make sure you are in project folder and venv is activated
 
 ```bash
 cd ml
-source .venv/bin/activate
+source .venv/bin/activate # Linux only
 uv sync
 ```
 
