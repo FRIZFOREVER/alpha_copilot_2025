@@ -1,19 +1,7 @@
-# ml
-
-FastAPI service for the agent-base project.
-
 ## Running the API
 
-Use the project script, which wraps the uvicorn CLI:
+uvicorn canonical launch:
 
 ```bash
-uv run ml
+uv run uvicorn ml.main:app --host 0.0.0.0 --port 8000 u
 ```
-
-Pass additional uvicorn flags after `--`, for example:
-
-```bash
-uv run ml -- --reload --port 9000
-```
-
-By default the server listens on `0.0.0.0:8000`; override via `ML_HOST` and `ML_PORT` environment variables if needed.
