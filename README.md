@@ -71,6 +71,14 @@ Run tests:
 uv run pytest
 ```
 
+## Docker image via Dockerfile
+
+from ml directory
+```bash
+docker build -t agent-base .
+docker run --rm -p 8000:8000 agent-base
+```
+
 ## Project policy's
 
 1. English-only including:
