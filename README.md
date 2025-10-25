@@ -1,4 +1,4 @@
-## Setting up for dev:
+## Setting up for dev
 
 For windows: make sure you are running git bash terminal inside VS Code, not powershell
 
@@ -103,6 +103,13 @@ docker build -t agent-base .
 docker run --rm -p 8000:8000 agent-base
 ```
 
+## Compose service
+Navigate to compose.yaml and click "run all services"
+or CLI way:
+```bash
+docker compose up --build
+```
+
 ## Project policy's
 
 ### English-only including:
@@ -149,5 +156,5 @@ git push --force-with-lease
 ```
 7. Merge
 ```bash
-gh pr merge --rebase
+gh pr merge --rebase -d # -d -> deletes branch in case it's HOPEFULLY no longer needs attention
 ```
