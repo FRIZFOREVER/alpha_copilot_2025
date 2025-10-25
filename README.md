@@ -16,13 +16,13 @@ uv venv
 
 Sync project:
 
-- For linux
+- linux
 ```bash
 source .venv/bin/activate 
 uv sync
 ```
 
-- For windows
+- windows
 ```bash
 source .venv/scripts/activate
 uv sync
@@ -40,8 +40,8 @@ Inside "files: exclude" -> add patterns:
 
 Setup current local environment to make Pylance Shut up:
 ctrl+shift+P -> Python: Select Interpreter -> Enter Interpreter path -> navigate according to OS:
-- linux: agent-base/ml/.venv/bin/activate
-- windows: agent-base/ml/.venv/scripts/python.exe
+- linux    - `agent-base/ml/.venv/bin/activate`
+- windows  - `agent-base/ml/.venv/scripts/python.exe`
 
 ## Running the API
 
@@ -106,9 +106,15 @@ docker run --rm -p 8000:8000 agent-base
 
 ## Compose service
 Navigate to compose.yaml and click "run all services"
+
 or CLI way:
+- upp'ing service
 ```bash
 docker compose up --build
+```
+- shutting it down after Ctrl+C or in another terminal:
+```bash
+docker compose down
 ```
 
 ## Project policy's
