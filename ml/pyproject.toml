@@ -1,0 +1,18 @@
+[project]
+name = "ml"
+version = "0.1.0"
+authors = [
+    { name = "FRIZFOREVER", email = "kirillhromov@mail.ru" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.120.0",
+    "uvicorn>=0.38.0",
+]
+
+[project.scripts]
+ml = "ml:main"
+
+[build-system]
+requires = ["uv_build>=0.9.4,<0.10.0"]
+build-backend = "uv_build"
