@@ -58,7 +58,7 @@ INFO:     Finished server process
 ```
 curl terminal:
 ```bash
-agent-base] ❯ curl http://localhost:8000/ping
+[agent-base] ❯ curl http://localhost:8000/ping
 {"message":"pong"}
 [agent-base] ❯ curl http://localhost:8000/health
 {"status":"healthy"}
