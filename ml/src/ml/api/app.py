@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from ..agent.router import react_workflow
+
 # Create fastapi ASGI importable app function
 # Needed for uvicorn to use as an app to setup local http server
 def create_app() -> FastAPI:
@@ -9,7 +11,8 @@ def create_app() -> FastAPI:
     # TODO: create "/ReAct" handle. get's json with data, including "messages" open-ai chat-completeion compatable field
     @app.get("/ReAct")
     def react() -> dict[str, str]:
-        pass
+        answer = react_workflow()
+        return {"message": answer}
     
     @app.get("/ping")
     def ping() -> dict[str, str]:
