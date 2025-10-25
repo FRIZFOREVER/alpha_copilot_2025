@@ -51,7 +51,8 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 INFO:     127.0.0.1:40054 - "GET /ping HTTP/1.1" 200 OK
 INFO:     127.0.0.1:40056 - "GET /health HTTP/1.1" 200 OK
-^CINFO:     Shutting down
+^C # Ctrl+C
+INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
 INFO:     Finished server process 
