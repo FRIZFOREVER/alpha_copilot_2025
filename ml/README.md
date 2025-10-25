@@ -33,3 +33,16 @@ uvicorn canonical launch:
 ```bash
 uv run uvicorn ml.main:app --host 0.0.0.0 --port 8000 u
 ```
+
+## Project policy's
+
+1. English-only including:
+    - instructions
+    - comments
+    - tests
+    - obviously code and deployment
+2. NO DEVEOPMENT IN MASTER BRANCH GOD BLESS. 
+    - Create your feature-branch i.e. `git checkout -b api`
+    - do all `git add .` and `git commit -m "comment"` that you need
+    - create PR to REBASE on top of master branch
+    - Dm me to review and approve
