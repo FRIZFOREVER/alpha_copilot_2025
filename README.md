@@ -14,9 +14,16 @@ cd ml
 uv venv
 ```
 
-Sync project
+Sync project:
+For linux
 ```bash
-source .venv/bin/activate
+source .venv/bin/activate 
+uv sync
+```
+
+For windows
+```bash
+source .venv/scripts/activate
 uv sync
 ```
 
