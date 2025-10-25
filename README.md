@@ -102,7 +102,13 @@ docker run --rm -p 8000:8000 agent-base
     - comments
     - tests
     - obviously code and deployment
-2. NO DEVEOPMENT IN MASTER BRANCH GOD BLESS. 
+
+2. We are using uv as package installer, dependency manager and build-tool. Here's how you can add a dependency:
+    - `uv add PACKAGE_NAME` - Add it
+    - `uv pip install PACKAGE_NAME` - install for everyday usage
+    - `uv sync` - Update dependency's and make sure current setup is working
+    
+3. NO DEVEOPMENT IN MASTER BRANCH GOD BLESS. 
     
     here is correct way to develop from a local branch:
     1. make sure you are on latest master:
