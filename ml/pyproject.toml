@@ -5,6 +5,7 @@ description = "Basic project for agent-hackathones"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.120.0",
+    "logging>=0.4.9.6",
     "openai>=2.6.1",
     "pytest>=8.4.2",
     "uvicorn>=0.38.0",
