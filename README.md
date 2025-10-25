@@ -97,54 +97,49 @@ docker run --rm -p 8000:8000 agent-base
 
 ## Project policy's
 
-1. English-only including:
-    - instructions
-    - comments
-    - tests
-    - obviously code and deployment
+### English-only including:
+- instructions
+- comments
+- tests
+- obviously code and deployment
 
-2. We are using uv as package installer, dependency manager and build-tool. Here's how you can add a dependency:
-    - `uv add PACKAGE_NAME` - Add it
-    - `uv pip install PACKAGE_NAME` - install for everyday usage
-    - `uv sync` - Update dependency's and make sure current setup is working
+### We are using uv as package installer, dependency manager and build-tool. Here's how you can add a dependency:
+- `uv add PACKAGE_NAME` - Add it
+- `uv pip install PACKAGE_NAME` - install for everyday usage
+- `uv sync` - Update dependency's and make sure current setup is working
+
+### NO DEVEOPMENT IN MASTER BRANCH GOD BLESS. 
     
-3. NO DEVEOPMENT IN MASTER BRANCH GOD BLESS. 
-    
-    here is correct way to develop from a local branch:
-    1. make sure you are on latest master:
-    ```bash
-    git fetch origin
-    git checkout master
-    git pull --ff-only
-    ```
-    2. create a new local branch and work there
-    ```bash
-    git checkout -b feature_name
-    git add .
-    git commit -m "Job's done"
-    ```
-
-    3. Publish branch (can be done anywhere along step 2)
-    ```bash
-    git push -u origin HEAD
-    ```
-
-    4. When you think it's ready, create a PR via Gihub GUI or CLI:
-    ```bash
-    gh pr create --base master --fill
-    ```
-
-    5. Rebase on top of origin master:
-    ```bash
-    git rebase origin/master
-    ```
-
-    6. Push after rebase
-    ```bash
-    git push --force-with-lease
-    ```
-
-    7. Merge
-    ```bash
-    gh pr merge --rebase
-    ```
+here is correct way to develop from a local branch:
+1. make sure you are on latest master:
+```bash
+git fetch origin
+git checkout master
+git pull --ff-only
+```
+2. create a new local branch and work there
+```bash
+git checkout -b feature_name
+git add .
+git commit -m "Job's done"
+```
+3. Publish branch (can be done anywhere along step 2)
+```bash
+git push -u origin HEAD
+```
+4. When you think it's ready, create a PR via Gihub GUI or CLI:
+```bash
+gh pr create --base master --fill
+```
+5. Rebase on top of origin master:
+```bash
+git rebase origin/master
+```
+6. Push after rebase
+```bash
+git push --force-with-lease
+```
+7. Merge
+```bash
+gh pr merge --rebase
+```
