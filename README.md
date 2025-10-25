@@ -16,13 +16,13 @@ uv venv
 
 Sync project:
 
-For linux
+- For linux
 ```bash
 source .venv/bin/activate 
 uv sync
 ```
 
-For windows
+- For windows
 ```bash
 source .venv/scripts/activate
 uv sync
