@@ -158,3 +158,17 @@ git push --force-with-lease
 ```bash
 gh pr merge --rebase -d # -d -> deletes branch in case it's HOPEFULLY no longer needs attention
 ```
+
+8. Pull new master
+```bash
+git switch master
+git pull origin master
+```
+
+8. (OPTIONAL) If you didn't delete branch, here's how to continue working on it
+```bash
+git switch api
+git fetch origin # just in case
+git reset --hard origin/master # Align with newly setted up master
+git push origin HEAD --force-with-lease # update origin feature HEAD
+```
