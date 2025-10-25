@@ -65,6 +65,11 @@ curl terminal:
 {"status":"healthy"}
 ```
 
+## Testing
+Run tests:
+```bash
+uv run pytest
+```
 
 ## Project policy's
 
