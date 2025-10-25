@@ -60,10 +60,23 @@ uv run uvicorn ml.main:app --host 0.0.0.0 --port 8000
 ```
 Ctrl+C to stop server
 
-Test via making calls from another terminal:
+Test via making calls from another terminal (docker compose ver):
 ```bash
-curl http://localhost:8000/ping # Should get {"message":"pong"} and INFO: 127.0.0.1:37270 - "GET /ping HTTP/1.1" 200 OK
-curl http://localhost:8000/health # Should get {"status":"healthy"} and INFO: 127.0.0.1:37272 - "GET /health HTTP/1.1" 200 OK
+curl http://localhost:8000/ping 
+# Should get inside curl terminal:
+# {"message":"pong"} 
+# and inside server terminal / logs: 
+# INFO:     127.0.0.1:45744 - "GET /ping HTTP/1.1" 200 OK
+curl http://localhost:8000/health 
+# Should get inside curl terminal:
+# {"status":"healthy"} 
+# and inside server terminal / logs:
+# INFO:     127.0.0.1:45750 - "GET /health HTTP/1.1" 200 OK
+curl http://localhost:8000/react
+# Should get inside curl terminal:
+# {"message":"react workflow"}
+# and inside server terminal / logs:
+# INFO:     127.0.0.1:45756 - "GET /react HTTP/1.1" 200 OK
 ```
 
 I.e.:
