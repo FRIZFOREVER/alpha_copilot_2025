@@ -15,6 +15,7 @@ uv venv
 ```
 
 Sync project:
+
 For linux
 ```bash
 source .venv/bin/activate 
