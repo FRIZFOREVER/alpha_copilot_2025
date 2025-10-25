@@ -124,5 +124,5 @@ docker run --rm -p 8000:8000 agent-base
 
     7. Merge
     ```bash
-    git pr merge --rebase
+    gh pr merge --rebase
     ```
