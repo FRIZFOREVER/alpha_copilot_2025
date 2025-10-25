@@ -34,7 +34,7 @@ ENTRYPOINT ["uvicorn"]
 USER nonroot
 
 # Running our entrypoint command with arguments
-CMD ["ml.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["ml.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-config", "/app/src/ml/configs/logging.yaml", "--access-log"]
 
 # Metadata
 LABEL org.opencontainers.image.title="agent-base" \
