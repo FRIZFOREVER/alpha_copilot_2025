@@ -16,6 +16,7 @@ uv venv
 
 Sync project
 ```bash
+source .venv/bin/activate
 uv sync
 ```
 
@@ -40,7 +41,7 @@ Make sure you are in project folder and venv is activated
 
 ```bash
 cd ml
-source .venv/bin/activate # Linux only
+source .venv/bin/activate
 uv sync
 ```
 
