@@ -54,9 +54,12 @@ uv sync
 ```
 
 uvicorn canonical launch:
-
 ```bash
 uv run uvicorn ml.main:app --host 0.0.0.0 --port 8000
+```
+Additional logging:
+```bash
+uv run uvicorn ml.main:app --host 0.0.0.0 --port 8000 --log-config ./src/ml/configs/logging.yaml --access-log
 ```
 Ctrl+C to stop server
 
