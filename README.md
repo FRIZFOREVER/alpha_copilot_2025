@@ -14,20 +14,23 @@ cd ml
 uv venv
 ```
 
-Sync project:
+### Sync project
 
-- linux
+#### Linux
+
 ```bash
 source .venv/bin/activate 
 uv sync
 ```
 
-- windows
+#### Windows 
+
 ```bash
 source .venv/scripts/activate
 uv sync
 ```
 
+### VS code setup
 VS code exclude cache setup + quicks:
 Open File -> Preferences -> Settings -> Search: exclude
 Inside "files: exclude" -> add patterns: 
@@ -37,7 +40,7 @@ Inside "files: exclude" -> add patterns:
 4. (OPTIONAL) `/.venv` - local environment
 5. (OPTIONAL) `/.git` - git folder (can be excluded via other setting, search git instead RECOMMENDED)
 
-
+### VS Code .venv
 Setup current local environment to make Pylance Shut up:
 ctrl+shift+P -> Python: Select Interpreter -> Enter Interpreter path -> navigate according to OS:
 - linux    - `agent-base/ml/.venv/bin/activate`
@@ -111,6 +114,47 @@ Run tests:
 ```bash
 uv run pytest
 ```
+
+## CUDA
+
+### Linux
+
+Install via your package manager
+Fedora 42 driver installation example: 
+```bash
+sudo dnf upgrade -y
+sudo dnf install -y \
+  https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+  https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+sudo dnf install -y akmod-nvidia xorg-x11-drv-nvidia-cuda
+sudo reboot
+```
+
+Linux general docker nvidia-container-toolkit:
+```bash
+curl -fsSL https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \
+  sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
+sudo dnf install -y nvidia-container-toolkit
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+```
+
+### GPU (Windows 10/11 + NVIDIA + WSL2) — minimal
+
+1) NVIDIA Driver (Windows)
+  - Install latest GeForce/Studio driver from NVIDIA → reboot.
+
+2) Enable WSL2
+  - Start → “Turn Windows features on or off”
+  - Check: “Virtual Machine Platform” and “Windows Subsystem for Linux” → OK → reboot.
+
+3) Linux distro
+  - Microsoft Store → install “Ubuntu” (or your choice) → launch once to finish setup.
+
+4) Docker Desktop
+  - Install Docker Desktop.
+  - Settings → General → ✔ “Use the WSL 2 based engine”
+  - Settings → Resources → WSL Integration → ✔ your distro (e.g., Ubuntu) → Apply & Restart.
 
 ## Docker image via Dockerfile
 
