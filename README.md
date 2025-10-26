@@ -139,7 +139,7 @@ sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
 
-### GPU (Windows 10/11 + NVIDIA + WSL2) — minimal
+### Winwows
 
 1) NVIDIA Driver (Windows)
   - Install latest GeForce/Studio driver from NVIDIA → reboot.
@@ -165,6 +165,8 @@ docker run --rm -p 8000:8000 agent-base
 ```
 
 ## Compose service
+
+### Linux
 Navigate to compose.yaml and click "run all services"
 
 or CLI way:
@@ -175,6 +177,19 @@ docker compose up --build
 - shutting it down after Ctrl+C or in another terminal:
 ```bash
 docker compose down
+```
+
+### Windows
+Navigate to compose.windows.yaml and click "run all services"
+
+or CLI way:
+- upp'ing service
+```bash
+docker compose -f compose.windows.yml up --build
+```
+- shutting it down after Ctrl+C or in another terminal:
+```bash
+docker compose -f compose.windows.yml down
 ```
 
 ## Project policy's
