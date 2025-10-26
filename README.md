@@ -117,6 +117,8 @@ uv run pytest
 
 ## CUDA
 
+Create `.env` file and copy `.env.example` contents into it (adjust model's if needed)
+
 ### Linux
 
 Install via your package manager
@@ -155,6 +157,13 @@ sudo systemctl restart docker
   - Install Docker Desktop.
   - Settings → General → ✔ “Use the WSL 2 based engine”
   - Settings → Resources → WSL Integration → ✔ your distro (e.g., Ubuntu) → Apply & Restart.
+
+### Testing
+
+This command should give non-empty json with created models
+```bash
+curl -s http://localhost:11434/api/tags
+```
 
 ## Docker image via Dockerfile
 
