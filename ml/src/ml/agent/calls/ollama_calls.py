@@ -1,6 +1,7 @@
 import os
 
 from openai import OpenAI
+from ml.utils.formats import _rstrip_slash
 
 _OLLAMA_BASE_URL = "http://ollama:11434/v1/"
 
@@ -13,7 +14,9 @@ def _get_env_var(key: str) -> str:
 
 
 class _OllamaClient:
-    def __init__(self, env_key: str) -> None:
+    def __init__(self, 
+                 *,
+                 env_key: str) -> None:
         self.model_name = _get_env_var(env_key)
         self.client = OpenAI(base_url=_OLLAMA_BASE_URL, api_key="ollama")
 
