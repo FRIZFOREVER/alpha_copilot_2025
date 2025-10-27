@@ -237,9 +237,9 @@ git push -u origin HEAD
 ```bash
 gh pr create --base master --fill
 ```
-5. Merge via gh with rebase
+5. Merge via gh with rebase. Deleting it is recommended
 ```bash
-gh pr merge --rebase -d # -d -> deletes branch in case it's HOPEFULLY no longer needs attention
+gh pr merge --rebase -d # -d -> deletes branch
 ```
 
 6. Pull new master
@@ -249,13 +249,14 @@ git pull origin master
 ```
 
 7. (OPTIONAL) If you didn't delete branch, here's how to continue working on it
+- Align branch HEAD with master, basically same as re-creating same branch from origin/master
 ```bash
 git switch api
 git fetch origin # just in case
 git reset --hard origin/master # Align with newly setted up master
 git push origin HEAD --force-with-lease # update origin feature HEAD
 ```
-or you could just merge with origin master instead, but it adds a commit in git history:
+- or you could just merge with origin master instead, but it adds an uggly commit in git history:
 ```bash
 git switch fature_name
 git git merge origin/master -m "syncing with master"
