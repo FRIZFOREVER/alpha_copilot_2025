@@ -1,4 +1,4 @@
-## Setting up for 
+## Setting up for Development
 
 ### Install project
 
