@@ -235,7 +235,7 @@ git push -u origin HEAD
 ```
 4. When you think it's ready, create a PR via Gihub GUI or CLI:
 ```bash
-gh pr create --base master --fill
+gh pr create --base master --fill # Msg me (FRIZ) for changes review before merging
 ```
 5. Merge via gh with rebase. Deleting it is recommended
 ```bash
