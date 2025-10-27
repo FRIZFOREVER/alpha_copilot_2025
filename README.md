@@ -158,7 +158,7 @@ sudo systemctl restart docker
   - Settings → General → ✔ “Use the WSL 2 based engine”
   - Settings → Resources → WSL Integration → ✔ your distro (e.g., Ubuntu) → Apply & Restart.
 
-### Testing
+### ollama Testing
 
 This command should give non-empty json with created models
 ```bash
