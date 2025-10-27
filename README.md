@@ -1,4 +1,8 @@
-## Setting up for dev
+## Setting up for 
+
+### Install project
+
+git clone repo via any way you like
 
 For windows: make sure you are running git bash terminal inside VS Code, not powershell
 
@@ -12,6 +16,21 @@ create venv via uv inside ml:
 ```bash
 cd ml
 uv venv
+```
+### CONFIGURE .gitignore !
+
+create .gitignore at:
+- agent-base/
+- agent-base/ml/
+
+via cli:
+
+```bash
+( curl -fsSL https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore
+  echo
+  echo ".gitignore"                                                                                   
+  echo ".vscode/*"
+) > .gitignore
 ```
 
 ### Sync project
@@ -30,7 +49,10 @@ source .venv/scripts/activate
 uv sync
 ```
 
-### VS code setup
+## VS code setup
+
+### Trash files excluding
+
 VS code exclude cache setup + quicks:
 Open File -> Preferences -> Settings -> Search: exclude
 Inside "files: exclude" -> add patterns: 
@@ -117,7 +139,7 @@ uv run pytest
 
 ## CUDA
 
-Create `.env` file and copy `.env.example` contents into it (adjust model's if needed)
+Adjust models in .env if needed
 
 ### Linux
 
