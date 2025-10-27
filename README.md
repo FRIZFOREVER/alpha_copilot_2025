@@ -255,3 +255,8 @@ git fetch origin # just in case
 git reset --hard origin/master # Align with newly setted up master
 git push origin HEAD --force-with-lease # update origin feature HEAD
 ```
+or you could just merge with origin master instead, but it adds a commit in git history:
+```bash
+git switch fature_name
+git git merge origin/master -m "syncing with master"
+```
