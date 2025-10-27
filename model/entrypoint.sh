@@ -7,40 +7,24 @@ log() {
 
 SCRIPT_PATH="$(readlink -f "$0")"
 SCRIPT_DIR="$(dirname "${SCRIPT_PATH}")"
-ENV_FILE="${OLLAMA_ENV_FILE:-/opt/ollama/.env}"
 
-if [ -z "${ENV_FILE}" ] || [ ! -f "${ENV_FILE}" ]; then
-  log "error: expected environment file at ${ENV_FILE:-<unset>}"
-  exit 1
-fi
-
-# shellcheck disable=SC1090
-log "loading configuration from ${ENV_FILE}"
-set -a
-# shellcheck source=/dev/null
-source "${ENV_FILE}"
-set +a
-
-CHAT_MODEL="${OLLAMA_MODEL:-${OLLAMA_CHAT_MODEL:-}}"
-if [ -z "${CHAT_MODEL}" ]; then
-  log "error: OLLAMA_MODEL or OLLAMA_CHAT_MODEL must be set in environment/.env"
+REASONING_MODEL="${OLLAMA_REASONING_MODEL:-}"
+if [ -z "${REASONING_MODEL}" ]; then
+  log "error: OLLAMA_REASONING_MODEL must be provided in the environment"
   exit 1
 fi
 
 RERANK_MODEL="${OLLAMA_RERANK_MODEL:-}"
 if [ -z "${RERANK_MODEL}" ]; then
-  log "error: OLLAMA_RERANK_MODEL must be set in environment/.env"
+  log "error: OLLAMA_RERANK_MODEL must be provided in the environment"
   exit 1
 fi
 
 EMBEDDING_MODEL="${OLLAMA_EMBEDDING_MODEL:-}"
 if [ -z "${EMBEDDING_MODEL}" ]; then
-  log "error: OLLAMA_EMBEDDING_MODEL must be set in environment/.env"
+  log "error: OLLAMA_EMBEDDING_MODEL must be provided in the environment"
   exit 1
 fi
-WARM_PROMPT="${OLLAMA_WARM_PROMPT:-Hello from ollama warm-up}"
-RERANK_PROMPT="${OLLAMA_RERANK_PROMPT:-Hello from rerank warm-up}"
-EMBED_WARM_TEXT="${OLLAMA_EMBED_WARM_TEXT:-embedding warm-up text}"
 HEALTH_URL="${OLLAMA_HEALTH_URL:-http://127.0.0.1:11434/api/tags}"
 MAX_ATTEMPTS="${OLLAMA_HEALTH_ATTEMPTS:-30}"
 SLEEP_SECONDS="${OLLAMA_HEALTH_INTERVAL:-2}"
@@ -99,7 +83,7 @@ trap cleanup EXIT
 start_ollama "$@"
 
 if await_health; then
-  ensure_model_present "${CHAT_MODEL}"
+  ensure_model_present "${REASONING_MODEL}"
   ensure_model_present "${RERANK_MODEL}"
   ensure_model_present "${EMBEDDING_MODEL}"
 fi
