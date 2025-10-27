@@ -9,8 +9,8 @@ services:
 
   ollama:
     build:
-      context: ./model
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: model/Dockerfile
     container_name: ollama
     ports:
       - "11434:11434"
