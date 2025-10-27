@@ -28,7 +28,7 @@ handlers:
 loggers:
   # Your app logs; use the same look as Uvicorn
   app:
-    level: DEBUG
+    level: INFO
     handlers: [console_default]
     propagate: false
 
