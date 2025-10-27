@@ -237,26 +237,18 @@ git push -u origin HEAD
 ```bash
 gh pr create --base master --fill
 ```
-5. Rebase on top of origin master:
-```bash
-git rebase origin/master
-```
-6. Push after rebase
-```bash
-git push --force-with-lease
-```
-7. Merge
+5. Merge via gh with rebase
 ```bash
 gh pr merge --rebase -d # -d -> deletes branch in case it's HOPEFULLY no longer needs attention
 ```
 
-8. Pull new master
+6. Pull new master
 ```bash
 git switch master
 git pull origin master
 ```
 
-8. (OPTIONAL) If you didn't delete branch, here's how to continue working on it
+7. (OPTIONAL) If you didn't delete branch, here's how to continue working on it
 ```bash
 git switch api
 git fetch origin # just in case
