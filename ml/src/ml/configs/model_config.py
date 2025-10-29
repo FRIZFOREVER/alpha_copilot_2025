@@ -1,9 +1,14 @@
 import logging
-
-
-from typing import Optional, Dict, Literal
-from pydantic import BaseModel, Field, model_validator
 from os import getenv
+from typing import Optional, Dict, Literal
+from urllib.parse import urlparse
+
+from pydantic import BaseModel, Field, model_validator
+
+from ml.utils.formats import _rstrip_slash
+
+_DEFAULT_BASE_URL = "http://ollama:11434/v1"
+_VALID_BASE_URL_SCHEMES = {"http", "https"}
 
 _MODEL_ENV_VARS = {
     "chat": "OLLAMA_REASONING_MODEL",
@@ -12,6 +17,22 @@ _MODEL_ENV_VARS = {
 }
 
 _MODEL_NAMES_DICT = {mode: getenv(env_var) for mode, env_var in _MODEL_ENV_VARS.items()}
+
+
+def _is_valid_base_url(candidate_url: str) -> bool:
+    """Return True when candidate_url looks like an HTTP(S) endpoint."""
+    if not candidate_url:
+        return False
+
+    parsed = urlparse(candidate_url)
+    if parsed.scheme not in _VALID_BASE_URL_SCHEMES:
+        return False
+
+    if not parsed.netloc:
+        return False
+
+    return True
+
 
 class ModelSettings(BaseModel):
     """
@@ -22,7 +43,6 @@ class ModelSettings(BaseModel):
     Args:
         base_url (str, default="http://ollama:11434/v1"): Root endpoint for OpenAI-compatible traffic.
         api_key (Optional[str], default=None): Credential forwarded to the backend when required.
-        headers (Dict[str, str], default={}): Extra HTTP headers applied to every request.
         timeout_s (float, default=60.0): Client-side request timeout in seconds.
         max_retries (int, default=3): Maximum retry attempts for transient request failures.
         api_mode (Literal["chat", "embeddings", "reranker"]): Selects backend route and default behaviours.
@@ -36,12 +56,8 @@ class ModelSettings(BaseModel):
         ModelSettings: Configured model settings instance ready for downstream use.
     """
     # ---- Connection (applies to ALL calls)
-    base_url: str = Field("http://ollama:11434/v1", description="OpenAI-compatible root")
+    base_url: str = Field(_DEFAULT_BASE_URL, description="OpenAI-compatible root")
     api_key: Optional[str] = Field(None, description="Local servers often ignore; SDK requires something")
-    headers: Dict[str, str] = Field(
-        default_factory=dict,
-        description="Extra HTTP headers applied to every request",
-    )
 
     timeout_s: float = Field(
         60.0,
@@ -92,6 +108,22 @@ class ModelSettings(BaseModel):
     )
 
     @model_validator(mode="after")
+    def ensure_base_url(self):
+        candidate_url = (self.base_url or "").strip()
+
+        if not _is_valid_base_url(self.base_url):
+            logging.warning(
+                "Invalid base_url '%s' provided; falling back to local endpoint '%s'.",
+                candidate_url or "<empty>",
+                _DEFAULT_BASE_URL,
+            )
+            self.base_url = _DEFAULT_BASE_URL
+        else:
+            self.base_url = _rstrip_slash(candidate_url)
+
+        return self
+
+    @model_validator(mode="after")
     def define_model(self):
         if self.model:
             return self
@@ -100,7 +132,9 @@ class ModelSettings(BaseModel):
         if not model:
             # Raise error in case it's not set in .env or it's unreachable
             env_var = _MODEL_ENV_VARS[self.api_mode]
-            raise ValueError(f"Environment variable {env_var} not set for api_mode '{self.api_mode}'")
+            raise ValueError(f"""Can't automatically define model from api_mode:\n
+                             Environment variable {env_var} not set for api_mode '{self.api_mode}'
+                             """)
 
         self.model = model
         return self
