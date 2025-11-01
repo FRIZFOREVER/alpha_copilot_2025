@@ -21,6 +21,10 @@ def create_app() -> FastAPI:
         answer = react_workflow()
         return {"message": answer}
     
+    @app.post("/mock")
+    def workflow():
+        return {"message": "No, you"}
+
     @app.get("/ping")
     def ping() -> dict[str, str]:
         logger.debug("Handling /ping request")
