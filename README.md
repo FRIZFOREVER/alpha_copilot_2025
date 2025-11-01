@@ -236,7 +236,7 @@ docker compose -f compose.windows.yml down
 - `uv pip install PACKAGE_NAME` - install for everyday usage
 - `uv sync` - Update dependency's and make sure current setup is working
 
-### NO DEVEOPMENT IN MASTER BRANCH GOD BLESS. 
+### NO DEVELOPMENT IN MASTER BRANCH GOD BLESS. 
     
 here is correct way to develop from a local branch:
 1. make sure you are on latest master:
