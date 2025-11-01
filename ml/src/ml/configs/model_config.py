@@ -1,6 +1,6 @@
 import logging
 from os import getenv
-from typing import Optional, Dict, Literal
+from typing import Any, Optional, Dict, Literal
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, model_validator
@@ -17,6 +17,13 @@ _MODEL_ENV_VARS = {
 }
 
 _MODEL_NAMES_DICT = {mode: getenv(env_var) for mode, env_var in _MODEL_ENV_VARS.items()}
+
+DEFAULT_RERANK_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {"label": {"type": "string", "enum": ["yes", "no"]}},
+    "required": ["label"],
+    "additionalProperties": False,
+}
 
 
 def _is_valid_base_url(candidate_url: str) -> bool:
@@ -99,6 +106,11 @@ class ModelSettings(BaseModel):
     chat_json_mode: bool = Field(
         default=False,
         description="Request structured JSON responses if the backend allows it",
+    )
+
+    rerank_json_schema: Dict[str, Any] = Field(
+        default_factory=lambda: DEFAULT_RERANK_JSON_SCHEMA.copy(),
+        description="JSON schema expected from rerank calls when none is explicitly provided.",
     )
 
     # ---- EMBEDDINGS ONLY (ignored by ChatClient)
