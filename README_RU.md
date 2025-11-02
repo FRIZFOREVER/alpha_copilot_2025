@@ -225,11 +225,9 @@ docker compose -f compose.windows.yml down
 
 ## Политика проекта
 
-### English-only including:
-- instructions
-- comments
-- tests
-- obviously code and deployment
+### Только на английском:
+- код и комментарии в нём
+- коммиты
 
 ### Мы используем uv как инструмент для установки пакетов, управления зависимостями и сборки.
 
@@ -245,7 +243,7 @@ docker compose -f compose.windows.yml down
 ```bash
 git fetch origin
 git checkout master
-git pull --ff-only
+git pull --ff-onlygit 
 ```
 2. Создай новую локальную ветку, внеси изменения и закоммить:
 ```bash
