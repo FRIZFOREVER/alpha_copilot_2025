@@ -100,7 +100,7 @@ sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
 
-### Winwows
+### Windows
 
 1) NVIDIA Driver (Windows)
   - Install latest GeForce/Studio driver from NVIDIA → reboot.
