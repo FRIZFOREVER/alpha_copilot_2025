@@ -76,6 +76,13 @@ services:
       start_period: 10s
     security_opt: [no-new-privileges:true]
 
+  model-api:
+    build:
+      context: ./model/api
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    
   ollama:
     build:
       context: .

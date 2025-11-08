@@ -14,7 +14,7 @@ func main() {
 	app, err := internal.InitApp(&settings, logger)
 	if err != nil {
 		app.Stop()
-		logger.Fatal("Ошибка инициализации проекта")
+		logger.Fatal("Ошибка инициализации проекта: ", err)
 	}
 	defer app.Stop()
 	logger.Fatal(app.Start())

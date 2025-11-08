@@ -78,24 +78,25 @@ func (mh *Message) Handler(c *fiber.Ctx) error {
 
 	var messageHistory messageOutToModel
 	for _, message := range messages {
-		messageHistory.Messages = append(messageHistory.Messages, 
+		messageHistory.Messages = append(messageHistory.Messages,
 			messageModel{
-				Role: "user",
+				Role:    "user",
 				Content: message.Question,
 			},
 			messageModel{
-				Role: "assistant",
+				Role:    "assistant",
 				Content: message.Answer,
 			},
 		)
 	}
-
-	dataToModel, err := json.Marshal(messageToModel{
-		ChatID:      chatID,
-		UserUUID:    uuid,
-		UserRequest: messageIn.Question,
-		Messages: messageHistory.Messages,
+	
+	// Добавляем последний вопрос в конец.
+	messageHistory.Messages = append(messageHistory.Messages, messageModel{
+		Role:    "user",
+		Content: messageIn.Question,
 	})
+
+	dataToModel, err := json.Marshal(messageHistory)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error to create json",
@@ -103,7 +104,7 @@ func (mh *Message) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	answer, err := mh.client.Mock(dataToModel)
+	answer, err := mh.client.MessageToModel(dataToModel)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error send message",

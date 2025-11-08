@@ -19,14 +19,14 @@ type Settings struct {
 	S3Password   string `envconfig:"S3_PASSWORD"    default:"minio-password"`
 
 	Recognizer string `envconfig:"recognizer"       default:"http://recognizer-service:3333"`
-	Model      string `envconfig:"MODEL"            default:"http://ollama:11434"`
+	Model      string `envconfig:"MODEL"            default:"http://model-api:3000"`
 
 	FrontOrigin string `envconfig:"FRONT_ORIGIB"    default:"http://localhost:5175"`
 }
 
 func InitSettings(logger *logrus.Logger) Settings {
 	var settings Settings
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("back.env"); err != nil {
 		logger.Warn("godotenv:  Error loading .env file", err)
 	}
 
