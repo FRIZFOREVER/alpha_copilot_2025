@@ -2,7 +2,7 @@ import logging
 
 from fastapi import FastAPI
 
-from ..agent.router import react_workflow
+from ml.agent.router import react_workflow
 
 logger = logging.getLogger(__name__)
 
