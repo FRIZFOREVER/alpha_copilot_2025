@@ -24,7 +24,7 @@ func NewClient(method, url, path string) *Client {
 	}
 }
 
-func (c *Client) Mock(data []byte) (*AnswerModel, error) {
+func (c *Client) MessageToModel(data []byte) (*AnswerModel, error) {
 	fullURL := c.url + c.path
 
 	req, err := http.NewRequest(c.method, fullURL, bytes.NewBuffer(data))

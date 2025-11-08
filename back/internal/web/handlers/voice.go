@@ -73,7 +73,7 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 
 	jsonBytes := fmt.Sprintf("{\"voice_url\":\"%s\"}", url)
 
-	question, err := vh.recognizer.Mock([]byte(jsonBytes))
+	question, err := vh.recognizer.MessageToModel([]byte(jsonBytes))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error send message",

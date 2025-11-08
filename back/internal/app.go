@@ -43,9 +43,9 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 
 	err = client.Ping(config.Model)
 	if err != nil {
-		logger.Fatalf("Нет подключение к ollama %v", err)
+		logger.Fatalf("Нет подключение к api модели %v", err)
 	}
-	logger.Info("Есть подключение к ollama! ⚙️")
+	logger.Info("Есть подключение к api модели! ⚙️")
 
 	// err = client.Ping(config.Recognizer)
 	// if err != nil {
@@ -53,7 +53,7 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 	// }
 	// logger.Info("Есть подключение к recognizer! 🔊")
 
-	modelClient := client.NewClient("POST", config.Model, "/mock")
+	modelClient := client.NewClient("POST", config.Model, "/message")
 	recognizerClient := client.NewClient("POST", config.Recognizer, "/mock")
 
 	web.InitServiceRoutes(server, db, config.SecretSerice, logger)
@@ -85,6 +85,9 @@ func (a *App) Start() error {
 }
 
 func (a *App) Stop() error {
+	if a == nil {
+		return nil
+	}
 	err := a.DB.Close()
 	return err
 }
