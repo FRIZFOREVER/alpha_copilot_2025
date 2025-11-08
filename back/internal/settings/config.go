@@ -19,7 +19,7 @@ type Settings struct {
 	S3Password   string `envconfig:"S3_PASSWORD"    default:"minio-password"`
 
 	Recognizer string `envconfig:"recognizer"       default:"http://recognizer-service:3333"`
-	Model      string `envconfig:"MODEL"            default:"http://model-api:3000"`
+	Model      string `envconfig:"MODEL"            default:"http://ml-api:8000"`
 
 	FrontOrigin string `envconfig:"FRONT_ORIGIB"    default:"http://localhost:5175"`
 }
