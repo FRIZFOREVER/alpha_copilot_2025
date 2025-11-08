@@ -117,13 +117,13 @@ export const Sidebar = ({
       <aside
         className={cn(
           "fixed left-0 top-0 h-full z-50 flex flex-col transition-all duration-300",
-          "bg-white border-r border-gray-200/50",
+          "bg-zinc-50",
           "md:static md:z-auto",
           isCollapsed ? "w-16 md:w-16" : "w-64 md:w-72",
           isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
-        <div className="flex items-center justify-between p-3.5 min-h-[60px]">
+        <div className="flex items-center justify-between px-3.5 py-3 pb-1">
           <div
             className={cn(
               "flex items-center justify-start w-full",
@@ -155,22 +155,6 @@ export const Sidebar = ({
             </Button>
           </div>
         </div>
-
-        {!isCollapsed && (
-          <div className="p-3 border-gray-200/50">
-            <button
-              onClick={() => {
-                onNewChat?.();
-                setIsMobileOpen(false);
-              }}
-              className="w-full rounded-2xl bg-white border text-zinc-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50 h-10 transition-all duration-200 font-medium flex items-center justify-center gap-2 group"
-            >
-              <SquarePen className="h-4 w-4" />
-              <span>Новый чат</span>
-            </button>
-          </div>
-        )}
-
         {isCollapsed && (
           <div className="p-3 border-b border-gray-200/50 flex justify-center">
             <button
@@ -182,21 +166,6 @@ export const Sidebar = ({
             >
               <Plus className="h-3 w-3" />
             </button>
-          </div>
-        )}
-
-        {!isCollapsed && (
-          <div className="px-3 pb-3 border-b border-gray-200/50">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Поиск..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 rounded-2xl border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/20 focus-visible:border-blue-500"
-              />
-            </div>
           </div>
         )}
 
@@ -232,7 +201,32 @@ export const Sidebar = ({
               </button>
             </div>
           ) : (
-            <div className="px-2 space-y-1">
+            <div className="px-2 space-y-0">
+              <button
+                className={cn(
+                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3"
+                )}
+              >
+                <span className="text-zinc-500 font-medium">Обзор</span>
+              </button>
+              <button
+                className={cn(
+                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
+                  "text-gray-700 hover:bg-gray-100"
+                )}
+              >
+                <SquarePen className="h-5 w-5 text-gray-500" />
+                <span>Новый чат</span>
+              </button>
+              <button
+                className={cn(
+                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
+                  "text-gray-700 hover:bg-gray-100"
+                )}
+              >
+                <Search className="h-5 w-5 text-gray-500" />
+                <span>Поиск в чатах</span>
+              </button>
               <button
                 className={cn(
                   "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
@@ -246,7 +240,7 @@ export const Sidebar = ({
               <button
                 className={cn(
                   "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
-                  "bg-gray-100 text-gray-900"
+                  "text-gray-700"
                 )}
               >
                 <Eye className="h-5 w-5 text-gray-500" />
@@ -255,21 +249,18 @@ export const Sidebar = ({
 
               {chatGroups.map((group) => {
                 const isExpanded = expandedSections.has(group.id);
-                const Icon = group.icon;
 
                 return (
                   <div key={group.id}>
                     <button
                       onClick={() => toggleSection(group.id)}
                       className={cn(
-                        "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
-                        isExpanded
-                          ? "bg-gray-100 text-gray-900"
-                          : "text-gray-700 hover:bg-gray-50"
+                        "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3"
                       )}
                     >
-                      <Icon className="h-5 w-5 text-gray-500 shrink-0" />
-                      <span className="flex-1">Chat bots</span>
+                      <span className="text-zinc-500 font-medium flex-1">
+                        Чаты
+                      </span>
                       {isExpanded ? (
                         <ChevronUp className="h-4 w-4 text-gray-400" />
                       ) : (
@@ -278,7 +269,7 @@ export const Sidebar = ({
                     </button>
 
                     {isExpanded && group.items.length > 0 && (
-                      <div className="ml-4 mt-1 space-y-0.5">
+                      <div className="mt-1 space-y-0.5">
                         {group.items.map((chat) => {
                           const isActive = currentChatId === chat.id;
                           const chatColor = getChatIcon(chat.id);
@@ -294,7 +285,7 @@ export const Sidebar = ({
                               className={cn(
                                 "w-full text-left px-3 py-2 rounded-lg transition-all text-sm flex items-center gap-3",
                                 isActive
-                                  ? "bg-gray-100 text-gray-900"
+                                  ? "bg-zinc-200 text-gray-900"
                                   : "text-gray-600 hover:bg-gray-50"
                               )}
                             >
@@ -351,7 +342,7 @@ export const Sidebar = ({
           ) : (
             <button
               onClick={handleProfileClick}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl bg-white border border-gray-200 group"
+              className="w-full flex items-center gap-3 px-2 py-0 rounded-2xlgroup"
             >
               <Avatar className="h-10 w-10 border-2 border-gray-200 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full shrink-0">
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white rounded-full text-xs font-semibold">

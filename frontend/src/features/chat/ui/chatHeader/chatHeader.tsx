@@ -6,14 +6,14 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select/select";
 
 export const ChatHeader = () => {
   return (
-    <div className="flex items-center justify-between border-b border-gray-200/50 bg-white px-4 md:px-6 py-3">
+    <div className="flex items-center justify-between bg-white px-4 md:px-6 py-3">
       <div className="flex items-center gap-4">
         <h2 className="text-lg md:text-xl font-semibold text-gray-900">
-          AI <span className="text-red-500">Copilot</span>
+          AI Copilot
         </h2>
         <Select defaultValue="thinking">
           <SelectTrigger className="w-[240px] h-9 text-sm rounded-xl border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 text-gray-900 shadow-sm hover:shadow transition-all focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500">

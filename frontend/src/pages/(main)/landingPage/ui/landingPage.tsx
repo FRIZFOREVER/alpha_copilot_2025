@@ -77,7 +77,7 @@ const LandingPage = () => {
             </Button>
             <Button
               variant="outline"
-              onClick={() => navigate(ERouteNames.AUTH_ROUTE)}
+              onClick={() => navigate(`/${ERouteNames.AUTH_ROUTE}`)}
               className="rounded-2xl border-red-500/30 hover:bg-red-500/10 hover:text-red-500 px-8 py-6 text-lg"
             >
               Войти
