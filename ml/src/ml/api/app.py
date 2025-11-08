@@ -1,8 +1,9 @@
 import logging
+from typing import Any, Dict
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
-from ml.agent.router import react_workflow
+from ml.agent.router import workflow
 
 logger = logging.getLogger(__name__)
 
@@ -13,12 +14,11 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Agent Base API")
     logger.info("FastAPI application initialised")
 
-    # TODO: create "/react" handle. 
-    # get's json with data, including "messages" open-ai chat-completeion compatable field
-    @app.get("/react")
-    def react() -> dict[str, str]:
-        logger.info("Handling /react request")
-        answer = react_workflow()
+    @app.post("/message")
+    async def message(request: Request) -> Dict[str, str]:
+        payload: Dict[str, Any] = await request.json()
+        logger.info("Handling /message request with payload")
+        answer = workflow(payload)
         return {"message": answer}
     
     @app.post("/mock")
