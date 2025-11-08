@@ -14,7 +14,7 @@ export interface MessageListProps {
 
 export const MessageList = ({ messages }: MessageListProps) => {
   return (
-    <ScrollArea className="flex-1">
+    <ScrollArea className="flex-1 max-w-[832px]">
       <div>
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center px-4 md:px-8 py-12">
@@ -50,7 +50,6 @@ export const MessageList = ({ messages }: MessageListProps) => {
               key={message.id}
               content={message.content}
               isUser={message.isUser}
-              timestamp={message.timestamp}
             />
           ))
         )}

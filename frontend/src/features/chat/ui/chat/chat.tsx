@@ -14,9 +14,9 @@ export const Chat = ({
   isLoading = false,
 }: ChatProps) => {
   return (
-    <div className="flex h-full flex-col bg-background overflow-hidden">
+    <div className="flex h-full flex-col bg-white overflow-hidden">
       <ChatHeader />
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden flex justify-center">
         <MessageList messages={messages} />
       </div>
       <ChatInput onSend={onSendMessage} disabled={isLoading} />

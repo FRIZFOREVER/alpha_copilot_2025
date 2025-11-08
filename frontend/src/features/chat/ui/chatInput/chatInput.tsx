@@ -66,7 +66,7 @@ export const ChatInput = ({
 
   return (
     <div className="bg-background">
-      <div className="mx-auto max-w-3xl px-4 md:px-8 py-4 md:pt-6">
+      <div className="mx-auto max-w-[832px] px-4 md:px-8 py-4 md:pt-6">
         <div className="relative">
           <textarea
             ref={textareaRef}

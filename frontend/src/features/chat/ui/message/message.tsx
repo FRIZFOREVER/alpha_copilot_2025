@@ -1,13 +1,19 @@
-import { Bot, User } from "lucide-react";
 import { cn } from "@/shared/lib/mergeClass";
+import {
+  Copy,
+  ThumbsUp,
+  ThumbsDown,
+  Share2,
+  RefreshCw,
+  MoreVertical,
+} from "lucide-react";
 
 export interface MessageProps {
   content: string;
   isUser: boolean;
-  timestamp?: string;
 }
 
-export const Message = ({ content, isUser, timestamp }: MessageProps) => {
+export const Message = ({ content, isUser }: MessageProps) => {
   return (
     <div
       className={cn(
@@ -15,11 +21,6 @@ export const Message = ({ content, isUser, timestamp }: MessageProps) => {
         isUser ? "justify-end" : "justify-start"
       )}
     >
-      {!isUser && (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-          <Bot className="h-5 w-5 text-muted-foreground" />
-        </div>
-      )}
       <div
         className={cn(
           "flex flex-col max-w-[85%] md:max-w-[80%]",
@@ -31,17 +32,52 @@ export const Message = ({ content, isUser, timestamp }: MessageProps) => {
             "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed",
             isUser
               ? "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
-              : "bg-zinc-100 text-foreground rounded-tl-sm"
+              : "text-foreground rounded-tl-sm"
           )}
         >
           {content}
         </div>
+        {!isUser && (
+          <div className="flex items-center gap-2 ml-3">
+            <button
+              className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Копировать"
+            >
+              <Copy className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            </button>
+            <button
+              className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Нравится"
+            >
+              <ThumbsUp className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            </button>
+            <button
+              className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Не нравится"
+            >
+              <ThumbsDown className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            </button>
+            <button
+              className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Поделиться"
+            >
+              <Share2 className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            </button>
+            <button
+              className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Обновить"
+            >
+              <RefreshCw className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            </button>
+            <button
+              className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Еще"
+            >
+              <MoreVertical className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            </button>
+          </div>
+        )}
       </div>
-      {isUser && (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/20 border border-red-100 dark:border-red-500/30">
-          <User className="h-5 w-5 text-red-500" />
-        </div>
-      )}
     </div>
   );
 };
