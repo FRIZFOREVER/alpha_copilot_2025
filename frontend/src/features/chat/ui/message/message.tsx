@@ -1,9 +1,17 @@
 import { cn } from "@/shared/lib/mergeClass";
-import { Copy, ThumbsUp, Share2, RefreshCw, MoreVertical } from "lucide-react";
+import {
+  Copy,
+  ThumbsUp,
+  Share2,
+  RefreshCw,
+  MoreVertical,
+  Check,
+} from "lucide-react";
 import { useModal } from "@/shared/lib/modal/context";
 import { EModalVariables } from "@/shared/lib/modal/constants";
 import { MarkdownContent } from "./markdownContent";
 import { TypingIndicator } from "./typingIndicator";
+import { useCopied } from "@/shared/hooks/useCopy";
 
 export interface MessageProps {
   content: string;
@@ -21,6 +29,8 @@ export const Message = ({
   isTyping = false,
 }: MessageProps) => {
   const { openModal } = useModal();
+
+  const { handleCopyClick, isCopied } = useCopied();
 
   const handleLikeClick = () => {
     if (answerId) {
@@ -59,12 +69,23 @@ export const Message = ({
         </div>
         {!isUser && !isTyping && (
           <div className="flex items-center gap-2 ml-3">
-            <button
-              className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Копировать"
-            >
-              <Copy className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-            </button>
+            {!isCopied ? (
+              <button
+                className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Копировать"
+                value={content}
+                onClick={handleCopyClick}
+              >
+                <Copy className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+              </button>
+            ) : (
+              <button
+                className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Готово"
+              >
+                <Check className="h-4 w-4 text-green-600 " />
+              </button>
+            )}
             <button
               onClick={handleLikeClick}
               disabled={!answerId}
