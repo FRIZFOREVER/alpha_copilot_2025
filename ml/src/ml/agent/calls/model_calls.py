@@ -2,7 +2,7 @@
 from ml.configs.model_config import ModelSettings
 from ml.configs.message import Message
 from ollama import chat, ChatResponse, embed
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Iterator
 
 
 class _ReasoningModelClient:
@@ -18,12 +18,20 @@ class _ReasoningModelClient:
             options={
                 "temperature": self.s.temperature,
                 "top_p": self.s.top_p,
-            }
-            )
-        answer: Message = Message(role=response.message.role,
-                content=response.message.content
-                )
-        return answer
+            },
+        )
+        return Message(role=response.message.role, content=response.message.content)
+
+    def stream(self, messages: List[Dict[str, str]]) -> Iterator[ChatResponse]:
+        return chat(
+            model=self.s.model,
+            messages=messages,
+            options={
+                "temperature": self.s.temperature,
+                "top_p": self.s.top_p,
+            },
+            stream=True,
+        )
 
 class _RerankModelClient:
     """Utility wrapper for using chat models as lightweight rerankers."""
