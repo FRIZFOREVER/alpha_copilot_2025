@@ -15,7 +15,7 @@ export const ChatEmptyState = () => {
 
     let currentIndex = 0;
     let timeoutId: NodeJS.Timeout;
-    const typingSpeed = 30; // миллисекунды между символами
+    const typingSpeed = 30;
 
     const typeText = () => {
       if (currentIndex < WELCOME_TEXT.length) {

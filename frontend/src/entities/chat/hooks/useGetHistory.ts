@@ -30,7 +30,6 @@ export const useGetHistoryQuery = (chatId: number | undefined) => {
           rating: historyItem.rating,
         });
 
-        // Добавляем ответ только если он не пустой (для оптимистичного обновления)
         if (historyItem.answer && historyItem.answer.trim() !== "") {
           result.push({
             id: `answer-${historyItem.answer_id}`,
@@ -47,4 +46,3 @@ export const useGetHistoryQuery = (chatId: number | undefined) => {
     },
   });
 };
-

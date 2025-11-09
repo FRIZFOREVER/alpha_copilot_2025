@@ -14,7 +14,6 @@ export interface Chat {
 
 export type GetChatsResponse = Chat[];
 
-// История чата
 export interface HistoryMessage {
   question_id: number;
   answer_id: number;
@@ -28,7 +27,6 @@ export interface HistoryMessage {
 
 export type GetHistoryResponse = HistoryMessage[];
 
-// Лайк на сообщение
 export interface LikeMessageDto {
   answer_id: number;
   rating: number;
@@ -39,7 +37,6 @@ export interface LikeMessageResponse {
   like: boolean;
 }
 
-// Отправка сообщения
 export interface SendMessageDto {
   question: string;
 }
@@ -53,9 +50,7 @@ export interface SendMessageResponse {
   is_support_needed: boolean;
 }
 
-// Отправка голосового сообщения
 export interface SendVoiceResponse {
   question: string;
   voice_url: string;
 }
-

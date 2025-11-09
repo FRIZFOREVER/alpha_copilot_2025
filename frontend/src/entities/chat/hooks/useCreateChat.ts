@@ -10,10 +10,8 @@ export const useCreateChatMutation = () => {
     mutationKey: [CREATE_CHAT_QUERY],
     mutationFn: (data: CreateChatDto) => createChat(data),
     onSuccess: (data: CreateChatResponse) => {
-      // Инвалидируем кеш списка чатов после создания нового чата
       queryClient.invalidateQueries({ queryKey: [GET_CHATS_QUERY] });
       return data;
     },
   });
 };
-

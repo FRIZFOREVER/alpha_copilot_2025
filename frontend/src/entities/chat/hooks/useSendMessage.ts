@@ -37,7 +37,7 @@ export const useSendMessageMutation = () => {
         question_id: tempQuestionId,
         answer_id: tempAnswerId,
         question: sendMessageDto.question,
-        answer: "", // Пока пустой, придет с сервера
+        answer: "",
         question_time: new Date().toISOString(),
         answer_time: new Date().toISOString(),
         voice_url: "",

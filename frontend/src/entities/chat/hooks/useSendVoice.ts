@@ -25,10 +25,8 @@ export const useSendVoiceMutation = () => {
       chatId: number;
       voiceBlob: Blob;
     }): Promise<SendVoiceResult> => {
-      // Step 1: Send voice to backend for transcription
       const voiceResponse: SendVoiceResponse = await sendVoice(voiceBlob);
 
-      // Step 2: Send transcribed question as a message
       const messageResponse = await sendMessage(chatId, {
         question: voiceResponse.question,
       });
@@ -45,7 +43,6 @@ export const useSendVoiceMutation = () => {
         chatId,
       ]);
 
-      // Add optimistic "обработка аудио" message
       const tempQuestionId = -Date.now();
       const tempAnswerId = tempQuestionId - 1;
 
@@ -53,7 +50,7 @@ export const useSendVoiceMutation = () => {
         question_id: tempQuestionId,
         answer_id: tempAnswerId,
         question: "обработка аудио",
-        answer: "", // Will be updated when response arrives
+        answer: "",
         question_time: new Date().toISOString(),
         answer_time: new Date().toISOString(),
         voice_url: "",
@@ -93,7 +90,6 @@ export const useSendVoiceMutation = () => {
             return [newHistoryItem];
           }
 
-          // Remove optimistic message and add real one
           const filtered = old.filter(
             (item) =>
               item.question_id !== tempQuestionId &&

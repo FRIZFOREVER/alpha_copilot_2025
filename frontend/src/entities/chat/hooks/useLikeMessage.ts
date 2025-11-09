@@ -16,10 +16,8 @@ export const useLikeMessageMutation = () => {
       likeDto: LikeMessageDto;
     }) => likeMessage(answerId, likeDto),
     onSuccess: (data: LikeMessageResponse) => {
-      // Инвалидируем кеш истории чата после лайка
       queryClient.invalidateQueries({ queryKey: [GET_HISTORY_QUERY] });
       return data;
     },
   });
 };
-

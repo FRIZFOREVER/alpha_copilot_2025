@@ -30,7 +30,6 @@ export const ChatInput = ({
     useComputerVoiceRecorder({
       sendCallback: (blob: Blob) => {
         recordedBlobRef.current = blob;
-        // If user clicked send, send it now
         if (shouldSendBlobRef.current && onSendVoice) {
           onSendVoice(blob);
           recordedBlobRef.current = null;
@@ -84,7 +83,6 @@ export const ChatInput = ({
 
   const handleMicClick = async () => {
     if (isRecording) {
-      // Stop recording without sending
       shouldSendBlobRef.current = false;
       stopRecording();
       recordedBlobRef.current = null;
@@ -105,18 +103,14 @@ export const ChatInput = ({
 
   const handleSendVoice = () => {
     if (isRecording) {
-      // Mark that we want to send the blob when recording stops
       shouldSendBlobRef.current = true;
       stopRecording();
-      // The callback will handle sending when blob is ready
     } else if (recordedBlobRef.current && onSendVoice) {
-      // If recording already stopped, send immediately
       onSendVoice(recordedBlobRef.current);
       recordedBlobRef.current = null;
     }
   };
 
-  // Format elapsed seconds to MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -130,7 +124,6 @@ export const ChatInput = ({
       <div className="mx-auto max-w-[832px] px-4 md:px-8 py-4 md:pt-6">
         <div className="relative">
           {isRecording ? (
-            // Recording state UI
             <div
               className={cn(
                 "w-full min-h-[52px] rounded-[24px]",
@@ -150,7 +143,6 @@ export const ChatInput = ({
                 <Plus className="h-5 w-5" />
               </button>
 
-              {/* Dotted line placeholder */}
               <div className="flex-1 flex items-center px-2">
                 <div className="flex-1 border-b-2 border-dotted border-gray-400"></div>
                 <span className="ml-3 text-sm text-gray-500">
@@ -158,7 +150,6 @@ export const ChatInput = ({
                 </span>
               </div>
 
-              {/* Cancel button (X) */}
               <button
                 type="button"
                 onClick={handleCancelRecording}
@@ -170,7 +161,6 @@ export const ChatInput = ({
                 <X className="h-5 w-5" />
               </button>
 
-              {/* Send button (Checkmark) - always enabled when recording */}
               <button
                 type="button"
                 onClick={handleSendVoice}
@@ -187,7 +177,6 @@ export const ChatInput = ({
               </button>
             </div>
           ) : (
-            // Normal text input state
             <>
               <textarea
                 ref={textareaRef}
