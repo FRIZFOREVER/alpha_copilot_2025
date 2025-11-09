@@ -18,6 +18,9 @@ var getChatsQuery string
 //go:embed queries/check_chat.sql
 var checkChatQuery string
 
+//go:embed queries/rename_chat.sql
+var renameChatQuery string
+
 var ErrUserByUUIDNotFound = errors.New("user with this UUID not found")
 
 func CreateChat(
@@ -130,4 +133,18 @@ func CheckChat(
 	}
 
 	return isCorresponds, nil
+}
+
+func RenameChat(
+	db *sql.DB,
+	chatID int,
+	newName string,
+	logger *logrus.Logger,
+) error {
+	_, err := db.Exec(renameChatQuery, chatID, newName)
+	if err != nil {
+		logger.WithError(err).Error("failed to rename chat")
+	}
+
+	return err
 }
