@@ -54,10 +54,20 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 	// logger.Info("Есть подключение к recognizer! 🔊")
 
 	modelClient := client.NewModelClient("POST", config.Model, "/message")
+	
+	// Проверка и логирование API ключа AssemblyAI
 	if config.RecognizerAPIKey == "" {
-		logger.Warn("RecognizerAPIKey пустой")
+		logger.Warn("⚠️  ASSEMBLYAI_API_KEY не установлен! Запросы к AssemblyAI будут возвращать ошибку 401")
+		logger.Warn("   Установите переменную окружения ASSEMBLYAI_API_KEY в .env файле или docker-compose.yml")
+	} else {
+		// Маскируем ключ для безопасности (показываем только первые 8 символов)
+		maskedKey := config.RecognizerAPIKey
+		if len(maskedKey) > 8 {
+			maskedKey = maskedKey[:8] + "..."
+		}
+		logger.Infof("AssemblyAI API ключ установлен: %s", maskedKey)
 	}
-	recognizerClient := client.NewRecognizerClient("https://api.assemblyai.com", "/v2", config.RecognizerAPIKey)
+	recognizerClient := client.NewRecognizerClient("https://api.assemblyai.com/v2", "", config.RecognizerAPIKey)
 
 	web.InitServiceRoutes(server, db, config.SecretSerice, logger)
 	web.InitPublicRoutes(server, db, config.SecretUser, config.FrontOrigin, logger)

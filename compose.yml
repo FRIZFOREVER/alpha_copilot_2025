@@ -5,6 +5,11 @@ services:
       dockerfile: deploy/Dockerfile
     ports:
       - "8080:8080"
+    env_file:
+      - ./.env
+    environment:
+      # Передаем переменную окружения для AssemblyAI API
+      - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY:-}
     depends_on:
       - postgres
       - minio
