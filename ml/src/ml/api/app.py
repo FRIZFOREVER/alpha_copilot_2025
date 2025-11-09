@@ -4,6 +4,7 @@ from typing import Any, Dict
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import StreamingResponse
 import ollama
 
 from ml.agent.router import workflow, init_models
@@ -40,6 +41,23 @@ def create_app() -> FastAPI:
         logger.info("Handling /message request with payload")
         answer = workflow(payload)
         return {"message": answer}
+    
+    @app.post("/message_stream")
+    async def message_stream(request: Request) -> StreamingResponse:
+        models_ready = app.state.models_ready
+
+        if not models_ready.is_set():
+            raise HTTPException(status_code=503, detail="Models are still initialising")
+
+        payload: Dict[str, Any] = await request.json()
+        logger.info("Handling /message_stream request with payload")
+
+        def event_generator():
+            stream = workflow(payload, streaming=True)
+            for chunk in stream:
+                yield f"data: {chunk.model_dump_json()}\n\n"
+
+        return StreamingResponse(event_generator(), media_type="text/event-stream")
     
     @app.post("/mock")
     def mock():
