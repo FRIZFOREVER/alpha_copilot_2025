@@ -62,6 +62,7 @@ func InitPrivateRoutes(
 	chat := handlers.NewChat(db, logger)
 	server.Post("/chat", chat.CreateHandler)
 	server.Get("/chats", chat.GetHandler)
+	server.Put("/chat/:chat_id", chat.RenameHandler)
 
 	supportHistory := handlers.NewSupportHistory(db, logger)
 	server.Get("/support_history/:chat_id", supportHistory.GetSupportsHistoryHandler)
