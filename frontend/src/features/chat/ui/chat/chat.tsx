@@ -19,7 +19,7 @@ export const Chat = ({
     <div className="flex h-full flex-col bg-white overflow-hidden">
       <ChatHeader />
       <div className="flex-1 overflow-hidden flex justify-center">
-        <MessageList messages={messages} />
+        <MessageList messages={messages} isLoading={isLoading} />
       </div>
       <ChatInput
         onSend={onSendMessage}

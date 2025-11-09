@@ -1,6 +1,7 @@
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Message } from "../message";
 import { ChatEmptyState } from "../chatEmptyState";
+import { useScrollBottom } from "@/shared/hooks/useScrollBottom";
 
 export interface MessageData {
   id: string;
@@ -14,11 +15,20 @@ export interface MessageData {
 
 export interface MessageListProps {
   messages: MessageData[];
+  isLoading?: boolean;
 }
 
-export const MessageList = ({ messages }: MessageListProps) => {
+export const MessageList = ({
+  messages,
+  isLoading = false,
+}: MessageListProps) => {
+  const { contentRef } = useScrollBottom([
+    messages.length,
+    messages[messages.length - 1]?.id,
+    isLoading ? "loading" : "loaded",
+  ]);
   return (
-    <ScrollArea className="flex-1 max-w-[832px]">
+    <ScrollArea className="flex-1 max-w-[832px]" ref={contentRef}>
       <div>
         {messages.length === 0 ? (
           <ChatEmptyState />
