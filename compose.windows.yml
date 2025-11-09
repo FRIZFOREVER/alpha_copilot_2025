@@ -17,6 +17,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./.env
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -82,8 +84,6 @@ services:
       dockerfile: model/Dockerfile
     env_file:
       - ./.env
-    environment:
-      - OLLAMA_HOST=0.0.0.0
     container_name: ollama
     ports:
       - "11434:11434"
