@@ -14,6 +14,7 @@ import {
   MoreVertical,
   SquarePen,
   ChartArea,
+  Menu,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
@@ -204,7 +205,7 @@ export const Sidebar = ({}: SidebarProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg hover:bg-gray-100 text-gray-600 hidden md:flex"
+              className="h-8 w-8 rounded-lg hover:bg-gray-100 text-gray-600 hidden md:flex cursor-pointer"
               onClick={handleToggleCollapse}
             >
               {isCollapsed ? (
@@ -240,7 +241,7 @@ export const Sidebar = ({}: SidebarProps) => {
             <div className="flex flex-col items-center gap-1 px-2">
               <button
                 className={cn(
-                  "w-10 h-10 rounded-lg flex items-center justify-center transition-all",
+                  "w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer",
                   "text-gray-600 hover:bg-gray-100"
                 )}
               >
@@ -248,7 +249,7 @@ export const Sidebar = ({}: SidebarProps) => {
               </button>
               <button
                 className={cn(
-                  "w-10 h-10 rounded-lg flex items-center justify-center transition-all",
+                  "w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer",
                   "text-gray-600 hover:bg-gray-100"
                 )}
               >
@@ -256,7 +257,7 @@ export const Sidebar = ({}: SidebarProps) => {
               </button>
               <button
                 className={cn(
-                  "w-10 h-10 rounded-lg flex items-center justify-center transition-all",
+                  "w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer",
                   expandedSections.has("chats")
                     ? "bg-gray-100 text-gray-900"
                     : "text-gray-600 hover:bg-gray-100"
@@ -297,7 +298,7 @@ export const Sidebar = ({}: SidebarProps) => {
               </button>
               <button
                 className={cn(
-                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
+                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
                   "text-gray-700 hover:bg-[#0000000f]/60"
                 )}
               >
@@ -307,7 +308,7 @@ export const Sidebar = ({}: SidebarProps) => {
 
               <button
                 className={cn(
-                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
+                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
                   "text-gray-700 hover:bg-[#0000000f]/60"
                 )}
               >
@@ -434,10 +435,10 @@ export const Sidebar = ({}: SidebarProps) => {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-30 md:hidden h-10 w-10 rounded-xl bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20"
+        className="fixed top-2.5 left-2 z-30 md:hidden h-10 w-10 rounded-xl bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20"
         onClick={handleOpenMobile}
       >
-        <MessageSquare className="h-5 w-5" />
+        <Menu className="h-5 w-5" />
       </Button>
     </>
   );
