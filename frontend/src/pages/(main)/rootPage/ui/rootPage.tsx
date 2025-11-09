@@ -1,4 +1,4 @@
-import { Image } from "@/shared/ui/image/image";
+import { Zap } from "lucide-react";
 import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 
@@ -7,11 +7,7 @@ const RootPage = () => {
     <Suspense
       fallback={
         <div className="h-screen w-full flex items-center justify-center">
-          <Image
-            alt="logo-suspense"
-            src="/images/logo.jpg"
-            className="w-6 h-6 rounded-sm animate-ping"
-          />
+          <Zap className="h-6 w-6 text-blue-500 animate-ping" />
         </div>
       }
     >

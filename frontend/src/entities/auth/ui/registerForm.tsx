@@ -19,6 +19,7 @@ export const RegisterForm = () => {
     defaultValues: {
       login: "",
       password: "",
+      username: "",
     },
   });
 
@@ -80,9 +81,9 @@ export const RegisterForm = () => {
                 </FormItem>
               )}
             />
-            {/* <FormField
+            <FormField
               control={form.control}
-              name="full_name"
+              name="username"
               render={({ field }) => (
                 <FormItem className="relative gap-1">
                   <FloatingLabelInput
@@ -90,15 +91,15 @@ export const RegisterForm = () => {
                     label={"ФИО"}
                     className={cn(
                       "py-1.5 text-black bg-[#f0f3f7] rounded-3xl shadow-sm border-[#f0f3f7]",
-                      errors.full_name && "border-red-700"
+                      errors.username && "border-red-700"
                     )}
                   />
-                  {errors.full_name && (
+                  {errors.username && (
                     <span className="text-red-800 text-xs px-3">
-                      {errors.full_name.message}
+                      {errors.username.message}
                     </span>
                   )}
-                  {field.value && !errors.full_name && (
+                  {field.value && !errors.username && (
                     <button
                       className="absolute right-4 top-4.5 text-blue-800 cursor-pointer"
                       onClick={() => field.onChange("")}
@@ -106,14 +107,14 @@ export const RegisterForm = () => {
                       <X className="w-4 h-4" />
                     </button>
                   )}
-                  {errors.full_name && (
+                  {errors.username && (
                     <button className="absolute right-4 top-4.5 text-red-800 cursor-pointer">
                       <CircleAlert className="w-4 h-4" />
                     </button>
                   )}
                 </FormItem>
               )}
-            /> */}
+            />
 
             <FormField
               control={form.control}

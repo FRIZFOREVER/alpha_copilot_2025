@@ -9,6 +9,7 @@ export interface MessageData {
   timestamp?: string;
   answerId?: number;
   rating?: number | null;
+  isTyping?: boolean;
 }
 
 export interface MessageListProps {
@@ -29,6 +30,7 @@ export const MessageList = ({ messages }: MessageListProps) => {
               isUser={message.isUser}
               answerId={message.answerId}
               rating={message.rating}
+              isTyping={message.isTyping}
             />
           ))
         )}

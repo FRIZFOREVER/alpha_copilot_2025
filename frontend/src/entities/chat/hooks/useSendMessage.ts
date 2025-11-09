@@ -21,22 +21,18 @@ export const useSendMessageMutation = () => {
       sendMessageDto: SendMessageDto;
     }) => sendMessage(chatId, sendMessageDto),
     onMutate: async ({ chatId, sendMessageDto }) => {
-      // Отменяем исходящие запросы, чтобы они не перезаписывали наше оптимистичное обновление
       await queryClient.cancelQueries({
         queryKey: [GET_HISTORY_QUERY, chatId],
       });
 
-      // Сохраняем предыдущее значение для отката
       const previousHistory = queryClient.getQueryData<GetHistoryResponse>([
         GET_HISTORY_QUERY,
         chatId,
       ]);
 
-      // Генерируем временный ID для оптимистичного обновления
-      const tempQuestionId = -Date.now(); // Отрицательный ID, чтобы отличать от реальных
+      const tempQuestionId = -Date.now();
       const tempAnswerId = tempQuestionId - 1;
 
-      // Оптимистично добавляем вопрос в кэш
       const optimisticQuestion: HistoryMessage = {
         question_id: tempQuestionId,
         answer_id: tempAnswerId,
@@ -48,7 +44,6 @@ export const useSendMessageMutation = () => {
         rating: null,
       };
 
-      // Обновляем кэш, добавляя новый вопрос
       queryClient.setQueryData<GetHistoryResponse>(
         [GET_HISTORY_QUERY, chatId],
         (old) => {
@@ -57,7 +52,6 @@ export const useSendMessageMutation = () => {
         }
       );
 
-      // Возвращаем контекст с предыдущими данными и временными ID для отката
       return { previousHistory, chatId, tempQuestionId, tempAnswerId };
     },
     onSuccess: (data: SendMessageResponse, variables, context) => {
@@ -65,12 +59,10 @@ export const useSendMessageMutation = () => {
 
       const { chatId, tempQuestionId, tempAnswerId } = context;
 
-      // Обновляем кэш с реальными данными с сервера
       queryClient.setQueryData<GetHistoryResponse>(
         [GET_HISTORY_QUERY, chatId],
         (old) => {
           if (!old) {
-            // Если кэша нет, создаем новую запись
             const newHistoryItem: HistoryMessage = {
               question_id: data.question_id,
               answer_id: data.answer_id,
@@ -84,7 +76,6 @@ export const useSendMessageMutation = () => {
             return [newHistoryItem];
           }
 
-          // Удаляем оптимистичное сообщение по временным ID и добавляем реальное
           const filtered = old.filter(
             (item) =>
               item.question_id !== tempQuestionId &&
@@ -107,7 +98,6 @@ export const useSendMessageMutation = () => {
       );
     },
     onError: (_error, _variables, context) => {
-      // Откатываем изменения при ошибке
       if (context?.previousHistory !== undefined && context?.chatId) {
         queryClient.setQueryData(
           [GET_HISTORY_QUERY, context.chatId],

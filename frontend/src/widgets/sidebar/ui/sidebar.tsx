@@ -22,18 +22,13 @@ import { ERouteNames } from "@/shared/lib/routeVariables";
 import { useGetChatsQuery } from "@/entities/chat/hooks/useGetChats";
 import { useCreateChatMutation } from "@/entities/chat/hooks/useCreateChat";
 import { Chat } from "@/entities/chat/types/types";
+import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
 
 export interface ChatItem {
   id: string;
   title: string;
   lastMessage?: string;
 }
-
-const userData = {
-  name: "Иван Иванов",
-  email: "ivan@example.com",
-  avatar: null,
-};
 
 export interface SidebarProps {}
 
@@ -51,6 +46,7 @@ export const Sidebar = ({}: SidebarProps) => {
   const { data: chatsData, isLoading: isLoadingChats } = useGetChatsQuery();
   const { mutate: createChat, isPending: isCreatingChat } =
     useCreateChatMutation();
+  const { data: profileData } = useGetProfileQuery();
 
   const chats: ChatItem[] = useMemo(() => {
     if (!chatsData) return [];
@@ -149,6 +145,32 @@ export const Sidebar = ({}: SidebarProps) => {
   const getChatInitial = (title: string) => {
     return title.charAt(0).toUpperCase();
   };
+
+  const getUserInitials = (username: string) => {
+    const parts = username.trim().split(" ").filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return username.charAt(0).toUpperCase();
+  };
+
+  const getDisplayName = (username: string) => {
+    const parts = username.trim().split(" ").filter(Boolean);
+    if (parts.length >= 3) {
+      return `${parts[1]} ${parts[0]}`;
+    } else if (parts.length === 2) {
+      return `${parts[0]} ${parts[1]}`;
+    }
+    return username;
+  };
+
+  const displayName = profileData?.username
+    ? getDisplayName(profileData.username)
+    : "Пользователь";
+  const displayEmail = profileData?.login || "";
+  const userInitials = profileData?.username
+    ? getUserInitials(profileData.username)
+    : "П";
 
   return (
     <>
@@ -378,10 +400,7 @@ export const Sidebar = ({}: SidebarProps) => {
               >
                 <Avatar className="h-8 w-8 border-2 border-gray-200 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg">
                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white rounded-lg text-xs font-semibold">
-                    {userData.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
+                    {userInitials}
                   </AvatarFallback>
                 </Avatar>
               </button>
@@ -393,19 +412,14 @@ export const Sidebar = ({}: SidebarProps) => {
             >
               <Avatar className="h-10 w-10 border-2 border-gray-200 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full shrink-0">
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white rounded-full text-xs font-semibold">
-                  {userData.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
+                  {userInitials}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-sm font-semibold text-gray-900 truncate">
-                  {userData.name}
+                  {displayName}
                 </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {userData.email}
-                </p>
+                <p className="text-xs text-gray-500 truncate">{displayEmail}</p>
               </div>
               <button
                 onClick={handleMoreOptionsClick}
