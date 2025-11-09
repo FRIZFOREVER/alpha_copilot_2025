@@ -1,4 +1,13 @@
-import { Share2, Copy, MoreVertical } from "lucide-react";
+import { useState } from "react";
+import {
+  Share2,
+  Copy,
+  MoreVertical,
+  Sparkles,
+  Zap,
+  Brain,
+  Settings,
+} from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import {
   Select,
@@ -8,42 +17,73 @@ import {
   SelectValue,
 } from "@/shared/ui/select/select";
 
+const modelOptions = [
+  {
+    value: "thinking",
+    label: "Fin Ai Thinking",
+    description: "Думает дольше для лучших ответов",
+    icon: Brain,
+  },
+  {
+    value: "thinking-mini",
+    label: "Fin Ai Thinking Mini",
+    description: "Думает быстро",
+    icon: Sparkles,
+  },
+  {
+    value: "instant",
+    label: "Fin Ai Instant",
+    description: "Отвечает сразу",
+    icon: Zap,
+  },
+  {
+    value: "auto",
+    label: "Fin Ai Auto",
+    description: "Решает как долго думать",
+    icon: Settings,
+  },
+] as const;
+
 export const ChatHeader = () => {
+  const [selectedModel, setSelectedModel] = useState<string>("thinking");
+
+  const currentModel = modelOptions.find((m) => m.value === selectedModel);
+
   return (
-    <div className="flex items-center justify-between bg-white px-4 md:px-6 py-3">
+    <div className="flex items-center justify-between bg-white px-4 md:px-6 py-3 border-b border-[#0d0d0d0d]">
       <div className="flex items-center gap-4">
-        <h2 className="text-lg md:text-xl font-semibold text-gray-900">
-          AI Copilot
-        </h2>
-        <Select defaultValue="thinking">
-          <SelectTrigger className="w-[240px] h-9 text-sm rounded-xl border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 text-gray-900 shadow-sm hover:shadow transition-all focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500">
-            <SelectValue />
+        <Select value={selectedModel} onValueChange={setSelectedModel}>
+          <SelectTrigger className="h-auto p-0 border-0 bg-transparent hover:bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg md:text-xl font-medium text-gray-900 gap-1.5 hover:text-gray-700 transition-colors cursor-pointer data-[state=open]:text-gray-700 [&>svg]:opacity-60 [&>svg]:hover:opacity-100 [&_[data-slot=select-value]]:hidden">
+            <span>{currentModel?.label || "FinAi"}</span>
+            <SelectValue placeholder="FinAi" />
           </SelectTrigger>
-          <SelectContent className="bg-white border-gray-200 rounded-xl shadow-lg">
-            <SelectItem
-              value="auto"
-              className="rounded-lg focus:bg-gray-100 focus:text-gray-900 cursor-pointer"
-            >
-              Auto - Решает как долго думать
-            </SelectItem>
-            <SelectItem
-              value="instant"
-              className="rounded-lg focus:bg-gray-100 focus:text-gray-900 cursor-pointer"
-            >
-              Instant - Отвечает сразу
-            </SelectItem>
-            <SelectItem
-              value="thinking-mini"
-              className="rounded-lg focus:bg-gray-100 focus:text-gray-900 cursor-pointer"
-            >
-              Thinking mini - Думает быстро
-            </SelectItem>
-            <SelectItem
-              value="thinking"
-              className="rounded-lg focus:bg-gray-100 focus:text-gray-900 cursor-pointer"
-            >
-              Thinking - Думает дольше для лучших ответов
-            </SelectItem>
+          <SelectContent
+            align="start"
+            alignOffset={-10}
+            className="bg-white border-gray-200 shadow-lg min-w-[300px] p-1.5 rounded-2xl"
+          >
+            {modelOptions.map((model) => {
+              const Icon = model.icon;
+              return (
+                <SelectItem
+                  key={model.value}
+                  value={model.value}
+                  className="rounded-lg focus:bg-gray-50 focus:text-gray-900 cursor-pointer py-2.5 px-3 data-[highlighted]:bg-gray-50"
+                >
+                  <div className="flex items-start gap-3 w-full pr-6">
+                    <Icon className="h-4 w-4 text-gray-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                      <span className="font-medium text-sm text-gray-900 leading-tight">
+                        {model.label}
+                      </span>
+                      <span className="text-xs text-gray-500 leading-tight">
+                        {model.description}
+                      </span>
+                    </div>
+                  </div>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>

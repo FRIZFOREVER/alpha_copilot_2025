@@ -13,6 +13,7 @@ import {
   Zap,
   MoreVertical,
   SquarePen,
+  ChartArea,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
@@ -184,7 +185,7 @@ export const Sidebar = ({}: SidebarProps) => {
       <aside
         className={cn(
           "fixed left-0 top-0 h-full z-50 flex flex-col transition-all duration-300",
-          "bg-zinc-50",
+          "bg-[#f9f9f9]",
           "md:static md:z-auto",
           isCollapsed ? "w-16 md:w-16" : "w-64 md:w-72",
           isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -278,8 +279,8 @@ export const Sidebar = ({}: SidebarProps) => {
                 onClick={handleNewChat}
                 disabled={isCreatingChat}
                 className={cn(
-                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
-                  "text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
+                  "text-gray-700 hover:bg-[#0000000f]/60 disabled:opacity-50 disabled:cursor-not-allowed"
                 )}
               >
                 <SquarePen className="h-5 w-5 text-gray-500" />
@@ -287,8 +288,8 @@ export const Sidebar = ({}: SidebarProps) => {
               </button>
               <button
                 className={cn(
-                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
-                  "text-gray-700 hover:bg-gray-100"
+                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
+                  "text-gray-700 hover:bg-[#0000000f]/60"
                 )}
               >
                 <Search className="h-5 w-5 text-gray-500" />
@@ -297,21 +298,21 @@ export const Sidebar = ({}: SidebarProps) => {
               <button
                 className={cn(
                   "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
-                  "text-gray-700 hover:bg-gray-100"
+                  "text-gray-700 hover:bg-[#0000000f]/60"
                 )}
               >
                 <Home className="h-5 w-5 text-gray-500" />
-                <span>Home</span>
+                <span>Главная</span>
               </button>
 
               <button
                 className={cn(
                   "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
-                  "text-gray-700"
+                  "text-gray-700 hover:bg-[#0000000f]/60"
                 )}
               >
-                <Eye className="h-5 w-5 text-gray-500" />
-                <span>Insights</span>
+                <ChartArea className="h-5 w-5 text-gray-500" />
+                <span>Аналитика</span>
               </button>
 
               {chatGroups.map((group) => {
@@ -329,9 +330,9 @@ export const Sidebar = ({}: SidebarProps) => {
                         Чаты
                       </span>
                       {isExpanded ? (
-                        <ChevronUp className="h-4 w-4 text-gray-400" />
+                        <ChevronUp className="h-4 w-4 text-gray-400 cursor-pointer" />
                       ) : (
-                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                        <ChevronDown className="h-4 w-4 text-gray-400 cursor-pointer" />
                       )}
                     </button>
 
@@ -347,10 +348,8 @@ export const Sidebar = ({}: SidebarProps) => {
                               key={chat.id}
                               onClick={() => handleSelectChat(chat.id)}
                               className={cn(
-                                "w-full text-left px-3 py-2 rounded-lg transition-all text-sm flex items-center gap-3",
-                                isActive
-                                  ? "bg-zinc-200 text-gray-900"
-                                  : "text-gray-600 hover:bg-gray-50"
+                                "w-full text-left px-3 py-2 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer hover:bg-[#0000000f]/60",
+                                isActive && "bg-[#0000000f] text-gray-900"
                               )}
                             >
                               <div
@@ -361,7 +360,7 @@ export const Sidebar = ({}: SidebarProps) => {
                               >
                                 {chatInitial}
                               </div>
-                              <span className="truncate flex-1">
+                              <span className="truncate flex-1 text-gray-700">
                                 {chat.title}
                               </span>
                               {isActive && (
@@ -393,7 +392,7 @@ export const Sidebar = ({}: SidebarProps) => {
 
         <div className="p-3 border-t border-gray-200/50">
           {isCollapsed ? (
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-2 cursor-pointer">
               <button
                 onClick={handleProfileClick}
                 className="h-10 w-10 rounded-lg hover:bg-gray-100 transition-all flex items-center justify-center"
@@ -408,7 +407,7 @@ export const Sidebar = ({}: SidebarProps) => {
           ) : (
             <button
               onClick={handleProfileClick}
-              className="w-full flex items-center gap-3 px-2 py-0 rounded-2xlgroup"
+              className="w-full flex items-center gap-3 px-2 py-0 rounded-2xl group cursor-pointer"
             >
               <Avatar className="h-10 w-10 border-2 border-gray-200 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full shrink-0">
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white rounded-full text-xs font-semibold">
