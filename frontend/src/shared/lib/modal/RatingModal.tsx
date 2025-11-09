@@ -5,7 +5,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/shared/ui/dialog/dialog";
 import { Button } from "@/shared/ui/button";
 import { useModal } from "./context";
 import { useLikeMessageMutation } from "@/entities/chat/hooks/useLikeMessage";
@@ -25,7 +25,6 @@ export const RatingModal = () => {
       ? (data as { answerId: number }).answerId
       : null;
 
-  // Сбрасываем рейтинг при открытии модального окна
   useEffect(() => {
     if (isOpen && isRatingModal) {
       setSelectedRating(0);
@@ -124,4 +123,3 @@ export const RatingModal = () => {
     </Dialog>
   );
 };
-

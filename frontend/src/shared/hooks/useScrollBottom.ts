@@ -3,19 +3,15 @@ import { useLayoutEffect, useRef, useEffect } from "react";
 export const useScrollBottom = <T>(deps: Array<T>) => {
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Функция для поиска элемента со скроллом
   const findScrollContainer = (): HTMLElement | null => {
     if (!contentRef.current) return null;
 
-    // Для ScrollArea: структура div > div (внутренний div имеет overflow-auto)
-    // Берем первый дочерний элемент - это скроллируемый контейнер
     const firstChild = contentRef.current.firstElementChild as HTMLElement;
 
     if (firstChild) {
       return firstChild;
     }
 
-    // Fallback: если контейнер сам имеет скролл
     const style = window.getComputedStyle(contentRef.current);
     if (
       style.overflow === "auto" ||
@@ -29,11 +25,9 @@ export const useScrollBottom = <T>(deps: Array<T>) => {
     return contentRef.current;
   };
 
-  // Функция скролла вниз с плавной анимацией
   const scrollToBottom = (retryCount = 0) => {
     const scrollContainer = findScrollContainer();
     if (!scrollContainer) {
-      // Если контейнер еще не найден, пробуем еще раз
       if (retryCount < 15) {
         setTimeout(() => scrollToBottom(retryCount + 1), 50);
       }
@@ -42,7 +36,6 @@ export const useScrollBottom = <T>(deps: Array<T>) => {
 
     const scrollHeight = scrollContainer.scrollHeight;
 
-    // Скроллим вниз до максимальной позиции с плавной анимацией
     if (scrollHeight > 0) {
       scrollContainer.scrollTo({
         top: scrollHeight,
@@ -50,12 +43,10 @@ export const useScrollBottom = <T>(deps: Array<T>) => {
       });
     }
 
-    // Дополнительная проверка через небольшую задержку на случай, если контент еще загружается
     if (retryCount < 10) {
       const delay = retryCount < 3 ? 100 : retryCount < 6 ? 200 : 300;
       setTimeout(() => {
         const newScrollHeight = scrollContainer.scrollHeight;
-        // Если высота контента изменилась, продолжаем скроллить
         if (newScrollHeight !== scrollHeight || retryCount < 3) {
           scrollToBottom(retryCount + 1);
         }
@@ -63,16 +54,13 @@ export const useScrollBottom = <T>(deps: Array<T>) => {
     }
   };
 
-  // Используем useLayoutEffect для синхронного скролла перед отрисовкой
   useLayoutEffect(() => {
-    // Используем requestAnimationFrame для гарантии, что DOM обновлен
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         scrollToBottom(0);
       });
     });
 
-    // Дополнительные попытки для асинхронно загружаемого контента
     const timeoutId1 = setTimeout(() => scrollToBottom(2), 100);
     const timeoutId2 = setTimeout(() => scrollToBottom(4), 300);
     const timeoutId3 = setTimeout(() => scrollToBottom(6), 500);
@@ -86,9 +74,7 @@ export const useScrollBottom = <T>(deps: Array<T>) => {
     };
   }, deps);
 
-  // Дополнительный эффект для обработки случаев, когда контент загружается после первого рендера
   useEffect(() => {
-    // Небольшая задержка для обработки асинхронно загружаемого контента
     const timeoutId1 = setTimeout(() => {
       scrollToBottom(0);
     }, 200);

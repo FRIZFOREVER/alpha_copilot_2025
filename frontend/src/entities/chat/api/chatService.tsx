@@ -62,11 +62,8 @@ class ChatService {
 
   public async sendVoice(voiceBlob: Blob): Promise<SendVoiceResponse> {
     const formData = new FormData();
-    // Append blob with .webm extension as required by backend
-    // Blob type is already "audio/webm" from MediaRecorder
     formData.append("voice", voiceBlob, "voice.webm");
 
-    // The interceptor will handle deleting Content-Type for FormData
     const { data } = await axiosAuth.post<SendVoiceResponse>(
       "/voice",
       formData as unknown as Record<string, unknown>
