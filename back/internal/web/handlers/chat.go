@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"jabki/internal/database"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -89,4 +90,41 @@ func (ch *Chat) GetHandler(c *fiber.Ctx) error {
 	}).Debug("chats retrieved successfully")
 
 	return c.JSON(chats)
+}
+
+func (ch *Chat) RenameHandler(c *fiber.Ctx) error {
+	chatIDStr := c.Params("chat_id")
+	var chatIn createChatIn
+	var err error
+
+	chatID, err := strconv.Atoi(chatIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid chat ID format",
+		})
+	}
+
+	if err = json.Unmarshal(c.Body(), &chatIn); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Invalid JSON format",
+			"details": err.Error(),
+		})
+	}
+
+	if err = database.RenameChat(ch.db, chatID, chatIn.Name, ch.logger); err != nil {
+		if errors.Is(err, database.ErrUserNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error":   "User not found",
+				"details": err.Error(),
+			})
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Error creating chat",
+			"details": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(createChatOut{
+		ChatID: chatID,
+	})
 }
