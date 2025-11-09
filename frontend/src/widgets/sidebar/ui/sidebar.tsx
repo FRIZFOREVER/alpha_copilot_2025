@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Plus,
   Search,
@@ -15,11 +15,13 @@ import {
   SquarePen,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { cn } from "@/shared/lib/mergeClass";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ERouteNames } from "@/shared/lib/routeVariables";
+import { useGetChatsQuery } from "@/entities/chat/hooks/useGetChats";
+import { useCreateChatMutation } from "@/entities/chat/hooks/useCreateChat";
+import { Chat } from "@/entities/chat/types/types";
 
 export interface ChatItem {
   id: string;
@@ -27,40 +29,60 @@ export interface ChatItem {
   lastMessage?: string;
 }
 
-export interface SidebarProps {
-  chats?: ChatItem[];
-  onNewChat?: () => void;
-  onSelectChat?: (chatId: string) => void;
-  currentChatId?: string;
-}
+const userData = {
+  name: "Иван Иванов",
+  email: "ivan@example.com",
+  avatar: null,
+};
 
-export const Sidebar = ({
-  chats = [],
-  onNewChat,
-  onSelectChat,
-  currentChatId,
-}: SidebarProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
+export interface SidebarProps {}
+
+export const Sidebar = ({}: SidebarProps) => {
+  const [searchQuery] = useState("");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["chats"])
   );
   const navigate = useNavigate();
+  const params = useParams<{ chatId?: string }>();
+  const currentChatId = params.chatId;
 
-  // Моковые данные пользователя
-  const userData = {
-    name: "Иван Иванов",
-    email: "ivan@example.com",
-    avatar: null,
-  };
+  const { data: chatsData, isLoading: isLoadingChats } = useGetChatsQuery();
+  const { mutate: createChat, isPending: isCreatingChat } =
+    useCreateChatMutation();
+
+  const chats: ChatItem[] = useMemo(() => {
+    if (!chatsData) return [];
+    return chatsData.map((chat: Chat) => ({
+      id: chat.chat_id.toString(),
+      title: chat.name,
+      lastMessage: undefined,
+    }));
+  }, [chatsData]);
 
   const filteredChats = chats.filter((chat) =>
     chat.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleProfileClick = () => {
-    navigate(ERouteNames.PROFILE_ROUTE);
+    navigate(`/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.PROFILE_ROUTE}`);
+    setIsMobileOpen(false);
+  };
+
+  const handleToggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
+  const handleCloseMobile = () => {
+    setIsMobileOpen(false);
+  };
+
+  const handleOpenMobile = () => {
+    setIsMobileOpen(true);
+  };
+
+  const handleBackdropClick = () => {
     setIsMobileOpen(false);
   };
 
@@ -76,7 +98,31 @@ export const Sidebar = ({
     });
   };
 
-  // Группируем чаты для демонстрации (можно адаптировать под реальные данные)
+  const handleNewChat = () => {
+    createChat(
+      { name: "Новый чат" },
+      {
+        onSuccess: (data) => {
+          navigate(
+            `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}/${data.chat_id}`
+          );
+          setIsMobileOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleSelectChat = (chatId: string) => {
+    navigate(
+      `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}/${chatId}`
+    );
+    setIsMobileOpen(false);
+  };
+
+  const handleMoreOptionsClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+  };
+
   const chatGroups = [
     {
       id: "chats",
@@ -87,7 +133,6 @@ export const Sidebar = ({
     },
   ];
 
-  // Генерируем цветные иконки для чатов
   const getChatIcon = (chatId: string) => {
     const colors = [
       "bg-blue-500",
@@ -110,7 +155,7 @@ export const Sidebar = ({
       {isMobileOpen && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
-          onClick={() => setIsMobileOpen(false)}
+          onClick={handleBackdropClick}
         />
       )}
 
@@ -137,7 +182,7 @@ export const Sidebar = ({
               variant="ghost"
               size="icon"
               className="h-8 w-8 rounded-lg hover:bg-gray-100 text-gray-600 hidden md:flex"
-              onClick={() => setIsCollapsed(!isCollapsed)}
+              onClick={handleToggleCollapse}
             >
               {isCollapsed ? (
                 <ChevronRight className="h-4 w-4" />
@@ -149,7 +194,7 @@ export const Sidebar = ({
               variant="ghost"
               size="icon"
               className="md:hidden h-8 w-8 rounded-lg hover:bg-gray-100 text-gray-600"
-              onClick={() => setIsMobileOpen(false)}
+              onClick={handleCloseMobile}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -158,11 +203,9 @@ export const Sidebar = ({
         {isCollapsed && (
           <div className="p-3 border-b border-gray-200/50 flex justify-center">
             <button
-              onClick={() => {
-                onNewChat?.();
-                setIsMobileOpen(false);
-              }}
-              className="h-9 w-9 rounded-xl bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center group"
+              onClick={handleNewChat}
+              disabled={isCreatingChat}
+              className="h-9 w-9 rounded-xl bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="h-3 w-3" />
             </button>
@@ -210,9 +253,11 @@ export const Sidebar = ({
                 <span className="text-zinc-500 font-medium">Обзор</span>
               </button>
               <button
+                onClick={handleNewChat}
+                disabled={isCreatingChat}
                 className={cn(
                   "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
-                  "text-gray-700 hover:bg-gray-100"
+                  "text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 )}
               >
                 <SquarePen className="h-5 w-5 text-gray-500" />
@@ -278,10 +323,7 @@ export const Sidebar = ({
                           return (
                             <button
                               key={chat.id}
-                              onClick={() => {
-                                onSelectChat?.(chat.id);
-                                setIsMobileOpen(false);
-                              }}
+                              onClick={() => handleSelectChat(chat.id)}
                               className={cn(
                                 "w-full text-left px-3 py-2 rounded-lg transition-all text-sm flex items-center gap-3",
                                 isActive
@@ -312,12 +354,17 @@ export const Sidebar = ({
                 );
               })}
 
-              {filteredChats.length === 0 && !searchQuery && (
+              {isLoadingChats ? (
+                <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                  <MessageSquare className="h-12 w-12 text-gray-300 mb-3 animate-pulse" />
+                  <p className="text-sm text-gray-400">Загрузка чатов...</p>
+                </div>
+              ) : filteredChats.length === 0 && !searchQuery ? (
                 <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
                   <MessageSquare className="h-12 w-12 text-gray-300 mb-3" />
                   <p className="text-sm text-gray-400">Нет чатов</p>
                 </div>
-              )}
+              ) : null}
             </div>
           )}
         </div>
@@ -361,9 +408,7 @@ export const Sidebar = ({
                 </p>
               </div>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
+                onClick={handleMoreOptionsClick}
                 className="h-8 w-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-all shrink-0"
               >
                 <MoreVertical className="h-4 w-4" />
@@ -377,7 +422,7 @@ export const Sidebar = ({
         variant="ghost"
         size="icon"
         className="fixed top-4 left-4 z-30 md:hidden h-10 w-10 rounded-xl bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20"
-        onClick={() => setIsMobileOpen(true)}
+        onClick={handleOpenMobile}
       >
         <MessageSquare className="h-5 w-5" />
       </Button>

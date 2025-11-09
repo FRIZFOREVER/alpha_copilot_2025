@@ -1,19 +1,30 @@
 import { cn } from "@/shared/lib/mergeClass";
-import {
-  Copy,
-  ThumbsUp,
-  ThumbsDown,
-  Share2,
-  RefreshCw,
-  MoreVertical,
-} from "lucide-react";
+import { Copy, ThumbsUp, Share2, RefreshCw, MoreVertical } from "lucide-react";
+import { useModal } from "@/shared/lib/modal/context";
+import { EModalVariables } from "@/shared/lib/modal/constants";
+import { MarkdownContent } from "./markdownContent";
 
 export interface MessageProps {
   content: string;
   isUser: boolean;
+  answerId?: number;
+  rating?: number | null;
 }
 
-export const Message = ({ content, isUser }: MessageProps) => {
+export const Message = ({
+  content,
+  isUser,
+  answerId,
+  rating,
+}: MessageProps) => {
+  const { openModal } = useModal();
+
+  const handleLikeClick = () => {
+    if (answerId) {
+      openModal(EModalVariables.RATING_MODAL, { answerId });
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -35,7 +46,7 @@ export const Message = ({ content, isUser }: MessageProps) => {
               : "text-foreground rounded-tl-sm"
           )}
         >
-          {content}
+          {isUser ? content : <MarkdownContent content={content} />}
         </div>
         {!isUser && (
           <div className="flex items-center gap-2 ml-3">
@@ -46,17 +57,25 @@ export const Message = ({ content, isUser }: MessageProps) => {
               <Copy className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </button>
             <button
-              className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              onClick={handleLikeClick}
+              disabled={!answerId}
+              className={cn(
+                "p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors",
+                rating && rating > 0 && "bg-yellow-100 dark:bg-yellow-900/20",
+                !answerId && "opacity-50 cursor-not-allowed"
+              )}
               aria-label="Нравится"
             >
-              <ThumbsUp className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+              <ThumbsUp
+                className={cn(
+                  "h-4 w-4",
+                  rating && rating > 0
+                    ? "text-yellow-600 dark:text-yellow-400"
+                    : "text-gray-600 dark:text-gray-400"
+                )}
+              />
             </button>
-            <button
-              className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Не нравится"
-            >
-              <ThumbsDown className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-            </button>
+
             <button
               className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               aria-label="Поделиться"

@@ -21,7 +21,7 @@ type Settings struct {
 	Recognizer string `envconfig:"recognizer"       default:"http://recognizer-service:3333"`
 	Model      string `envconfig:"MODEL"            default:"http://ml-api:8000"`
 
-	FrontOrigin string `envconfig:"FRONT_ORIGIB"    default:"http://localhost:5175"`
+	FrontOrigin string `envconfig:"FRONT_ORIGIB"    default:"http://localhost:5173"`
 }
 
 func InitSettings(logger *logrus.Logger) Settings {

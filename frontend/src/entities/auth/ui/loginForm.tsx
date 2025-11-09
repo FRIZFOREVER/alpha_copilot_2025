@@ -8,17 +8,18 @@ import { Link } from "react-router-dom";
 import { FloatingLabelInput } from "@/shared/ui/input/floatingInputLabel";
 import { cn } from "@/shared/lib/mergeClass";
 import { ERouteNames } from "@/shared/lib/routeVariables";
+import { useLoginMutation } from "../hooks/useLogin";
 
 export const LoginForm = () => {
   const form = useForm<TypeLoginSchema>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
-      email: "",
+      login: "",
       password: "",
     },
   });
 
-  // const { mutate } = useLoginMutation();
+  const { mutate } = useLoginMutation();
 
   const {
     handleSubmit,
@@ -27,7 +28,7 @@ export const LoginForm = () => {
   } = form;
 
   const onSubmit = (data: TypeLoginSchema) => {
-    console.log(data);
+    mutate(data);
     reset();
   };
 
@@ -44,7 +45,7 @@ export const LoginForm = () => {
             </h2>
             <FormField
               control={form.control}
-              name="email"
+              name="login"
               render={({ field }) => (
                 <FormItem className="relative gap-1">
                   <FloatingLabelInput
@@ -52,15 +53,15 @@ export const LoginForm = () => {
                     label="Почта"
                     className={cn(
                       "py-1.5 text-black bg-[#f0f3f7] rounded-3xl shadow-sm border-[#f0f3f7]",
-                      errors.email && "border-red-700"
+                      errors.login && "border-red-700"
                     )}
                   />
-                  {errors.email && (
+                  {errors.login && (
                     <span className="text-red-800 text-xs px-3">
-                      {errors.email.message}
+                      {errors.login.message}
                     </span>
                   )}
-                  {field.value && !errors.email && (
+                  {field.value && !errors.login && (
                     <button
                       className="absolute right-4 top-4.5 text-blue-800 cursor-pointer"
                       onClick={() => field.onChange("")}
@@ -68,7 +69,7 @@ export const LoginForm = () => {
                       <X className="w-4 h-4" />
                     </button>
                   )}
-                  {errors.email && (
+                  {errors.login && (
                     <button className="absolute right-4 top-4.5 text-red-800 cursor-pointer">
                       <CircleAlert className="w-4 h-4" />
                     </button>
