@@ -1,6 +1,20 @@
 back.env
 .env
 
+# ===========================================
+# Frontend - игнорировать только артефакты сборки
+# ===========================================
+frontend/dist/
+frontend/node_modules/
+frontend/.vite/
+frontend/.cache/
+frontend/tsconfig.tsbuildinfo
+frontend/*.log
+frontend/.DS_Store
+
+# ===========================================
+# Python / Backend правила
+# ===========================================
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -17,7 +31,11 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Игнорируем lib/ только в корне проекта (для Python), но НЕ во фронтенде
+/lib/
+# Игнорируем lib/ в Python проектах
+back/lib/
+ml/lib/
 lib64/
 parts/
 sdist/
