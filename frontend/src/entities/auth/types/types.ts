@@ -1,15 +1,13 @@
-import { EProfileRoles } from "@/entities/profile/types/types";
-
 export interface LoginDto {
-  email: string;
+  login: string;
   password: string;
 }
 
 export interface RegisterDto {
-  full_name: string;
-  email: string;
+  login: string;
   password: string;
-  role: EProfileRoles;
-  company_id?: number;
-  university_id?: number;
+}
+
+export interface AuthResponse {
+  jwt: string;
 }
