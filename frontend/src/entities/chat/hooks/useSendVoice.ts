@@ -70,7 +70,7 @@ export const useSendVoiceMutation = () => {
 
       return { previousHistory, chatId, tempQuestionId, tempAnswerId };
     },
-    onSuccess: (data: SendVoiceResult, variables, context) => {
+    onSuccess: (data: SendVoiceResult, _, context) => {
       if (!context) return;
 
       const { chatId, tempQuestionId, tempAnswerId } = context;
@@ -125,4 +125,3 @@ export const useSendVoiceMutation = () => {
     },
   });
 };
-
