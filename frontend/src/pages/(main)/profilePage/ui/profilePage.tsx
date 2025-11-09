@@ -19,15 +19,15 @@ import { Progress } from "@/shared/ui/progress/progress";
 import { useNavigate } from "react-router-dom";
 import { ERouteNames } from "@/shared/lib/routeVariables";
 import { cn } from "@/shared/lib/mergeClass";
+import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const { data: profileData, isLoading: isLoadingProfile } = useGetProfileQuery();
 
-  const userData = {
-    name: "Иван Иванов",
-    email: "ivan@example.com",
+  // Мок данные для статистики и достижений (пока нет API)
+  const mockData = {
     joinDate: "15 января 2024",
-    avatar: null,
     plan: "Pro",
     level: 5,
     xp: 1247,
@@ -45,7 +45,42 @@ const ProfilePage = () => {
     ],
   };
 
-  const progress = (userData.xp / userData.xpToNext) * 100;
+  const getUserInitials = (username: string) => {
+    const parts = username.trim().split(" ").filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return username.charAt(0).toUpperCase();
+  };
+
+  const getDisplayName = (username: string) => {
+    const parts = username.trim().split(" ").filter(Boolean);
+    if (parts.length >= 3) {
+      // Если 3+ слова (например, "Маслов Денис Романович"), берем второе и первое (Имя Фамилия)
+      return `${parts[1]} ${parts[0]}`;
+    } else if (parts.length === 2) {
+      // Если 2 слова, берем оба
+      return `${parts[0]} ${parts[1]}`;
+    }
+    // Если одно слово, возвращаем как есть
+    return username;
+  };
+
+  if (isLoadingProfile) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-500">Загрузка профиля...</p>
+      </div>
+    );
+  }
+
+  const displayName = profileData?.username 
+    ? getDisplayName(profileData.username) 
+    : "Пользователь";
+  const displayEmail = profileData?.login || "";
+  const userInitials = profileData?.username ? getUserInitials(profileData.username) : "П";
+
+  const progress = (mockData.xp / mockData.xpToNext) * 100;
 
   return (
     <div>
@@ -74,10 +109,7 @@ const ProfilePage = () => {
                   <div className="relative group">
                     <Avatar className="relative h-32 w-32 md:h-40 md:w-40 border-4 border-white">
                       <AvatarFallback className="bg-gradient-to-br from-red-500 to-pink-600 text-white text-4xl font-bold rounded-3xl">
-                        {userData.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
+                        {userInitials}
                       </AvatarFallback>
                     </Avatar>
                   </div>
@@ -85,30 +117,30 @@ const ProfilePage = () => {
                   <div className="flex-1 text-center md:text-left">
                     <div className="flex items-center justify-center md:justify-start gap-3 mb-3">
                       <h2 className="text-2xl font-medium text-gray-900">
-                        {userData.name}
+                        {displayName}
                       </h2>
                       <Badge className="bg-gradient-to-r from-red-500 to-pink-600 text-white border-0 px-4 py-1 text-sm font-bold">
-                        {userData.plan}
+                        {mockData.plan}
                       </Badge>
                     </div>
 
                     <p className="text-gray-600 flex items-center justify-center md:justify-start gap-2 mb-1">
                       <Calendar className="h-4 w-4" />
-                      Присоединился {userData.joinDate}
+                      Присоединился {mockData.joinDate}
                     </p>
 
                     <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-gray-600 mb-6">
                       <Mail className="h-4 w-4" />
-                      {userData.email}
+                      {displayEmail}
                     </div>
 
                     <div className="mb-6">
                       <div className="flex items-center justify-between text-sm mb-2">
                         <span className="font-medium text-gray-700">
-                          Уровень {userData.level}
+                          Уровень {mockData.level}
                         </span>
                         <span className="text-gray-500">
-                          {userData.xp} / {userData.xpToNext} XP
+                          {mockData.xp} / {mockData.xpToNext} XP
                         </span>
                       </div>
                       <Progress
@@ -139,19 +171,19 @@ const ProfilePage = () => {
               {[
                 {
                   icon: MessageSquare,
-                  value: userData.usage.chats,
+                  value: mockData.usage.chats,
                   label: "Диалогов",
                   color: "bg-red-50 border-red-200",
                 },
                 {
                   icon: BarChart3,
-                  value: userData.usage.messages,
+                  value: mockData.usage.messages,
                   label: "Сообщений",
                   color: "bg-purple-50 border-purple-200",
                 },
                 {
                   icon: Clock,
-                  value: userData.usage.daysActive,
+                  value: mockData.usage.daysActive,
                   label: "Дней активен",
                   color: "bg-emerald-50 border-emerald-200",
                 },

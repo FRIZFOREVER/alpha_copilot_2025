@@ -3,12 +3,14 @@ import { Copy, ThumbsUp, Share2, RefreshCw, MoreVertical } from "lucide-react";
 import { useModal } from "@/shared/lib/modal/context";
 import { EModalVariables } from "@/shared/lib/modal/constants";
 import { MarkdownContent } from "./markdownContent";
+import { TypingIndicator } from "./typingIndicator";
 
 export interface MessageProps {
   content: string;
   isUser: boolean;
   answerId?: number;
   rating?: number | null;
+  isTyping?: boolean;
 }
 
 export const Message = ({
@@ -16,6 +18,7 @@ export const Message = ({
   isUser,
   answerId,
   rating,
+  isTyping = false,
 }: MessageProps) => {
   const { openModal } = useModal();
 
@@ -46,9 +49,15 @@ export const Message = ({
               : "text-foreground rounded-tl-sm"
           )}
         >
-          {isUser ? content : <MarkdownContent content={content} />}
+          {isTyping ? (
+            <TypingIndicator />
+          ) : isUser ? (
+            content
+          ) : (
+            <MarkdownContent content={content} />
+          )}
         </div>
-        {!isUser && (
+        {!isUser && !isTyping && (
           <div className="flex items-center gap-2 ml-3">
             <button
               className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"

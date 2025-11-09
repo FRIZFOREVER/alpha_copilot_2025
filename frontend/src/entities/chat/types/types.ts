@@ -53,3 +53,9 @@ export interface SendMessageResponse {
   is_support_needed: boolean;
 }
 
+// Отправка голосового сообщения
+export interface SendVoiceResponse {
+  question: string;
+  voice_url: string;
+}
+

@@ -5,12 +5,14 @@ import { ChatInput } from "../chatInput";
 export interface ChatProps {
   messages?: MessageData[];
   onSendMessage?: (message: string) => void;
+  onSendVoice?: (voiceBlob: Blob) => void;
   isLoading?: boolean;
 }
 
 export const Chat = ({
   messages = [],
   onSendMessage,
+  onSendVoice,
   isLoading = false,
 }: ChatProps) => {
   return (
@@ -19,7 +21,11 @@ export const Chat = ({
       <div className="flex-1 overflow-hidden flex justify-center">
         <MessageList messages={messages} />
       </div>
-      <ChatInput onSend={onSendMessage} disabled={isLoading} />
+      <ChatInput
+        onSend={onSendMessage}
+        onSendVoice={onSendVoice}
+        disabled={isLoading}
+      />
     </div>
   );
 };
