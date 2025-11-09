@@ -8,15 +8,15 @@ import (
 	"net/http"
 )
 
-type Client struct {
+type ModelClient struct {
 	method string
 	url    string
 	path   string
 	client *http.Client
 }
 
-func NewClient(method, url, path string) *Client {
-	return &Client{
+func NewModelClient(method, url, path string) *ModelClient {
+	return &ModelClient{
 		method: method,
 		url:    url,
 		path:   path,
@@ -24,7 +24,7 @@ func NewClient(method, url, path string) *Client {
 	}
 }
 
-func (c *Client) MessageToModel(data []byte) (*AnswerModel, error) {
+func (c *ModelClient) MessageToModel(data []byte) (*AnswerModel, error) {
 	fullURL := c.url + c.path
 
 	req, err := http.NewRequest(c.method, fullURL, bytes.NewBuffer(data))

@@ -14,7 +14,7 @@ import (
 )
 
 type Message struct {
-	client *client.Client
+	client *client.ModelClient
 	db     *sql.DB
 	logger *logrus.Logger
 }
@@ -31,7 +31,7 @@ type messageToModel struct {
 	Messages    []messageModel `json:"messages"`
 }
 
-func NewMessage(client *client.Client, db *sql.DB, logger *logrus.Logger) *Message {
+func NewMessage(client *client.ModelClient, db *sql.DB, logger *logrus.Logger) *Message {
 	return &Message{
 		client: client,
 		db:     db,
@@ -89,7 +89,7 @@ func (mh *Message) Handler(c *fiber.Ctx) error {
 			},
 		)
 	}
-	
+
 	// Добавляем последний вопрос в конец.
 	messageHistory.Messages = append(messageHistory.Messages, messageModel{
 		Role:    "user",

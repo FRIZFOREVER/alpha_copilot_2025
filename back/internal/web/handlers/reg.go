@@ -25,12 +25,13 @@ func NewReg(db *sql.DB, secret string, logger *logrus.Logger) *Reg {
 }
 
 type regIn struct {
+	FIO      string `json:"username"`
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 
 func (rh *Reg) Handler(c *fiber.Ctx) error {
-	var regIn authIn
+	var regIn regIn
 	var err error
 	if err = json.Unmarshal(c.Body(), &regIn); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -38,9 +39,9 @@ func (rh *Reg) Handler(c *fiber.Ctx) error {
 			"details": err.Error(),
 		})
 	}
-	var regOut authOut
+	var regOut regOut
 
-	userUUID, err := database.RegistrateUser(rh.db, regIn.Login, regIn.Password, rh.logger)
+	userUUID, err := database.RegistrateUser(rh.db, regIn.Login, regIn.Password, regIn.FIO, rh.logger)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "fail registration",
