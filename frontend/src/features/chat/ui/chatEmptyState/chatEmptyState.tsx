@@ -3,7 +3,7 @@ import { Image } from "@/shared/ui/image/image";
 import { cn } from "@/shared/lib/mergeClass";
 
 const WELCOME_TEXT =
-  "Добро пожаловать! Я ваш AI-консультант. Задавайте разнопрофильные бизнес-вопросы, и я предоставлю вам качественные ответы на основе передовых технологий машинного обучения.";
+  "Задавайте любые бизнес-вопросы — получите точный ответ за секунды.";
 
 export const ChatEmptyState = () => {
   const [displayedText, setDisplayedText] = useState("");
@@ -60,21 +60,16 @@ export const ChatEmptyState = () => {
 
         <div
           className={cn(
-            "text-center space-y-4 transition-all duration-700 ease-out",
-            imageLoaded
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-4"
+            "text-center transition-opacity duration-700 ease-out",
+            imageLoaded ? "opacity-100" : "opacity-0"
           )}
-          style={{ transitionDelay: imageLoaded ? "300ms" : "0ms" }}
         >
-          <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-2xl p-6 md:p-8 shadow-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
-            <p className="text-base md:text-lg text-gray-700 dark:text-gray-300 leading-relaxed min-h-[5rem] md:min-h-[4rem]">
-              {displayedText}
-              {isTyping && (
-                <span className="inline-block w-0.5 h-5 md:h-6 bg-red-500 ml-1 align-middle cursor-blink" />
-              )}
-            </p>
-          </div>
+          <p className="text-xl md:text-2xl font-medium text-gray-800">
+            {displayedText}
+            {isTyping && (
+              <span className="inline-block w-1 h-6 bg-red-500 ml-1 align-middle cursor-blink" />
+            )}
+          </p>
         </div>
       </div>
     </div>

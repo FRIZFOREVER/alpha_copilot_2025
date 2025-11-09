@@ -188,7 +188,7 @@ export const ChatInput = ({
                 rows={1}
                 className={cn(
                   "w-full min-h-[52px] max-h-[200px] resize-none",
-                  "px-12 py-3 pr-20 rounded-[24px]",
+                  "px-12 py-3.5 md:py-3 pr-20 rounded-[24px]",
                   "bg-white border border-gray-200",
                   "text-sm md:text-base text-gray-900 placeholder:text-gray-400",
                   "focus:outline-none focus:border-gray-300",
