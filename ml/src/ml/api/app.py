@@ -1,34 +1,68 @@
+import asyncio
 import logging
 from typing import Any, Dict
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.encoders import jsonable_encoder
+import ollama
 
-from ml.agent.router import workflow
+from ml.agent.router import workflow, init_models
 
 logger = logging.getLogger(__name__)
 
-# Create fastapi ASGI importable app function
-# Needed for uvicorn to use as an app to setup local http server
+async def lifespan(app: FastAPI):
+    app.state.models = None
+    app.state.models_ready = asyncio.Event()
+    
+    async def _init():
+        models = await init_models()
+        app.state.models = models
+        app.state.models_ready.set()
+
+    app.state.models_task = asyncio.create_task(_init())
+
+    yield
+
+
 def create_app() -> FastAPI:
     """Configure and return the FastAPI application."""
-    app = FastAPI(title="Agent Base API")
+    app = FastAPI(title="Agent Base API", lifespan=lifespan)
     logger.info("FastAPI application initialised")
 
     @app.post("/message")
     async def message(request: Request) -> Dict[str, str]:
+        models_ready = app.state.models_ready
+
+        if not models_ready.is_set():
+            raise HTTPException(status_code=503, detail="Models are still initialising")
+
         payload: Dict[str, Any] = await request.json()
         logger.info("Handling /message request with payload")
         answer = workflow(payload)
         return {"message": answer}
     
     @app.post("/mock")
-    def workflow():
+    def mock():
         return {"message": "No, you"}
 
     @app.get("/ping")
     def ping() -> dict[str, str]:
         logger.debug("Handling /ping request")
         return {"message": "pong"}
+
+    @app.get("/ollama")
+    async def ollama_models() -> Dict[str, Any]:
+        logger.debug("Handling /ollama request")
+        try:
+            models = await asyncio.to_thread(ollama.list)
+        except Exception as exc:
+            logger.exception("Failed to fetch ollama models")
+            raise HTTPException(
+                status_code=503,
+                detail="Failed to fetch ollama models",
+            ) from exc
+
+        return jsonable_encoder(models)
 
     @app.get("/health")
     def healthcheck() -> dict[str, str]:
