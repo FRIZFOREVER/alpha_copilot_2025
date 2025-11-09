@@ -1,9 +1,10 @@
 WITH inserted_user AS (
-    INSERT INTO users (uuid, login, password_hash)
+    INSERT INTO users (uuid, login, password_hash, fio)
     VALUES (
         gen_random_uuid(), 
         $1, 
-        crypt($2, gen_salt('bf'))
+        crypt($2, gen_salt('bf')),
+        $3
     )
     ON CONFLICT (login) DO NOTHING
     RETURNING uuid

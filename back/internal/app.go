@@ -53,8 +53,11 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 	// }
 	// logger.Info("Есть подключение к recognizer! 🔊")
 
-	modelClient := client.NewClient("POST", config.Model, "/message")
-	recognizerClient := client.NewClient("POST", config.Recognizer, "/mock")
+	modelClient := client.NewModelClient("POST", config.Model, "/message")
+	if config.RecognizerAPIKey == "" {
+		logger.Warn("RecognizerAPIKey пустой")
+	}
+	recognizerClient := client.NewRecognizerClient("https://api.assemblyai.com", "/v2", config.RecognizerAPIKey)
 
 	web.InitServiceRoutes(server, db, config.SecretSerice, logger)
 	web.InitPublicRoutes(server, db, config.SecretUser, config.FrontOrigin, logger)

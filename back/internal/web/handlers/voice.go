@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"database/sql"
-	"fmt"
 	"io"
 	"jabki/internal/client"
 	"jabki/internal/s3"
@@ -14,14 +13,14 @@ import (
 )
 
 type Voice struct {
-	model      *client.Client
-	recognizer *client.Client
+	model      *client.ModelClient
+	recognizer *client.RecognizerClient
 	db         *sql.DB
 	s3         *minio.Client
 	logger     *logrus.Logger
 }
 
-func NewVoice(client *client.Client, recognizer *client.Client, db *sql.DB, s3 *minio.Client, logger *logrus.Logger) *Voice {
+func NewVoice(client *client.ModelClient, recognizer *client.RecognizerClient, db *sql.DB, s3 *minio.Client, logger *logrus.Logger) *Voice {
 	return &Voice{
 		model:      client,
 		recognizer: recognizer,
@@ -71,9 +70,9 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	jsonBytes := fmt.Sprintf("{\"voice_url\":\"%s\"}", url)
+	//jsonBytes := fmt.Sprintf("{\"voice_url\":\"%s\"}", url)
 
-	question, err := vh.recognizer.MessageToModel([]byte(jsonBytes))
+	question, err := vh.recognizer.MessageToRecognizer(fileBytes)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error send message",
@@ -82,7 +81,7 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 	}
 
 	messageOut := voiceOut{
-		Question: question.Message,
+		Question: question,
 		VoiceURL: url,
 	}
 
