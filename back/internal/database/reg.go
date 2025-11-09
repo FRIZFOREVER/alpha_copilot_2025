@@ -14,10 +14,10 @@ var regQuery string
 
 var ErrUserAlreadyExists = errors.New("user with this login already exists")
 
-func RegistrateUser(db *sql.DB, login, password string, logger *logrus.Logger) (*uuid.UUID, error) {
+func RegistrateUser(db *sql.DB, login, password, fio string, logger *logrus.Logger) (*uuid.UUID, error) {
 	var userUUID uuid.UUID
 
-	err := db.QueryRow(regQuery, login, password).Scan(&userUUID)
+	err := db.QueryRow(regQuery, login, password, fio).Scan(&userUUID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			logger.WithFields(logrus.Fields{

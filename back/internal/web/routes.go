@@ -37,8 +37,8 @@ func InitPrivateRoutes(
 	server *fiber.App,
 	db *sql.DB,
 	s3 *minio.Client,
-	model *client.Client,
-	recognizer *client.Client,
+	model *client.ModelClient,
+	recognizer *client.RecognizerClient,
 	logger *logrus.Logger,
 ) {
 	message := handlers.NewMessage(model, db, logger)
@@ -76,4 +76,7 @@ func InitPrivateRoutes(
 	})
 
 	server.Get("/support/:chat_id", handlers.SupportHandler(db, logger))
+
+	profile := handlers.NewProfile(db, logger)
+	server.Get("/profile", profile.Handler)
 }
