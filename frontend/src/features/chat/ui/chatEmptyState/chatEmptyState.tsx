@@ -36,10 +36,10 @@ export const ChatEmptyState = () => {
   }, [imageLoaded]);
 
   return (
-    <div className="flex h-full items-center justify-center px-4 md:px-8 py-12">
-      <div className="flex flex-col items-center justify-center space-y-8 max-w-2xl w-full">
+    <div className="flex items-center justify-center px-3 sm:px-4 md:px-8 py-6 sm:py-8 md:py-12 w-full">
+      <div className="flex flex-col items-center justify-center space-y-4 sm:space-y-6 md:space-y-8 max-w-2xl w-full">
         <div className="relative">
-          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-red-500/20 to-pink-600/20 rounded-full blur-3xl animate-pulse scale-150" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-red-500/20 to-pink-600/20 rounded-full blur-3xl animate-pulse scale-125 sm:scale-150" />
           <div
             className={cn(
               "relative transition-all duration-700 ease-out",
@@ -51,7 +51,7 @@ export const ChatEmptyState = () => {
             <Image
               src="/images/meditation-yaga.png"
               alt="AI Consultant"
-              className="w-48 md:w-64 h-auto drop-shadow-2xl select-none"
+              className="w-32 sm:w-40 md:w-48 lg:w-64 h-auto drop-shadow-2xl select-none"
               loading="eager"
               onLoad={() => setImageLoaded(true)}
             />
@@ -60,14 +60,14 @@ export const ChatEmptyState = () => {
 
         <div
           className={cn(
-            "text-center transition-opacity duration-700 ease-out",
+            "text-center transition-opacity duration-700 ease-out px-2 sm:px-4",
             imageLoaded ? "opacity-100" : "opacity-0"
           )}
         >
-          <p className="text-xl md:text-2xl font-medium text-gray-800">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-medium text-gray-800 leading-relaxed">
             {displayedText}
             {isTyping && (
-              <span className="inline-block w-1 h-6 bg-red-500 ml-1 align-middle cursor-blink" />
+              <span className="inline-block w-0.5 sm:w-1 h-4 sm:h-5 md:h-6 bg-red-500 ml-1 align-middle cursor-blink" />
             )}
           </p>
         </div>
