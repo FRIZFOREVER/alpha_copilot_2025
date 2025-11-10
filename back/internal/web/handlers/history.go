@@ -54,13 +54,13 @@ func (hh *History) Handler(c *fiber.Ctx) error {
 	if strings.HasPrefix(authHeader, prefix) {
 		var messageToModel messageOutToModel
 		for _, message := range messages {
-			messageToModel.Messages = append(messageToModel.Messages, 
+			messageToModel.Messages = append(messageToModel.Messages,
 				messageModel{
-					Role: "user",
+					Role:    "user",
 					Content: message.Question,
 				},
 				messageModel{
-					Role: "assistant",
+					Role:    "assistant",
 					Content: message.Answer,
 				},
 			)
