@@ -2,6 +2,7 @@ import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Message } from "../message";
 import { ChatEmptyState } from "../chatEmptyState";
 import { useScrollBottom } from "@/shared/hooks/useScrollBottom";
+import { cn } from "@/shared/lib/mergeClass";
 
 export interface MessageData {
   id: string;
@@ -29,7 +30,11 @@ export const MessageList = ({
   ]);
   return (
     <ScrollArea className="flex-1 max-w-[832px]" ref={contentRef}>
-      <div className={messages.length === 0 ? "h-full flex items-center justify-center" : ""}>
+      <div
+        className={cn(
+          messages.length === 0 && "h-full flex items-center justify-center"
+        )}
+      >
         {messages.length === 0 ? (
           <ChatEmptyState />
         ) : (

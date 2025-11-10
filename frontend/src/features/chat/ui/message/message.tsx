@@ -87,7 +87,6 @@ export const Message = ({
               </button>
             )}
             <button
-              onClick={handleLikeClick}
               disabled={!answerId}
               className={cn(
                 "p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer",
@@ -95,6 +94,7 @@ export const Message = ({
                 !answerId && "opacity-50 cursor-not-allowed"
               )}
               aria-label="Нравится"
+              onClick={handleLikeClick}
             >
               <ThumbsUp
                 className={cn(
