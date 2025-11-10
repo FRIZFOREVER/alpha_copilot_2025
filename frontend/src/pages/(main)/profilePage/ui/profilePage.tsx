@@ -17,9 +17,11 @@ import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge/badge";
 import { Progress } from "@/shared/ui/progress/progress";
 import { useNavigate } from "react-router-dom";
-import { ERouteNames } from "@/shared/lib/routeVariables";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
-import { getUserInitials, getDisplayName } from "@/shared/lib/utils/userHelpers";
+import {
+  getUserInitials,
+  getDisplayName,
+} from "@/shared/lib/utils/userHelpers";
 
 const mockData = {
   joinDate: "15 января 2024",
@@ -65,12 +67,12 @@ const ProfilePage = () => {
 
   return (
     <div>
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-4">
         <div className="flex items-center gap-3 mb-6">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(`/${ERouteNames.DASHBOARD_ROUTE}`)}
+            onClick={() => navigate(-1)}
             className="h-10 w-10 rounded-xl bg-white hover:bg-gray-50 shadow-sm transition cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5 text-gray-700" />
@@ -86,7 +88,7 @@ const ProfilePage = () => {
               </AvatarFallback>
             </Avatar>
 
-            <div className="flex-1 text-center md:text-left space-y-3">
+            <div className="flex-1 text-center md:text-left space-y-3 w-full">
               <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-3">
                 <h2 className="text-xl font-medium text-gray-900">
                   {displayName}
@@ -95,15 +97,16 @@ const ProfilePage = () => {
                   {mockData.plan}
                 </Badge>
               </div>
-
-              <p className="text-sm text-gray-600 flex items-center justify-center md:justify-start gap-2 leading-2">
-                <Calendar className="h-4 w-4" />
-                Присоединился {mockData.joinDate}
-              </p>
-              <p className="text-sm text-gray-600 flex items-center justify-center md:justify-start gap-2 leading-2">
-                <Mail className="h-4 w-4" />
-                {displayEmail}
-              </p>
+              <div className="w-full flex justify-center flex-col items-center md:items-start">
+                <p className="text-sm text-gray-600 flex items-center justify-center md:justify-start gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Присоединился {mockData.joinDate}
+                </p>
+                <p className="text-sm text-gray-600 flex items-center justify-center md:justify-start gap-2">
+                  <Mail className="h-4 w-4" />
+                  {displayEmail}
+                </p>
+              </div>
 
               <div className="mt-4 space-y-1">
                 <div className="flex items-center justify-between text-xs text-gray-500">
@@ -119,13 +122,13 @@ const ProfilePage = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                <Button className="flex-1 h-10 rounded-xl bg-gradient-to-r from-red-500 to-pink-600 hover:opacity-90 text-white text-sm font-medium">
+                <Button className="flex-1 cursor-pointer h-10 rounded-xl bg-gradient-to-r from-red-500 to-pink-600 hover:opacity-90 text-white text-sm font-medium">
                   <Settings className="h-4 w-4" />
                   Настройки
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 h-10 rounded-xl border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium"
+                  className="flex-1 cursor-pointer h-10 rounded-xl border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium"
                 >
                   <LogOut className="h-4 w-4" />
                   Выйти
@@ -155,7 +158,7 @@ const ProfilePage = () => {
           ].map((stat, i) => (
             <div
               key={i}
-              className="rounded-xl p-4 bg-white/60 backdrop-blur-sm border border-gray-200 hover:shadow-sm transition-all text-center"
+              className="rounded-xl cursor-pointer p-4 bg-white/60 backdrop-blur-sm border border-gray-200 hover:shadow-sm transition-all text-center"
             >
               <stat.icon className="h-6 w-6 text-gray-700 mx-auto mb-2" />
               <p className="text-xl font-medium text-gray-900">{stat.value}</p>

@@ -14,6 +14,26 @@ body {
 @custom-variant dark (&:is(.dark *));
 
 
+::-webkit-scrollbar {
+  width: 4px;
+  height: 5px;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(235, 228, 228);
+  border-radius: 10px;
+  transition: all 0.2s ease-in-out;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d9ddff;
+}
+
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);

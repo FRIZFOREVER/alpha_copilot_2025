@@ -126,7 +126,7 @@ export const ChatInput = ({
           {isRecording ? (
             <div
               className={cn(
-                "w-full min-h-[52px] rounded-[24px]",
+                "w-full min-h-[52px] rounded-[24px] shadow-sm mb-[18px]",
                 "px-12 py-3 pr-20",
                 "bg-white border border-gray-200",
                 "flex items-center",
