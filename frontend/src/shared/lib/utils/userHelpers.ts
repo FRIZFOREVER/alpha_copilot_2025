@@ -26,3 +26,12 @@ export const getDisplayName = (username: string): string => {
   return username;
 };
 
+/**
+ * Делает первую букву строки заглавной
+ * @param str - Строка для форматирования
+ * @returns Строка с заглавной первой буквой
+ */
+export const capitalizeFirst = (str: string): string => {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};

@@ -307,18 +307,6 @@ const LandingPage = () => {
               variants={itemVariants}
               className="flex flex-col lg:flex-row gap-8 items-center"
             >
-              <motion.div
-                variants={imageVariants}
-                className="flex-shrink-0 hidden lg:block"
-              >
-                <motion.div variants={floatingVariants} animate="animate">
-                  <Image
-                    src="/images/question-people.png"
-                    alt="Benefits"
-                    className="w-48 md:w-64 h-auto drop-shadow-xl select-none"
-                  />
-                </motion.div>
-              </motion.div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
                 {benefits.map((benefit, index) => (
                   <motion.div

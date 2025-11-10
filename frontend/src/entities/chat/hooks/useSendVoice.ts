@@ -27,6 +27,38 @@ export const useSendVoiceMutation = () => {
     }): Promise<SendVoiceResult> => {
       const voiceResponse: SendVoiceResponse = await sendVoice(voiceBlob);
 
+      queryClient.setQueryData<GetHistoryResponse>(
+        [GET_HISTORY_QUERY, chatId],
+        (old) => {
+          if (!old) return old;
+          const processingMessages = old.filter(
+            (item) =>
+              item.question === "Обработка аудио..." && item.question_id < 0
+          );
+
+          if (processingMessages.length === 0) return old;
+
+          const lastProcessingMessage = processingMessages.reduce(
+            (latest, current) =>
+              current.question_id > latest.question_id ? current : latest
+          );
+
+          return old.map((item) => {
+            if (
+              item.question_id === lastProcessingMessage.question_id &&
+              item.answer_id === lastProcessingMessage.answer_id
+            ) {
+              return {
+                ...item,
+                question: voiceResponse.question,
+                voice_url: voiceResponse.voice_url,
+              };
+            }
+            return item;
+          });
+        }
+      );
+
       const messageResponse = await sendMessage(chatId, {
         question: voiceResponse.question,
       });
@@ -49,7 +81,7 @@ export const useSendVoiceMutation = () => {
       const optimisticMessage: HistoryMessage = {
         question_id: tempQuestionId,
         answer_id: tempAnswerId,
-        question: "обработка аудио",
+        question: "Обработка аудио...",
         answer: "",
         question_time: new Date().toISOString(),
         answer_time: new Date().toISOString(),
