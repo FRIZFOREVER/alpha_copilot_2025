@@ -35,7 +35,6 @@ export class AxiosClient {
         deleteAccessToken();
       }
 
-      // If data is FormData, delete Content-Type to let browser set it with boundary
       if (config.data instanceof FormData) {
         delete config.headers["Content-Type"];
       }

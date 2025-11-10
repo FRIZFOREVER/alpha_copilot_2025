@@ -15,10 +15,6 @@ const CopilotChatPage = () => {
   const chatId = params.chatId ? Number(params.chatId) : undefined;
   const chatIdRef = useRef(chatId);
 
-  useEffect(() => {
-    chatIdRef.current = chatId;
-  }, [chatId]);
-
   const { data: messages = [], isLoading: isLoadingHistory } =
     useGetHistoryQuery(chatId);
   const { mutate: sendMessage, isPending: isSendingMessage } =
@@ -113,6 +109,10 @@ const CopilotChatPage = () => {
       });
     }
   };
+
+  useEffect(() => {
+    chatIdRef.current = chatId;
+  }, [chatId]);
 
   return (
     <Chat
