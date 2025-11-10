@@ -4,7 +4,7 @@ import { queryClient } from "@/shared/api/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
 import { ModalProvider as ModalContextProvider } from "@/shared/lib/modal/context";
-import { ModalProvider } from "@/shared/lib/modal/ModalProvider";
+import { ModalProvider } from "../modal/ModalProvider";
 
 export const Providers = () => {
   return (

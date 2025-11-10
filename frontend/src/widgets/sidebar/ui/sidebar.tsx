@@ -402,12 +402,12 @@ export const Sidebar = () => {
                 </p>
                 <p className="text-xs text-gray-500 truncate">{displayEmail}</p>
               </div>
-              <button
+              <span
                 onClick={handleMoreOptionsClick}
                 className="h-8 w-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-all shrink-0"
               >
                 <MoreVertical className="h-4 w-4" />
-              </button>
+              </span>
             </button>
           )}
         </div>

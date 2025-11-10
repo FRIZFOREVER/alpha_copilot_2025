@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { MessageSquare } from "lucide-react";
 import { cn } from "@/shared/lib/mergeClass";
 import { EModalVariables } from "./constants";
+import { DialogTitle } from "@radix-ui/react-dialog";
 
 interface SearchResult {
   id: string;
@@ -133,8 +134,8 @@ export const SearchChatsModal = () => {
         )}
         showCloseButton={true}
       >
+        <DialogTitle className="hidden">Поиск в чатах</DialogTitle>
         <div className="flex flex-col h-[460px] max-h-[80vh]">
-          {/* Search Input */}
           <div className="px-6 pt-6 pb-4 border-b border-gray-100">
             <input
               type="text"
@@ -151,7 +152,6 @@ export const SearchChatsModal = () => {
             />
           </div>
 
-          {/* Results List */}
           <div className="flex-1 overflow-y-auto px-2 py-2">
             {filteredResults.length > 0 ? (
               <div className="space-y-0">
@@ -166,7 +166,6 @@ export const SearchChatsModal = () => {
                       "border-0 outline-none focus:outline-none"
                     )}
                     onClick={() => {
-                      // TODO: Navigate to chat when endpoint is ready
                       handleClose();
                     }}
                   >

@@ -1,3 +1,2 @@
 export { Sidebar } from "./sidebar";
-export type { SidebarProps, ChatItem } from "./sidebar";
-
+export type { ChatItem } from "./sidebar";
