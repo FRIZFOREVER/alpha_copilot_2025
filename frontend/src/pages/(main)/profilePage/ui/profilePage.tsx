@@ -19,48 +19,31 @@ import { Progress } from "@/shared/ui/progress/progress";
 import { useNavigate } from "react-router-dom";
 import { ERouteNames } from "@/shared/lib/routeVariables";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
+import { getUserInitials, getDisplayName } from "@/shared/lib/utils/userHelpers";
+
+const mockData = {
+  joinDate: "15 января 2024",
+  plan: "Pro",
+  level: 5,
+  xp: 1247,
+  xpToNext: 1500,
+  usage: {
+    messages: 1247,
+    chats: 24,
+    daysActive: 12,
+  },
+  achievements: [
+    { icon: Zap, label: "Молния", unlocked: true },
+    { icon: Star, label: "Звезда", unlocked: true },
+    { icon: Crown, label: "Корона", unlocked: false },
+    { icon: Target, label: "Цель", unlocked: true },
+  ],
+};
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { data: profileData, isLoading: isLoadingProfile } =
     useGetProfileQuery();
-
-  const mockData = {
-    joinDate: "15 января 2024",
-    plan: "Pro",
-    level: 5,
-    xp: 1247,
-    xpToNext: 1500,
-    usage: {
-      messages: 1247,
-      chats: 24,
-      daysActive: 12,
-    },
-    achievements: [
-      { icon: Zap, label: "Молния", unlocked: true },
-      { icon: Star, label: "Звезда", unlocked: true },
-      { icon: Crown, label: "Корона", unlocked: false },
-      { icon: Target, label: "Цель", unlocked: true },
-    ],
-  };
-
-  const getUserInitials = (username: string) => {
-    const parts = username.trim().split(" ").filter(Boolean);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return username.charAt(0).toUpperCase();
-  };
-
-  const getDisplayName = (username: string) => {
-    const parts = username.trim().split(" ").filter(Boolean);
-    if (parts.length >= 3) {
-      return `${parts[1]} ${parts[0]}`;
-    } else if (parts.length === 2) {
-      return `${parts[0]} ${parts[1]}`;
-    }
-    return username;
-  };
 
   if (isLoadingProfile) {
     return (

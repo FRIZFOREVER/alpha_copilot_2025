@@ -71,7 +71,7 @@ export const Message = ({
           <div className="flex items-center gap-2 ml-3">
             {!isCopied ? (
               <button
-                className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                 aria-label="Копировать"
                 value={content}
                 onClick={handleCopyClick}
@@ -90,7 +90,7 @@ export const Message = ({
               onClick={handleLikeClick}
               disabled={!answerId}
               className={cn(
-                "p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors",
+                "p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer",
                 rating && rating > 0 && "bg-yellow-100 dark:bg-yellow-900/20",
                 !answerId && "opacity-50 cursor-not-allowed"
               )}

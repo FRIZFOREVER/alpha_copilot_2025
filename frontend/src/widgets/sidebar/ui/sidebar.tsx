@@ -25,6 +25,13 @@ import { useGetChatsQuery } from "@/entities/chat/hooks/useGetChats";
 import { useCreateChatMutation } from "@/entities/chat/hooks/useCreateChat";
 import { Chat } from "@/entities/chat/types/types";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
+import { useModal } from "@/shared/lib/modal/context";
+import { EModalVariables } from "@/shared/lib/modal/constants";
+import {
+  getUserInitials,
+  getDisplayName,
+} from "@/shared/lib/utils/userHelpers";
+import { getChatIcon, getChatInitial } from "@/shared/lib/utils/chatHelpers";
 
 export interface ChatItem {
   id: string;
@@ -32,9 +39,7 @@ export interface ChatItem {
   lastMessage?: string;
 }
 
-export interface SidebarProps {}
-
-export const Sidebar = ({}: SidebarProps) => {
+export const Sidebar = () => {
   const [searchQuery] = useState("");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -49,6 +54,7 @@ export const Sidebar = ({}: SidebarProps) => {
   const { mutate: createChat, isPending: isCreatingChat } =
     useCreateChatMutation();
   const { data: profileData } = useGetProfileQuery();
+  const { openModal } = useModal();
 
   const chats: ChatItem[] = useMemo(() => {
     if (!chatsData) return [];
@@ -70,6 +76,10 @@ export const Sidebar = ({}: SidebarProps) => {
 
   const handleToggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
+  };
+
+  const handleLandingPage = () => {
+    navigate(`/${ERouteNames.LANDING_ROUTE}`);
   };
 
   const handleCloseMobile = () => {
@@ -130,41 +140,6 @@ export const Sidebar = ({}: SidebarProps) => {
       color: "bg-blue-500",
     },
   ];
-
-  const getChatIcon = (chatId: string) => {
-    const colors = [
-      "bg-blue-500",
-      "bg-purple-500",
-      "bg-green-500",
-      "bg-orange-500",
-      "bg-pink-500",
-      "bg-indigo-500",
-    ];
-    const index = parseInt(chatId) % colors.length;
-    return colors[index];
-  };
-
-  const getChatInitial = (title: string) => {
-    return title.charAt(0).toUpperCase();
-  };
-
-  const getUserInitials = (username: string) => {
-    const parts = username.trim().split(" ").filter(Boolean);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return username.charAt(0).toUpperCase();
-  };
-
-  const getDisplayName = (username: string) => {
-    const parts = username.trim().split(" ").filter(Boolean);
-    if (parts.length >= 3) {
-      return `${parts[1]} ${parts[0]}`;
-    } else if (parts.length === 2) {
-      return `${parts[0]} ${parts[1]}`;
-    }
-    return username;
-  };
 
   const displayName = profileData?.username
     ? getDisplayName(profileData.username)
@@ -244,6 +219,7 @@ export const Sidebar = ({}: SidebarProps) => {
                   "w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer",
                   "text-gray-600 hover:bg-gray-100"
                 )}
+                onClick={handleLandingPage}
               >
                 <Home className="h-5 w-5" />
               </button>
@@ -288,6 +264,10 @@ export const Sidebar = ({}: SidebarProps) => {
                 <span>Новый чат</span>
               </button>
               <button
+                onClick={() => {
+                  openModal(EModalVariables.SEARCH_CHATS_MODAL);
+                  setIsMobileOpen(false);
+                }}
                 className={cn(
                   "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
                   "text-gray-700 hover:bg-[#0000000f]/60"
@@ -301,6 +281,7 @@ export const Sidebar = ({}: SidebarProps) => {
                   "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
                   "text-gray-700 hover:bg-[#0000000f]/60"
                 )}
+                onClick={handleLandingPage}
               >
                 <Home className="h-5 w-5 text-gray-500" />
                 <span>Главная</span>
