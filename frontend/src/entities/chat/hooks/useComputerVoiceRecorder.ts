@@ -29,9 +29,16 @@ export const useComputerVoiceRecorder = (opts?: {
 
   const intervalRef = useRef<number | null>(null);
 
+  const sendCallbackRef = useRef(opts?.sendCallback);
+  
+  // Обновляем ref при изменении sendCallback
+  useEffect(() => {
+    sendCallbackRef.current = opts?.sendCallback;
+  }, [opts?.sendCallback]);
+
   const sendAudio = useCallback(async (blob: Blob) => {
     try {
-      opts?.sendCallback?.(blob);
+      sendCallbackRef.current?.(blob);
     } catch (err) {
       setError("Ошибка при отправке аудио");
       console.error("Audio upload error:", err);

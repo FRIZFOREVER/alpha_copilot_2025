@@ -22,7 +22,6 @@ import { cn } from "@/shared/lib/mergeClass";
 import { useNavigate, useParams } from "react-router-dom";
 import { ERouteNames } from "@/shared/lib/routeVariables";
 import { useGetChatsQuery } from "@/entities/chat/hooks/useGetChats";
-import { useCreateChatMutation } from "@/entities/chat/hooks/useCreateChat";
 import { Chat } from "@/entities/chat/types/types";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
 import { useModal } from "@/shared/lib/modal/context";
@@ -51,8 +50,6 @@ export const Sidebar = () => {
   const currentChatId = params.chatId;
 
   const { data: chatsData, isLoading: isLoadingChats } = useGetChatsQuery();
-  const { mutate: createChat, isPending: isCreatingChat } =
-    useCreateChatMutation();
   const { data: profileData } = useGetProfileQuery();
   const { openModal } = useModal();
 
@@ -107,17 +104,8 @@ export const Sidebar = () => {
   };
 
   const handleNewChat = () => {
-    createChat(
-      { name: "Новый чат" },
-      {
-        onSuccess: (data) => {
-          navigate(
-            `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}/${data.chat_id}`
-          );
-          setIsMobileOpen(false);
-        },
-      }
-    );
+    navigate(`/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}`);
+    setIsMobileOpen(false);
   };
 
   const handleSelectChat = (chatId: string) => {
@@ -203,8 +191,7 @@ export const Sidebar = () => {
           <div className="p-3 border-b border-gray-200/50 flex justify-center">
             <button
               onClick={handleNewChat}
-              disabled={isCreatingChat}
-              className="h-9 w-9 rounded-xl bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-9 w-9 rounded-xl bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center group"
             >
               <Plus className="h-3 w-3" />
             </button>
@@ -254,10 +241,9 @@ export const Sidebar = () => {
               </button>
               <button
                 onClick={handleNewChat}
-                disabled={isCreatingChat}
                 className={cn(
                   "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
-                  "text-gray-700 hover:bg-[#0000000f]/60 disabled:opacity-50 disabled:cursor-not-allowed"
+                  "text-gray-700 hover:bg-[#0000000f]/60"
                 )}
               >
                 <SquarePen className="h-5 w-5 text-gray-500" />

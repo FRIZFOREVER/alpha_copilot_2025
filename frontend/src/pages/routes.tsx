@@ -6,7 +6,6 @@ import AuthPage from "./(auth)/authPage";
 import { ERouteNames } from "@/shared/lib/routeVariables";
 import { privatePage } from "@/entities/viewer/lib/hoc/privatePage";
 import { routesWithHoc } from "@/shared/lib/routesWithHoc";
-import { chatDetailAction } from "@/entities/chat/action/chatRedirectAction";
 
 const DashboardPage = lazy(() => import("@/pages/(main)/dashboardPage"));
 const ProfilePage = lazy(() => import("@/pages/(main)/profilePage"));
@@ -45,7 +44,7 @@ export const routes = createBrowserRouter([
                     },
                     {
                       path: ERouteNames.CHAT_ROUTE,
-                      loader: chatDetailAction,
+                      element: <CopilotChatPage />,
                     },
                     {
                       path: ERouteNames.CHAT_DETAIL_ROUTE,
