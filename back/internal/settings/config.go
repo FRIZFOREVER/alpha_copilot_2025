@@ -18,7 +18,8 @@ type Settings struct {
 	S3Login      string `envconfig:"S3_LOGIN"             default:"minio-user"`
 	S3Password   string `envconfig:"S3_PASSWORD"          default:"minio-password"`
 
-	Model string `envconfig:"MODEL"                       default:"http://ml-api:8000"`
+	Model      string `envconfig:"MODEL"                       default:"http://ml-api:8000"`
+	HistoryLen int    `envconfig:"HISTORY_LEN"                 default:"5"`
 
 	Recognizer       string `envconfig:"RECOGNIZER"       default:"http://recognizer-service:3333"`
 	RecognizerAPIKey string `envconfig:"ASSEMBLYAI_API_KEY"`
