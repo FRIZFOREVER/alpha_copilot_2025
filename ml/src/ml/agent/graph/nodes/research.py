@@ -4,7 +4,9 @@ from ml.agent.graph.state import GraphState
 from ml.agent.calls.model_calls import _ReasoningModelClient
 from ml.configs.message import Role, Message
 from ml.agent.tools.registry import get_tool_registry
-import os
+from ml.agent.prompts.research_prompt import PROMPT as RESEARCH_PROMPT
+from ml.agent.prompts.analysis_prompt import PROMPT as ANALYSIS_PROMPT
+from ml.agent.prompts.synthesis_prompt import PROMPT as SYNTHESIS_PROMPT
 
 
 class SearchQueries(BaseModel):
@@ -34,16 +36,8 @@ def research_node(state: GraphState, client: _ReasoningModelClient) -> GraphStat
         state.needs_more_research = False
         return state
     
-    # Load research prompt
-    prompt_path = os.path.join(
-        os.path.dirname(__file__),
-        "..", "..", "prompts", "research_prompt.txt"
-    )
-    with open(prompt_path, "r", encoding="utf-8") as f:
-        research_prompt = f.read()
-    
     # Add search history context
-    context = research_prompt
+    context = RESEARCH_PROMPT
     if state.search_history:
         context += f"\n\nПредыдущие поиски:\n"
         for search in state.search_history[-3:]:  # Last 3 searches
@@ -89,14 +83,6 @@ def analyze_results_node(state: GraphState, client: _ReasoningModelClient) -> Gr
         state.needs_more_research = False
         return state
     
-    # Load analysis prompt
-    prompt_path = os.path.join(
-        os.path.dirname(__file__),
-        "..", "..", "prompts", "analysis_prompt.txt"
-    )
-    with open(prompt_path, "r", encoding="utf-8") as f:
-        analysis_prompt = f.read()
-    
     # Prepare search results context
     results_context = "Результаты поиска:\n\n"
     for result in state.tool_results:
@@ -112,7 +98,7 @@ def analyze_results_node(state: GraphState, client: _ReasoningModelClient) -> Gr
     
     # Prepare messages
     messages = [
-        {"role": "system", "content": analysis_prompt},
+        {"role": "system", "content": ANALYSIS_PROMPT},
         {"role": "user", "content": f"Запрос пользователя: {user_message}\n\n{results_context}"}
     ]
     
@@ -152,14 +138,6 @@ def synthesize_answer_node(state: GraphState, client: _ReasoningModelClient) -> 
         state.final_answer = "Извините, не удалось найти запрос пользователя."
         return state
     
-    # Load synthesis prompt
-    prompt_path = os.path.join(
-        os.path.dirname(__file__),
-        "..", "..", "prompts", "synthesis_prompt.txt"
-    )
-    with open(prompt_path, "r", encoding="utf-8") as f:
-        synthesis_prompt = f.read()
-    
     # Prepare search results context
     results_context = "Результаты поиска:\n\n"
     for result in state.tool_results:
@@ -175,7 +153,7 @@ def synthesize_answer_node(state: GraphState, client: _ReasoningModelClient) -> 
     
     # Prepare messages
     messages = [
-        {"role": "system", "content": synthesis_prompt},
+        {"role": "system", "content": SYNTHESIS_PROMPT},
         {"role": "user", "content": f"Запрос пользователя: {user_message}\n\n{results_context}"}
     ]
     
@@ -187,4 +165,3 @@ def synthesize_answer_node(state: GraphState, client: _ReasoningModelClient) -> 
         state.final_answer = f"Извините, произошла ошибка при синтезе ответа: {str(e)}"
     
     return state
-

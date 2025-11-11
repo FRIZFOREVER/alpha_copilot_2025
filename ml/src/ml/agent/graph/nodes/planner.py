@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from ml.agent.graph.state import GraphState
 from ml.agent.calls.model_calls import _ReasoningModelClient
 from ml.configs.message import Role, Message
-import os
+from ml.agent.prompts.planner_prompt import PROMPT as PLANNER_PROMPT
 
 
 class PlanningDecision(BaseModel):
@@ -33,17 +33,9 @@ def planner_node(state: GraphState, client: _ReasoningModelClient) -> GraphState
         }
         return state
     
-    # Load planner prompt
-    prompt_path = os.path.join(
-        os.path.dirname(__file__),
-        "..", "..", "prompts", "planner_prompt.txt"
-    )
-    with open(prompt_path, "r", encoding="utf-8") as f:
-        planner_prompt = f.read()
-    
     # Prepare messages
     messages = [
-        {"role": "system", "content": planner_prompt},
+        {"role": "system", "content": PLANNER_PROMPT},
         {"role": "user", "content": user_message}
     ]
     
@@ -70,4 +62,3 @@ def planner_node(state: GraphState, client: _ReasoningModelClient) -> GraphState
         }
     
     return state
-
