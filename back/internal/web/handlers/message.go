@@ -24,13 +24,6 @@ type messageIn struct {
 	VoiceURL string `json:"voice_url"`
 }
 
-type messageToModel struct {
-	ChatID      int            `json:"chat_id"`
-	UserUUID    uuid.UUID      `json:"user_uuid"`
-	UserRequest string         `json:"user_request"`
-	Messages    []messageModel `json:"messages"`
-}
-
 func NewMessage(client *client.ModelClient, db *sql.DB, logger *logrus.Logger) *Message {
 	return &Message{
 		client: client,
@@ -68,7 +61,7 @@ func (mh *Message) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	messages, err := database.GetHistory(mh.db, chatID, mh.logger)
+	messages, err := database.GetHistory(mh.db, chatID, uuid.String(), mh.logger, -1)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error in database",
@@ -76,14 +69,14 @@ func (mh *Message) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	var messageHistory messageOutToModel
+	var messageHistory client.PayloadStream
 	for _, message := range messages {
 		messageHistory.Messages = append(messageHistory.Messages,
-			messageModel{
+			client.Message{
 				Role:    "user",
 				Content: message.Question,
 			},
-			messageModel{
+			client.Message{
 				Role:    "assistant",
 				Content: message.Answer,
 			},
@@ -91,7 +84,7 @@ func (mh *Message) Handler(c *fiber.Ctx) error {
 	}
 
 	// Добавляем последний вопрос в конец.
-	messageHistory.Messages = append(messageHistory.Messages, messageModel{
+	messageHistory.Messages = append(messageHistory.Messages, client.Message{
 		Role:    "user",
 		Content: messageIn.Question,
 	})

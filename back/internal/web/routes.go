@@ -39,6 +39,7 @@ func InitPrivateRoutes(
 	s3 *minio.Client,
 	model *client.ModelClient,
 	recognizer *client.RecognizerClient,
+	streamClient *client.StreamMessageClient,
 	logger *logrus.Logger,
 ) {
 	message := handlers.NewMessage(model, db, logger)
@@ -80,4 +81,8 @@ func InitPrivateRoutes(
 
 	profile := handlers.NewProfile(db, logger)
 	server.Get("/profile", profile.Handler)
+
+	
+	stream := handlers.NewStream(streamClient, db, streamClient.HistoryLen, logger)
+	server.Post("message_stream/:chat_id", stream.Handler)
 }
