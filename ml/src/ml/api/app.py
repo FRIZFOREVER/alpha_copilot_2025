@@ -2,7 +2,7 @@ import asyncio
 import logging
 import logging.config
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -42,11 +42,42 @@ def _configure_logging() -> None:
         if filename:
             log_path = Path(filename)
             if not log_path.is_absolute():
-                # Place logs alongside the package root by default.
-                log_path = (config_path.parents[3] / "logs" / log_path.name).resolve()
+                # Place logs alongside the ml package root by default.
+                log_path = (config_path.parents[1] / "logs" / log_path.name).resolve()
 
-            log_path.parent.mkdir(parents=True, exist_ok=True)
-            pipeline_handler["filename"] = str(log_path)
+            resolved_path: Optional[Path]
+            try:
+                log_path.parent.mkdir(parents=True, exist_ok=True)
+            except OSError as exc:
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    "Unable to create pipeline log directory '%s': %s", log_path.parent, exc
+                )
+                fallback_dir = Path("/tmp/ml-logs")
+                try:
+                    fallback_dir.mkdir(parents=True, exist_ok=True)
+                except OSError as fallback_exc:
+                    logger.warning(
+                        "Disabling pipeline file logging; failed to create fallback directory '%s': %s",
+                        fallback_dir,
+                        fallback_exc,
+                    )
+                    pipeline_logger = config.get("loggers", {}).get("app.pipeline")
+                    if pipeline_logger:
+                        pipeline_logger["handlers"] = []
+                    pipeline_handler.clear()
+                    pipeline_handler["class"] = "logging.NullHandler"
+                    resolved_path = None
+                else:
+                    logger.info(
+                        "Pipeline logs will be written to fallback directory '%s'", fallback_dir
+                    )
+                    resolved_path = fallback_dir / log_path.name
+            else:
+                resolved_path = log_path
+
+            if resolved_path is not None:
+                pipeline_handler["filename"] = str(resolved_path)
 
     logging.config.dictConfig(config)
 
