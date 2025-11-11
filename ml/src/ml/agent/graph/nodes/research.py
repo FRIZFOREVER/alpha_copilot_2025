@@ -92,8 +92,16 @@ def analyze_results_node(state: GraphState, client: _ReasoningModelClient) -> Gr
             results = search_data.get("results", [])
             results_context += f"Запрос: {query}\n"
             for i, res in enumerate(results[:3], 1):  # Top 3 results per query
+                excerpt = res.get("excerpt") or res.get("snippet", "")
+                preview = res.get("content", "")
                 results_context += f"{i}. {res.get('title', '')}\n"
-                results_context += f"   {res.get('snippet', '')}\n"
+                if excerpt:
+                    results_context += f"   {excerpt}\n"
+                if preview:
+                    short_preview = preview[:300].rstrip()
+                    if len(preview) > 300:
+                        short_preview += "..."
+                    results_context += f"   [Контент] {short_preview}\n"
             results_context += "\n"
     
     # Prepare messages
@@ -149,9 +157,18 @@ def synthesize_answer_node(state: GraphState, _client: _ReasoningModelClient) ->
             results = search_data.get("results", [])
             results_context += f"Запрос: {query}\n"
             for i, res in enumerate(results, 1):
+                excerpt = res.get("excerpt") or res.get("snippet", "")
+                preview = res.get("content", "")
                 results_context += f"{i}. {res.get('title', '')}\n"
                 results_context += f"   URL: {res.get('url', '')}\n"
-                results_context += f"   {res.get('snippet', '')}\n\n"
+                if excerpt:
+                    results_context += f"   {excerpt}\n"
+                if preview:
+                    short_preview = preview[:300].rstrip()
+                    if len(preview) > 300:
+                        short_preview += "..."
+                    results_context += f"   [Контент] {short_preview}\n"
+                results_context += "\n"
     
     # Prepare messages
     messages = [
