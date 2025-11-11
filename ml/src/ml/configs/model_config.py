@@ -46,6 +46,7 @@ class ModelSettings(BaseModel):
     Description:
         Runtime configuration for OpenAI-compatible clients, covering connection tuning, routing, and
         per-mode sampling controls shared between chat and embedding workloads.
+        Non-chat modes always disable chat_json_mode to prevent incompatible payloads.
 
     Args:
         base_url (str, default="http://ollama:11434/v1"): Root endpoint for OpenAI-compatible traffic.
@@ -123,7 +124,7 @@ class ModelSettings(BaseModel):
     def ensure_base_url(self):
         candidate_url = (self.base_url or "").strip()
 
-        if not _is_valid_base_url(self.base_url):
+        if not _is_valid_base_url(candidate_url):
             logging.warning(
                 "Invalid base_url '%s' provided; falling back to local endpoint '%s'.",
                 candidate_url or "<empty>",
@@ -156,7 +157,11 @@ class ModelSettings(BaseModel):
         if self.chat_json_mode and self.api_mode != "chat":
             json_mode = self.chat_json_mode
             api_mode = self.api_mode
-            logging.warning("Using chat_json_mode = {json_mode} while api_mode = {api_mode}")
-            logging.warning("Removing value")
-            self.chat_json_mode = None
+            logging.warning(
+                "Using chat_json_mode=%s while api_mode=%s", json_mode, api_mode
+            )
+            logging.warning(
+                "Disabling chat_json_mode=%s for api_mode=%s", json_mode, api_mode
+            )
+            self.chat_json_mode = False
         return self

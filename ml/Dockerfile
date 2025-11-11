@@ -25,7 +25,7 @@ COPY . /app
 
 # mounting installation cache folder and running uv sync to build dependency's
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev
+    uv sync --no-dev
 
 # Setting up Entrypoint, aka "What command will we run inside the terminal ?"
 ENTRYPOINT ["uvicorn"]
