@@ -111,8 +111,41 @@ class _RerankModelClient:
                 "top_p": self.s.top_p,
             }
         )
-        # return True if field is 'yes', otherwise return 'no'
-        return True if response.message.content['label'] == 'yes' else False 
+        content = response.message.content
+
+        if isinstance(content, str):
+            try:
+                content = json.loads(content)
+            except json.JSONDecodeError:
+                logger.warning(
+                    "Rerank model returned non-JSON response, defaulting to False: %s",
+                    content,
+                )
+                return False
+
+        if not isinstance(content, dict):
+            logger.warning(
+                "Rerank model response has unexpected type %s, defaulting to False",
+                type(content).__name__,
+            )
+            return False
+
+        label = content.get("label")
+        if not isinstance(label, str):
+            logger.warning("Rerank model response missing 'label', defaulting to False")
+            return False
+
+        normalized_label = label.strip().lower()
+        if normalized_label == "yes":
+            return True
+
+        if normalized_label != "no":
+            logger.warning(
+                "Rerank model response has unexpected label '%s', defaulting to False",
+                label,
+            )
+
+        return False
     
     def call_batch(self, messages: List[List[Dict[str,str]]])  -> List[bool]:
         return [self.call(item) for item in messages]
