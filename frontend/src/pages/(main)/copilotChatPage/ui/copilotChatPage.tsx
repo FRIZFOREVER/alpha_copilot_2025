@@ -53,10 +53,10 @@ const CopilotChatPage = () => {
     ];
   }, [messages, isSendingMessage, isSendingVoice, chatId]);
 
-  const handleSendMessage = (message: string) => {
-    if (!message.trim()) return;
+  const handleSendMessage = (data: { message: string; file_url?: string }) => {
+    if (!data.message.trim()) return;
 
-    const trimmedMessage = message.trim();
+    const trimmedMessage = data.message.trim();
 
     if (!chatId) {
       const truncatedMessage =
@@ -68,14 +68,17 @@ const CopilotChatPage = () => {
       createChat(
         { name: chatName },
         {
-          onSuccess: (data) => {
+          onSuccess: (chatData) => {
             navigate(
-              `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}/${data.chat_id}`,
+              `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}/${chatData.chat_id}`,
               { replace: true }
             );
             sendMessage({
-              chatId: data.chat_id,
-              sendMessageDto: { question: trimmedMessage },
+              chatId: chatData.chat_id,
+              sendMessageDto: {
+                question: trimmedMessage,
+                file_url: data.file_url,
+              },
             });
           },
           onError: (error) => {
@@ -86,7 +89,10 @@ const CopilotChatPage = () => {
     } else {
       sendMessage({
         chatId,
-        sendMessageDto: { question: trimmedMessage },
+        sendMessageDto: {
+          question: trimmedMessage,
+          file_url: data.file_url,
+        },
       });
     }
   };

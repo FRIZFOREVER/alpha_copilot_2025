@@ -55,9 +55,14 @@ export interface SendVoiceResponse {
   voice_url: string;
 }
 
+export interface UploadFileResponse {
+  file_url: string;
+}
+
 export interface SendMessageStreamDto {
   question: string;
   voice_url?: string;
+  file_url?: string;
   tag?: string;
 }
 

@@ -5,7 +5,7 @@ import { type Suggestion } from "../suggestions";
 
 export interface ChatProps {
   messages?: MessageData[];
-  onSendMessage?: (message: string) => void;
+  onSendMessage?: (data: { message: string; file_url?: string }) => void;
   onSendVoice?: (voiceBlob: Blob) => void;
   isLoading?: boolean;
   suggestions?: Suggestion[];
