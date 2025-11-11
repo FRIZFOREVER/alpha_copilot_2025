@@ -123,15 +123,17 @@ def run_pipeline_stream(
     if not isinstance(final_state, GraphState):
         final_state = GraphState.model_validate(final_state)
 
-    stream_messages = getattr(final_state, "stream_messages", None)
-    if not stream_messages:
-        stream_messages = _build_stream_messages(final_state)
+    final_prompt_messages = getattr(final_state, "final_prompt_messages", None)
+    if not final_prompt_messages:
+        final_prompt_messages = getattr(final_state, "stream_messages", None)
+    if not final_prompt_messages:
+        final_prompt_messages = _build_stream_messages(final_state)
 
-    if not stream_messages:
+    if not final_prompt_messages:
         logger.warning("No streamable messages produced by pipeline; aborting stream.")
         return
 
-    yield from client.stream(stream_messages)
+    yield from client.stream(final_prompt_messages)
 
 
 def _build_stream_messages(state: GraphState) -> List[Dict[str, str]]:
