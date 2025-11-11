@@ -1,18 +1,11 @@
 import {
-  MessageSquare,
-  BarChart3,
   Clock,
   FileText,
   TrendingUp,
   DollarSign,
   Target,
-  Zap,
   CheckCircle2,
   Sparkles,
-  Calendar,
-  Users,
-  ArrowUp,
-  ArrowDown,
 } from "lucide-react";
 
 export const analyticsData = {
@@ -107,4 +100,3 @@ export const analyticsData = {
     { category: "Другое", percentage: 8, color: "bg-gray-500" },
   ],
 };
-
