@@ -16,4 +16,5 @@ class GraphState(BaseModel):
     research_iteration: int = 0
     max_research_iterations: int = 3
     stream_messages: List[Dict[str, str]] = Field(default_factory=list)
+    final_prompt_messages: List[Dict[str, str]] = Field(default_factory=list)
 

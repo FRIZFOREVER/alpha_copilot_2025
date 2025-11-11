@@ -16,6 +16,7 @@ def fast_answer_node(state: GraphState, _client: _ReasoningModelClient) -> Graph
             "content": msg.content
         })
 
+    state.final_prompt_messages = messages
     state.stream_messages = messages
     state.final_answer = None
 
