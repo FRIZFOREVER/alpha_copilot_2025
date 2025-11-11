@@ -124,8 +124,8 @@ def analyze_results_node(state: GraphState, client: _ReasoningModelClient) -> Gr
     return state
 
 
-def synthesize_answer_node(state: GraphState, client: _ReasoningModelClient) -> GraphState:
-    """Synthesize final answer from search results."""
+def synthesize_answer_node(state: GraphState, _client: _ReasoningModelClient) -> GraphState:
+    """Prepare synthesis prompt from search results."""
     
     # Get user message
     user_message = None
@@ -136,6 +136,7 @@ def synthesize_answer_node(state: GraphState, client: _ReasoningModelClient) -> 
     
     if not user_message:
         state.final_answer = "Извините, не удалось найти запрос пользователя."
+        state.stream_messages = []
         return state
     
     # Prepare search results context
@@ -156,12 +157,8 @@ def synthesize_answer_node(state: GraphState, client: _ReasoningModelClient) -> 
         {"role": "system", "content": SYNTHESIS_PROMPT},
         {"role": "user", "content": f"Запрос пользователя: {user_message}\n\n{results_context}"}
     ]
-    
-    # Get answer
-    try:
-        response = client.call(messages=messages)
-        state.final_answer = response.content
-    except Exception as e:
-        state.final_answer = f"Извините, произошла ошибка при синтезе ответа: {str(e)}"
-    
+
+    state.stream_messages = messages
+    state.final_answer = None
+
     return state
