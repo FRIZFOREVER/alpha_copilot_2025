@@ -7,7 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
 import ollama
 
-from ml.agent.router import workflow, init_models
+from ml.agent.router import init_models, workflow_collect, workflow_stream
 
 logger = logging.getLogger(__name__)
 
@@ -40,28 +40,8 @@ def create_app() -> FastAPI:
         payload: Dict[str, Any] = await request.json()
         logger.info("Handling /message request with payload")
 
-        buffer: list[str] = []
-
         try:
-            for chunk in workflow(payload, streaming=True):
-                message = getattr(chunk, "message", None)
-                if message is None:
-                    logger.warning("Skipping chunk without message: %s", chunk)
-                    continue
-
-                role = getattr(message, "role", None)
-                if role != "assistant":
-                    logger.warning(
-                        "Skipping chunk with non-assistant role '%s': %s", role, chunk
-                    )
-                    continue
-
-                content = getattr(message, "content", None)
-                if not isinstance(content, str):
-                    logger.warning("Skipping chunk with invalid content: %s", chunk)
-                    continue
-
-                buffer.append(content)
+            message_text = workflow_collect(payload)
         except HTTPException:
             raise
         except Exception as exc:
@@ -70,7 +50,7 @@ def create_app() -> FastAPI:
                 status_code=500, detail="Failed to generate response from workflow"
             ) from exc
 
-        return {"message": "".join(buffer)}
+        return {"message": message_text}
     
     @app.post("/message_stream")
     async def message_stream(request: Request) -> StreamingResponse:
@@ -83,7 +63,7 @@ def create_app() -> FastAPI:
         logger.info("Handling /message_stream request with payload")
 
         def event_generator():
-            stream = workflow(payload, streaming=True)
+            stream = workflow_stream(payload)
             for chunk in stream:
                 yield f"data: {chunk.model_dump_json()}\n\n"
 
