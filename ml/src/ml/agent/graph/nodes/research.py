@@ -137,6 +137,7 @@ def synthesize_answer_node(state: GraphState, _client: _ReasoningModelClient) ->
     if not user_message:
         state.final_answer = "Извините, не удалось найти запрос пользователя."
         state.stream_messages = []
+        state.final_prompt_messages = []
         return state
     
     # Prepare search results context
@@ -158,6 +159,7 @@ def synthesize_answer_node(state: GraphState, _client: _ReasoningModelClient) ->
         {"role": "user", "content": f"Запрос пользователя: {user_message}\n\n{results_context}"}
     ]
 
+    state.final_prompt_messages = messages
     state.stream_messages = messages
     state.final_answer = None
 
