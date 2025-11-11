@@ -54,11 +54,12 @@ func InitPrivateRoutes(
 	like := handlers.NewLike(db, logger)
 	server.Put("/like/:chat_id", like.Handler)
 
-	voice := handlers.NewVoice(model, recognizer, db, s3, logger)
+	voice := handlers.NewVoice(recognizer, s3, logger)
 	server.Post("/voice", voice.Handler)
 
 	proxy := handlers.NewProxy(s3, logger)
-	server.Get("/voices/:file_name.webm", proxy.Handler)
+	server.Get("/voices/:file_name", proxy.HandlerWebm)
+	server.Get("/files/:file_name", proxy.HandlerFile)
 
 	chat := handlers.NewChat(db, logger)
 	server.Post("/chat", chat.CreateHandler)
@@ -82,7 +83,9 @@ func InitPrivateRoutes(
 	profile := handlers.NewProfile(db, logger)
 	server.Get("/profile", profile.Handler)
 
-	
 	stream := handlers.NewStream(streamClient, db, streamClient.HistoryLen, logger)
-	server.Post("message_stream/:chat_id", stream.Handler)
+	server.Post("/message_stream/:chat_id", stream.Handler)
+
+	file := handlers.NewFile(s3, logger)
+	server.Post("/file", file.Handler)
 }
