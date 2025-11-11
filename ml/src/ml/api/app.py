@@ -1,11 +1,14 @@
 import asyncio
 import logging
+import logging.config
+from pathlib import Path
 from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
 import ollama
+import yaml
 
 from ml.agent.router import init_models, workflow_collect, workflow_stream
 from ml.configs.message import RequestPayload
@@ -13,6 +16,48 @@ from ml.utils.fetch_model import fetch_models
 from ml.utils.warmup import warmup_models
 
 
+_LOGGING_CONFIGURED = False
+
+
+def _configure_logging() -> None:
+    global _LOGGING_CONFIGURED
+
+    if _LOGGING_CONFIGURED:
+        return
+
+    config_path = Path(__file__).resolve().parents[1] / "configs" / "logging.yaml"
+
+    if not config_path.is_file():
+        logging.getLogger(__name__).warning(
+            "Logging configuration file '%s' could not be found", config_path
+        )
+        return
+
+    with config_path.open("r", encoding="utf-8") as stream:
+        config = yaml.safe_load(stream)
+
+    pipeline_handler = config.get("handlers", {}).get("pipeline_file")
+    if pipeline_handler:
+        filename = pipeline_handler.get("filename")
+        if filename:
+            log_path = Path(filename)
+            if not log_path.is_absolute():
+                # Place logs alongside the package root by default.
+                log_path = (config_path.parents[3] / "logs" / log_path.name).resolve()
+
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            pipeline_handler["filename"] = str(log_path)
+
+    logging.config.dictConfig(config)
+
+    from ml.configs.runtime_flags import PIPELINE_LOGGING_ENABLED
+
+    pipeline_logger = logging.getLogger("app.pipeline")
+    pipeline_logger.disabled = not PIPELINE_LOGGING_ENABLED
+    _LOGGING_CONFIGURED = True
+
+
+_configure_logging()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
