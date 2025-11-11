@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Literal
+from typing import Any, Dict, List, Optional, Literal
 from pydantic import BaseModel, Field
 from ml.configs.message import Message
 
@@ -11,6 +11,7 @@ class GraphState(BaseModel):
     planning_decision: Optional[Dict] = None
     tool_results: List[Dict] = Field(default_factory=list)
     search_history: List[Dict] = Field(default_factory=list)
+    evidence: List[Dict[str, Any]] = Field(default_factory=list)
     final_answer: Optional[str] = None
     needs_more_research: bool = False
     research_iteration: int = 0

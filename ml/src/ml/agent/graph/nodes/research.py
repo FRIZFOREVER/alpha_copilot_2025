@@ -7,6 +7,7 @@ from ml.agent.tools.registry import get_tool_registry
 from ml.agent.prompts.research_prompt import PROMPT as RESEARCH_PROMPT
 from ml.agent.prompts.analysis_prompt import PROMPT as ANALYSIS_PROMPT
 from ml.agent.prompts.synthesis_prompt import PROMPT as SYNTHESIS_PROMPT
+from ml.agent.graph.nodes.evidence import format_evidence_context
 
 
 class SearchQueries(BaseModel):
@@ -84,25 +85,7 @@ def analyze_results_node(state: GraphState, client: _ReasoningModelClient) -> Gr
         return state
     
     # Prepare search results context
-    results_context = "Результаты поиска:\n\n"
-    for result in state.tool_results:
-        if result.get("type") == "search_result":
-            search_data = result.get("data", {})
-            query = search_data.get("query", "")
-            results = search_data.get("results", [])
-            results_context += f"Запрос: {query}\n"
-            for i, res in enumerate(results[:3], 1):  # Top 3 results per query
-                excerpt = res.get("excerpt") or res.get("snippet", "")
-                preview = res.get("content", "")
-                results_context += f"{i}. {res.get('title', '')}\n"
-                if excerpt:
-                    results_context += f"   {excerpt}\n"
-                if preview:
-                    short_preview = preview[:300].rstrip()
-                    if len(preview) > 300:
-                        short_preview += "..."
-                    results_context += f"   [Контент] {short_preview}\n"
-            results_context += "\n"
+    results_context = format_evidence_context(state)
     
     # Prepare messages
     messages = [
@@ -149,26 +132,7 @@ def synthesize_answer_node(state: GraphState, _client: _ReasoningModelClient) ->
         return state
     
     # Prepare search results context
-    results_context = "Результаты поиска:\n\n"
-    for result in state.tool_results:
-        if result.get("type") == "search_result" and result.get("success"):
-            search_data = result.get("data", {})
-            query = search_data.get("query", "")
-            results = search_data.get("results", [])
-            results_context += f"Запрос: {query}\n"
-            for i, res in enumerate(results, 1):
-                excerpt = res.get("excerpt") or res.get("snippet", "")
-                preview = res.get("content", "")
-                results_context += f"{i}. {res.get('title', '')}\n"
-                results_context += f"   URL: {res.get('url', '')}\n"
-                if excerpt:
-                    results_context += f"   {excerpt}\n"
-                if preview:
-                    short_preview = preview[:300].rstrip()
-                    if len(preview) > 300:
-                        short_preview += "..."
-                    results_context += f"   [Контент] {short_preview}\n"
-                results_context += "\n"
+    results_context = format_evidence_context(state)
     
     # Prepare messages
     messages = [

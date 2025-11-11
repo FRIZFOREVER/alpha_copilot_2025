@@ -73,6 +73,15 @@ def test_run_pipeline_stream_builds_prompt_when_missing() -> None:
                 },
             }
         ],
+        evidence=[
+            {
+                "title": "Result 1",
+                "url": "http://example.com",
+                "facts": ["Краткий факт"],
+                "query": "Hello",
+                "fallback": False,
+            }
+        ],
     )
 
     fake_app = Mock()
@@ -86,3 +95,5 @@ def test_run_pipeline_stream_builds_prompt_when_missing() -> None:
     built_messages = client.stream_calls[0]
     assert built_messages[0]["role"] == "system"
     assert "Результаты поиска" in built_messages[1]["content"]
+    assert "Краткий факт" in built_messages[1]["content"]
+    assert "Snippet" not in built_messages[1]["content"]
