@@ -6,6 +6,7 @@ import { MarkdownContent } from "./markdownContent";
 import { TypingIndicator } from "./typingIndicator";
 import { useCopied } from "@/shared/hooks/useCopy";
 import { Image } from "@/shared/ui/image/image";
+import { useParams } from "react-router-dom";
 
 export interface MessageProps {
   content: string;
@@ -22,13 +23,18 @@ export const Message = ({
   rating,
   isTyping = false,
 }: MessageProps) => {
+  const chatId = useParams().chatId;
+
   const { openModal } = useModal();
 
   const { handleCopyClick, isCopied } = useCopied();
 
   const handleLikeClick = () => {
     if (answerId) {
-      openModal(EModalVariables.RATING_MODAL, { answerId });
+      openModal(EModalVariables.RATING_MODAL, {
+        answerId,
+        chatId: Number(chatId),
+      });
     }
   };
 
@@ -100,7 +106,6 @@ export const Message = ({
               disabled={!answerId}
               className={cn(
                 "p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer",
-                rating && rating > 0 && "bg-yellow-100 dark:bg-yellow-900/20",
                 !answerId && "opacity-50 cursor-not-allowed"
               )}
               aria-label="Нравится"
@@ -110,7 +115,7 @@ export const Message = ({
                 className={cn(
                   "h-4 w-4",
                   rating && rating > 0
-                    ? "text-yellow-600 dark:text-yellow-400"
+                    ? "text-red-600 dark:text-yellow-400"
                     : "text-gray-600 dark:text-gray-400"
                 )}
               />

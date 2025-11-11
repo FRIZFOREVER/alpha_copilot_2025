@@ -148,7 +148,7 @@ export const ChatInput = ({
         )}
         <div className="relative">
           {isRecording ? (
-            <div className="w-full min-h-[52px] rounded-[24px] shadow-sm mb-[18px] px-12 py-3 pr-20 bg-white border border-gray-200 flex items-center relative">
+            <div className="w-full min-h-[50px] rounded-[24px] shadow-sm mb-[13px] px-12 py-3 pr-20 bg-white border border-gray-200 flex items-center relative">
               <button
                 type="button"
                 className="absolute left-3 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"

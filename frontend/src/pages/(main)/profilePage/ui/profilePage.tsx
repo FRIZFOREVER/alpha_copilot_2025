@@ -18,8 +18,12 @@ import {
 } from "@/shared/lib/utils/userHelpers";
 import { cn } from "@/shared/lib/mergeClass";
 import { mockData } from "../lib/constants";
+import { deleteAccessToken } from "@/entities/token";
+import { useQueryClient } from "@tanstack/react-query";
+import { ERouteNames } from "@/shared/lib/routeVariables";
 
 const ProfilePage = () => {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { data: profileData, isLoading: isLoadingProfile } =
     useGetProfileQuery();
@@ -41,6 +45,12 @@ const ProfilePage = () => {
     : "П";
 
   const progress = (mockData.xp / mockData.xpToNext) * 100;
+
+  const handleLogout = () => {
+    deleteAccessToken();
+    queryClient.clear();
+    navigate(`/${ERouteNames.LANDING_ROUTE}`);
+  };
 
   return (
     <div>
@@ -106,6 +116,7 @@ const ProfilePage = () => {
                 <Button
                   variant="outline"
                   className="flex-1 cursor-pointer h-10 rounded-xl border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium"
+                  onClick={handleLogout}
                 >
                   <LogOut className="h-4 w-4" />
                   Выйти
@@ -122,25 +133,21 @@ const ProfilePage = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               {
-                icon: "✅",
                 value: mockData.productivity.tasksCompleted,
                 label: "Задач выполнено",
                 color: "text-green-600",
               },
               {
-                icon: "⏰",
                 value: mockData.productivity.timeSaved,
                 label: "Сэкономлено времени",
                 color: "text-blue-600",
               },
               {
-                icon: "💻",
                 value: mockData.productivity.documentsCreated,
                 label: "Документов создано",
                 color: "text-purple-600",
               },
               {
-                icon: "⭐️",
                 value: mockData.productivity.templatesUsed,
                 label: "Шаблонов использовано",
                 color: "text-pink-600",
@@ -148,9 +155,8 @@ const ProfilePage = () => {
             ].map((stat, i) => (
               <div
                 key={i}
-                className="rounded-xl p-4 bg-gradient-to-br from-gray-50 to-white border border-gray-200 text-center"
+                className="rounded-xl p-4 bg-gradient-to-br from-gray-50 to-white border border-gray-200 text-center shadow-sm"
               >
-                <div className="text-2xl mb-2 text-center">{stat.icon}</div>
                 <p className="text-xl font-medium text-gray-900">
                   {stat.value}
                 </p>
@@ -197,32 +203,42 @@ const ProfilePage = () => {
         </div>
 
         {mockData.recommendations && mockData.recommendations.length > 0 && (
-          <div className="rounded-3xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Рекомендации для вас
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {mockData.recommendations.map((rec, i) => (
-                <div
-                  key={i}
-                  className="flex items-start justify-between p-4 rounded-xl bg-white/80 border border-blue-100"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900 mb-1">
-                      {rec.title}
-                    </p>
-                    <p className="text-xs text-gray-600">{rec.description}</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="ml-4 h-8 px-4 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+          <div className="rounded-3xl p-1 transform transition-all bg-white shadow-sm border border-gray-200">
+            <div className="rounded-[22px] bg-white  p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+                  Рекомендации для вас
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                {mockData.recommendations.map((rec, i) => (
+                  <div
+                    key={i}
+                    className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-white/90 to-white/70 dark:from-gray-800/90 dark:to-gray-800/70 backdrop-blur-md border border-red-100 dark:border-pink-900/30 p-4 transition-all duration-300"
                   >
-                    {rec.action}
-                  </Button>
-                </div>
-              ))}
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    <div className="relative flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                          {rec.title}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                          {rec.description}
+                        </p>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        className="h-9 cursor-pointer px-4 text-xs font-medium bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl shadow-md hover:shadow-lg transform transition-all duration-200"
+                      >
+                        {rec.action}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
