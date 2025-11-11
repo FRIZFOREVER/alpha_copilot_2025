@@ -20,6 +20,7 @@ from ml.configs.message import Message, Role
 from ml.agent.prompts.synthesis_prompt import PROMPT as SYNTHESIS_PROMPT
 from ml.agent.prompts.fast_answer_prompt import PROMPT as FAST_ANSWER_PROMPT
 from ml.agent.graph.nodes.evidence import format_evidence_context
+from ml.agent.graph.logging_utils import log_pipeline_event
 from ollama import ChatResponse
 
 
@@ -29,17 +30,33 @@ logger = logging.getLogger("app.pipeline")
 def route_after_planner(state: GraphState) -> str:
     """Route after planner based on mode."""
     if state.mode == "research":
-        return "research"
+        next_node = "research"
     else:
-        return "fast_answer"
+        next_node = "fast_answer"
+
+    log_pipeline_event(
+        "route.after_planner",
+        state=state,
+        extra={"next_node": next_node},
+    )
+
+    return next_node
 
 
 def route_after_analyze(state: GraphState) -> str:
     """Route after analysis based on whether more research is needed."""
     if state.needs_more_research:
-        return "research"  # Go back to research
+        next_node = "research"  # Go back to research
     else:
-        return "synthesize"  # Synthesize final answer
+        next_node = "synthesize"  # Synthesize final answer
+
+    log_pipeline_event(
+        "route.after_analyze",
+        state=state,
+        extra={"next_node": next_node},
+    )
+
+    return next_node
 
 
 def create_pipeline(client: _ReasoningModelClient) -> StateGraph:
@@ -126,9 +143,38 @@ def run_pipeline_stream(
     state = GraphState(messages=message_objects)
 
     invoke_config = _ensure_invoke_config(config)
-    final_state = app.invoke(state, config=invoke_config)
-    if not isinstance(final_state, GraphState):
-        final_state = GraphState.model_validate(final_state)
+    configurable = invoke_config.get("configurable") or {}
+    state.thread_id = configurable.get("thread_id")
+    state.checkpoint_ns = configurable.get("checkpoint_ns")
+    state.checkpoint_id = configurable.get("checkpoint_id")
+
+    log_pipeline_event(
+        "pipeline.start",
+        state=state,
+        config=invoke_config,
+        extra={"message_count": len(message_objects)},
+    )
+
+    latest_state: GraphState = state
+    final_state: Optional[GraphState] = None
+
+    for update in app.stream(state, config=invoke_config):
+        for node_name, node_payload in update.items():
+            node_state = _coerce_graph_state(node_payload)
+            if node_state is not None:
+                _sync_identifiers(node_state, latest_state)
+                latest_state = node_state
+                final_state = node_state
+
+            log_pipeline_event(
+                "pipeline.transition",
+                state=node_state or latest_state,
+                config=invoke_config,
+                extra={"node": node_name},
+            )
+
+    if final_state is None:
+        final_state = latest_state
 
     final_prompt_messages = getattr(final_state, "final_prompt_messages", None)
     if not final_prompt_messages:
@@ -138,7 +184,23 @@ def run_pipeline_stream(
 
     if not final_prompt_messages:
         logger.warning("No streamable messages produced by pipeline; aborting stream.")
+        log_pipeline_event(
+            "pipeline.no_stream_messages",
+            state=final_state,
+            config=invoke_config,
+        )
         return
+
+    log_pipeline_event(
+        "pipeline.final_prompt",
+        state=final_state,
+        config=invoke_config,
+        extra={
+            "message_count": len(final_prompt_messages),
+            "roles": [msg.get("role") for msg in final_prompt_messages],
+            "messages": final_prompt_messages,
+        },
+    )
 
     yield from client.stream(final_prompt_messages)
 
@@ -159,6 +221,24 @@ def _ensure_invoke_config(config: Optional[Dict[str, Any]]) -> Dict[str, Any]:
 
     config["configurable"] = configurable
     return config
+
+
+def _coerce_graph_state(payload: Any) -> Optional[GraphState]:
+    if isinstance(payload, GraphState):
+        return payload
+    if isinstance(payload, dict):
+        try:
+            return GraphState.model_validate(payload)
+        except Exception:  # pragma: no cover - defensive guard
+            return None
+    return None
+
+
+def _sync_identifiers(target: GraphState, reference: GraphState) -> None:
+    for attr in ("thread_id", "checkpoint_ns", "checkpoint_id"):
+        ref_value = getattr(reference, attr, None)
+        if ref_value and not getattr(target, attr, None):
+            setattr(target, attr, ref_value)
 
 
 def _build_stream_messages(state: GraphState) -> List[Dict[str, str]]:
