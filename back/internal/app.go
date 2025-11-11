@@ -69,7 +69,7 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 		logger.Infof("AssemblyAI API ключ установлен: %s", maskedKey)
 	}
 	recognizerClient := client.NewRecognizerClient("https://api.assemblyai.com/v2", "", config.RecognizerAPIKey)
-	streamClient := client.NewStreamMessageClient(http.MethodPost, config.Model, "message_stream", config.HistoryLen)
+	streamClient := client.NewStreamMessageClient(http.MethodPost, config.Model, "/message_stream", config.HistoryLen)
 
 	web.InitServiceRoutes(server, db, config.SecretSerice, logger)
 	web.InitPublicRoutes(server, db, config.SecretUser, config.FrontOrigin, logger)

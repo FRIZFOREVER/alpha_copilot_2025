@@ -1,12 +1,12 @@
 package handlers
 
 import (
+	"bufio"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"jabki/internal/client"
 	"jabki/internal/database"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -39,18 +39,10 @@ type streamIn struct {
 }
 
 func (sh *Stream) Handler(c *fiber.Ctx) error {
-
 	c.Set("Content-Type", "text/event-stream")
 	c.Set("Cache-Control", "no-cache")
 	c.Set("Connection", "keep-alive")
-
-	// Получаем ResponseWriter для Flush
-	w, ok := c.Context().Response.BodyWriter().(http.Flusher)
-	if !ok {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Streaming not supported",
-		})
-	}
+	c.Set("Transfer-Encoding", "chunked")
 
 	questionTime := time.Now().UTC()
 	var streamIn streamIn
@@ -134,84 +126,87 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	// отправляй тут метадату
-	metaOut := streamMetaOut{
-		QuestionID:   questionID,
-		AnswerID:     answerID,
-		QuestionTime: questionTime,
-		Tag:          streamIn.Tag,
-	}
+	// Используем SetBodyStreamWriter для потоковой отправки
+	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
+		// Отправка метаданных
+		metaOut := streamMetaOut{
+			QuestionID:   questionID,
+			AnswerID:     answerID,
+			QuestionTime: questionTime,
+			Tag:          streamIn.Tag,
+		}
 
-	metaJSON, err := json.Marshal(metaOut)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Error encoding metadata",
-			"details": err.Error(),
-		})
-	}
+		metaJSON, err := json.Marshal(metaOut)
+		if err != nil {
+			sh.logger.Errorf("Error encoding metadata: %v", err)
+			return
+		}
 
-	// Отправка метаданных
-	if _, err := c.Write(metaJSON); err != nil {
-		return err
-	}
-	w.Flush()
+		// Отправляем метаданные как SSE событие
+		if _, err := fmt.Fprintf(w, "data: %s\n\n", metaJSON); err != nil {
+			sh.logger.Errorf("Error writing metadata: %v", err)
+			return
+		}
+		w.Flush()
 
-	var builder strings.Builder
-	builder.Grow(1024)
-	for message := range messageChan {
-		if message != nil {
-			builder.WriteString(message.Message.Content)
+		var builder strings.Builder
+		builder.Grow(1024)
+		
+		// Обрабатываем поток сообщений
+		for message := range messageChan {
+			if message != nil {
+				builder.WriteString(message.Message.Content)
 
-			// отправляй чанк
-			chunkOut := streamChunckOut{
-				Content:  message.Message.Content,
-				Thinking: message.Message.Thinking, // предполагая, что есть такое поле
-				Time:     time.Now().UTC(),
-				Done:     false,
-			}
-			
-			chunkJSON, err := json.Marshal(chunkOut)
-			if err != nil {
-				sh.logger.Errorf("Error encoding chunk: %v", err)
-				continue
-			}
-			
-			if _, err := c.Write([]byte(fmt.Sprintf("data: %s\n\n", chunkJSON))); err != nil {
-				sh.logger.Errorf("Error writing chunk: %v", err)
-				break
-			}
-			w.Flush()
-
-			if message.Done {
-				// Отправляем финальный чанк с флагом Done
-				finalChunk := streamChunckOut{
-					Content:  "", // или итоговый контент если нужен
-					Thinking: "",
+				// Отправляем чанк
+				chunkOut := streamChunckOut{
+					Content:  message.Message.Content,
+					Thinking: message.Message.Thinking,
 					Time:     time.Now().UTC(),
-					Done:     true,
+					Done:     false,
 				}
 				
-				finalJSON, err := json.Marshal(finalChunk)
+				chunkJSON, err := json.Marshal(chunkOut)
 				if err != nil {
-					sh.logger.Errorf("Error encoding final chunk: %v", err)
-				} else {
-					c.Write([]byte(fmt.Sprintf("data: %s\n\n", finalJSON)))
-					w.Flush()
+					sh.logger.Errorf("Error encoding chunk: %v", err)
+					continue
 				}
-				break
+				
+				if _, err := fmt.Fprintf(w, "data: %s\n\n", chunkJSON); err != nil {
+					sh.logger.Errorf("Error writing chunk: %v", err)
+					break
+				}
+				w.Flush()
+
+				if message.Done {
+					// Отправляем финальный чанк с флагом Done
+					finalChunk := streamChunckOut{
+						Content:  "",
+						Thinking: "",
+						Time:     time.Now().UTC(),
+						Done:     true,
+					}
+					
+					finalJSON, err := json.Marshal(finalChunk)
+					if err != nil {
+						sh.logger.Errorf("Error encoding final chunk: %v", err)
+					} else {
+						fmt.Fprintf(w, "data: %s\n\n", finalJSON)
+						w.Flush()
+					}
+					break
+				}
 			}
 		}
-	}
 
-	// Сохраняем полный ответ в базу данных
-	fullAnswer := builder.String()
-	_, err = database.UpdateAnswer(sh.db, answerID, fullAnswer, sh.logger)
-	if err != nil {
-		sh.logger.Errorf("Error updating answer in database: %v", err)
-	}
+		// Сохраняем полный ответ в базу данных
+		fullAnswer := builder.String()
+		_, err = database.UpdateAnswer(sh.db, answerID, fullAnswer, sh.logger)
+		if err != nil {
+			sh.logger.Errorf("Error updating answer in database: %v", err)
+		}
+	})
 
 	return nil
-
 }
 
 type streamMetaOut struct {
@@ -225,5 +220,5 @@ type streamChunckOut struct {
 	Content  string    `json:"content"`
 	Thinking string    `json:"thinking"`
 	Time     time.Time `json:"time"`
-	Done     bool      `json:"Done"`
+	Done     bool      `json:"done"`
 }
