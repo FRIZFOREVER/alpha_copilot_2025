@@ -167,9 +167,18 @@ def _build_stream_messages(state: GraphState) -> List[Dict[str, str]]:
                 results = search_data.get("results", [])
                 results_context += f"Запрос: {query}\n"
                 for i, res in enumerate(results, 1):
+                    excerpt = res.get("excerpt") or res.get("snippet", "")
+                    preview = res.get("content", "")
                     results_context += f"{i}. {res.get('title', '')}\n"
                     results_context += f"   URL: {res.get('url', '')}\n"
-                    results_context += f"   {res.get('snippet', '')}\n\n"
+                    if excerpt:
+                        results_context += f"   {excerpt}\n"
+                    if preview:
+                        short_preview = preview[:300].rstrip()
+                        if len(preview) > 300:
+                            short_preview += "..."
+                        results_context += f"   [Контент] {short_preview}\n"
+                    results_context += "\n"
 
         return [
             {"role": "system", "content": SYNTHESIS_PROMPT},
