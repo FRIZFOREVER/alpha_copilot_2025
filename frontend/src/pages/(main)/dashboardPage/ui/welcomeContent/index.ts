@@ -1,0 +1,2 @@
+export { WelcomeContent } from "./welcomeContent";
+
