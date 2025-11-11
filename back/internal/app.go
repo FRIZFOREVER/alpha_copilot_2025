@@ -54,7 +54,7 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 	// logger.Info("Есть подключение к recognizer! 🔊")
 
 	modelClient := client.NewModelClient("POST", config.Model, "/message")
-	
+
 	// Проверка и логирование API ключа AssemblyAI
 	if config.RecognizerAPIKey == "" {
 		logger.Warn("⚠️  ASSEMBLYAI_API_KEY не установлен! Запросы к AssemblyAI будут возвращать ошибку 401")

@@ -24,13 +24,6 @@ type messageIn struct {
 	VoiceURL string `json:"voice_url"`
 }
 
-type messageToModel struct {
-	ChatID      int            `json:"chat_id"`
-	UserUUID    uuid.UUID      `json:"user_uuid"`
-	UserRequest string         `json:"user_request"`
-	Messages    []messageModel `json:"messages"`
-}
-
 func NewMessage(client *client.ModelClient, db *sql.DB, logger *logrus.Logger) *Message {
 	return &Message{
 		client: client,
