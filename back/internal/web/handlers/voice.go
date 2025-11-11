@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"io"
 	"jabki/internal/client"
 	"jabki/internal/s3"
@@ -15,16 +14,13 @@ import (
 type Voice struct {
 	model      *client.ModelClient
 	recognizer *client.RecognizerClient
-	db         *sql.DB
 	s3         *minio.Client
 	logger     *logrus.Logger
 }
 
-func NewVoice(client *client.ModelClient, recognizer *client.RecognizerClient, db *sql.DB, s3 *minio.Client, logger *logrus.Logger) *Voice {
+func NewVoice(recognizer *client.RecognizerClient, s3 *minio.Client, logger *logrus.Logger) *Voice {
 	return &Voice{
-		model:      client,
 		recognizer: recognizer,
-		db:         db,
 		s3:         s3,
 		logger:     logger,
 	}

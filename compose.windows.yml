@@ -75,7 +75,9 @@ services:
         while ! isAlive; do sleep 0.1; done                                # wait until Minio is alive
         mc alias set minio http://127.0.0.1:9000 minio-user minio-password # setup Minio client
         mc mb minio/voices || true                                         # create a test bucket
+        mc mb minio/files || true                                          # create additional bucket
         mc anonymous set public minio/voices                               # make the test bucket public
+        mc anonymous set public minio/files                                # make the additional bucket public
         kill -s INT $$(cat /tmp/minio.pid) && rm /tmp/minio.pid            # stop Minio
         while isAlive; do sleep 0.1; done                                  # wait until Minio is stopped
         exec minio $$0 "$$@"                                               # start Minio in the foreground
