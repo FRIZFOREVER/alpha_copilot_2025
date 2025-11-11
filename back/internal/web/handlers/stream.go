@@ -108,6 +108,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		questionTime,
 		questionTime, //
 		streamIn.VoiceURL,
+		streamIn.FileURL,
 		sh.logger,
 	)
 	if err != nil {
