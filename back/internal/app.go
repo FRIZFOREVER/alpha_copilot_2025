@@ -26,7 +26,10 @@ type App struct {
 
 func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 	ctx := context.Background()
-	server := fiber.New()
+	server := fiber.New(fiber.Config{
+		// Устанавливаем лимит тела запроса до 101 МБ (для запаса)
+		BodyLimit: 101 * 1024 * 1024,
+	})
 
 	var err error
 	db, err := database.InitDBWithPing(ctx, config.PostgresURL, logger)
