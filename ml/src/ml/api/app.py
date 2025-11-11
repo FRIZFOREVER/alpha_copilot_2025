@@ -9,15 +9,28 @@ import ollama
 
 from ml.agent.router import workflow, init_models
 from ml.configs.message import RequestPayload
+from ml.utils.fetch_model import fetch_models
+from ml.utils.warmup import warmup_models
+
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 
 async def lifespan(app: FastAPI):
     app.state.models = None
     app.state.models_ready = asyncio.Event()
     
     async def _init():
+        try:
+            await fetch_models()
+        except Exception:
+            logger.warning("Failed to prefetch models via Ollama", exc_info=True)
         models = await init_models()
+        try:
+            await warmup_models(list(models.values()))
+        except Exception:
+            logger.warning("Failed to warmup models", exc_info=True)
         app.state.models = models
         app.state.models_ready.set()
 

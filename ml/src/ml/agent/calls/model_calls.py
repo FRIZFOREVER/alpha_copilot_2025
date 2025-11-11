@@ -1,15 +1,24 @@
 # from ml.utils.formats import _rstrip_slash
+from abc import ABC, abstractmethod
+import json
 from ml.configs.model_config import ModelSettings
 from ml.configs.message import Message
 from ollama import chat, ChatResponse, embed
-from typing import Union, List, Dict, Iterator
+from typing import Any, Union, List, Dict, Iterator
 
 
-class _ReasoningModelClient:
-    """Thin wrapper around `ollama.chat` for conversational reasoning models."""
 
+class ModelClient(ABC):
     def __init__(self, settings: ModelSettings):
         self.s: ModelSettings = settings
+    
+    @abstractmethod
+    def call(self, messages: Any) -> Message:
+        pass
+    
+
+class _ReasoningModelClient(ModelClient):
+    """Thin wrapper around `ollama.chat` for conversational reasoning models."""
 
     def call(self, messages: List[Dict[str, str]]) -> Message:
         response: ChatResponse = chat(
@@ -33,11 +42,8 @@ class _ReasoningModelClient:
             stream=True,
         )
 
-class _RerankModelClient:
+class _RerankModelClient(ModelClient):
     """Utility wrapper for using chat models as lightweight rerankers."""
-
-    def __init__(self, settings: ModelSettings):
-        self.s: ModelSettings = settings
 
     # WARNING: If you want to get score, we should switch this model to vLLM serving and take logits 
     # on Yes/No probability
@@ -51,20 +57,27 @@ class _RerankModelClient:
                 "temperature": self.s.temperature,
                 "top_p": self.s.top_p,
             }
-        )
-        # return True if field is 'yes', otherwise return 'no'
-        return True if response.message.content['label'] == 'yes' else False 
-    
+        )   
+        
+        content = response.message.content
+        if isinstance(content, str):
+            try:
+                content = json.loads(content)
+            except json.JSONDecodeError:
+                raise ValueError(f"Rerank model returned non-JSON content: {response.message.content!r}")
+
+        label = content.get("label")
+        if label not in {"yes", "no"}:
+            raise ValueError(f"Unexpected label '{label}' from rerank model")
+
+        return label == "yes"
     def call_batch(self, messages: List[List[Dict[str,str]]])  -> List[bool]:
         return [self.call(item) for item in messages]
 
 
-class _EmbeddingModelClient:
+class _EmbeddingModelClient(ModelClient):
     """Batch-friendly helper for producing embeddings via `ollama.embed`."""
 
-    def __init__(self, settings: ModelSettings):
-        self.s: ModelSettings = settings
-    
     def call(self, content: str) -> List[float]:
         response = embed(model=self.s.model, input=content)
         return response["embeddings"][0]
