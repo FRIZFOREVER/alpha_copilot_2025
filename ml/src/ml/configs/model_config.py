@@ -123,7 +123,7 @@ class ModelSettings(BaseModel):
     def ensure_base_url(self):
         candidate_url = (self.base_url or "").strip()
 
-        if not _is_valid_base_url(self.base_url):
+        if not _is_valid_base_url(candidate_url):
             logging.warning(
                 "Invalid base_url '%s' provided; falling back to local endpoint '%s'.",
                 candidate_url or "<empty>",
