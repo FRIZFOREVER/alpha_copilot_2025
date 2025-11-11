@@ -117,6 +117,8 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 	}
 
 	messageToModel.Tag = streamIn.Tag
+	
+	messageToModel.IsVoice = len(streamIn.VoiceURL) > 0
 
 	messageChan, err := sh.client.StreamRequestToModel(messageToModel)
 	if err != nil {
@@ -151,7 +153,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 
 		var builder strings.Builder
 		builder.Grow(1024)
-		
+
 		// Обрабатываем поток сообщений
 		for message := range messageChan {
 			if message != nil {
@@ -159,17 +161,17 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 
 				// Отправляем чанк
 				chunkOut := streamChunckOut{
-					Content:  message.Message.Content,
-					Time:     time.Now().UTC(),
-					Done:     false,
+					Content: message.Message.Content,
+					Time:    time.Now().UTC(),
+					Done:    false,
 				}
-				
+
 				chunkJSON, err := json.Marshal(chunkOut)
 				if err != nil {
 					sh.logger.Errorf("Error encoding chunk: %v", err)
 					continue
 				}
-				
+
 				if _, err := fmt.Fprintf(w, "data: %s\n\n", chunkJSON); err != nil {
 					sh.logger.Errorf("Error writing chunk: %v", err)
 					break
@@ -179,11 +181,11 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 				if message.Done {
 					// Отправляем финальный чанк с флагом Done
 					finalChunk := streamChunckOut{
-						Content:  "",
-						Time:     time.Now().UTC(),
-						Done:     true,
+						Content: "",
+						Time:    time.Now().UTC(),
+						Done:    true,
 					}
-					
+
 					finalJSON, err := json.Marshal(finalChunk)
 					if err != nil {
 						sh.logger.Errorf("Error encoding final chunk: %v", err)
@@ -215,7 +217,7 @@ type streamMetaOut struct {
 }
 
 type streamChunckOut struct {
-	Content  string    `json:"content"`
-	Time     time.Time `json:"time"`
-	Done     bool      `json:"done"`
+	Content string    `json:"content"`
+	Time    time.Time `json:"time"`
+	Done    bool      `json:"done"`
 }

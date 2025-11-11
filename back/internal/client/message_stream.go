@@ -22,6 +22,7 @@ type PayloadStream struct {
 	QuestionID int       `json:"question_id"`
 	Mode       string    `json:"mode"`
 	System     string    `json:"system"`
+	IsVoice    bool      `json:"is_voice"`
 }
 
 // StreamMessage представляет структуру сообщения из стрима
