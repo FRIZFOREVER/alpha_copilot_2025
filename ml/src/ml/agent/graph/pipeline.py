@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict, Iterator, List, Optional
 from weakref import WeakKeyDictionary
 from uuid import uuid4
@@ -20,9 +21,9 @@ from ml.agent.prompts.synthesis_prompt import PROMPT as SYNTHESIS_PROMPT
 from ml.agent.prompts.fast_answer_prompt import PROMPT as FAST_ANSWER_PROMPT
 from ml.agent.graph.nodes.evidence import format_evidence_context
 from ollama import ChatResponse
-import logging
 
-logger = logging.getLogger(__name__)
+
+logger = logging.getLogger("app.pipeline")
 
 
 def route_after_planner(state: GraphState) -> str:

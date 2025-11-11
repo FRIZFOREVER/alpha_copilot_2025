@@ -1,9 +1,10 @@
-from typing import Dict, Any
+import logging
+from typing import Any, Dict
+
 from ml.agent.graph.state import GraphState
 from ml.agent.tools.registry import get_tool_registry
-import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app.pipeline")
 
 
 def execute_tools_node(state: GraphState) -> GraphState:

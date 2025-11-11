@@ -11,7 +11,7 @@ from ml.agent.graph.state import GraphState
 from ml.agent.calls.model_calls import _ReasoningModelClient
 from ml.agent.prompts.evidence_prompt import PROMPT as EVIDENCE_PROMPT
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app.pipeline")
 
 
 class EvidenceSummary(BaseModel):
