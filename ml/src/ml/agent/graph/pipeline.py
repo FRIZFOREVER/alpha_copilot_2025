@@ -1,6 +1,7 @@
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Callable, Dict, Iterator, List, Optional
 from weakref import WeakKeyDictionary
 from uuid import uuid4
+import json
 
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
@@ -21,6 +22,28 @@ from ollama import ChatResponse
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _serialize_state(state: GraphState) -> str:
+    """Convert GraphState into a JSON string for logging."""
+    try:
+        state_dict = state.model_dump(mode="json")
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.exception("Failed to serialise GraphState for logging")
+        return f"<unserializable GraphState: {exc}>"
+    return json.dumps(state_dict, ensure_ascii=False)
+
+
+def _wrap_graph_node(node_name: str, fn: Callable[[GraphState], GraphState]) -> Callable[[GraphState], GraphState]:
+    """Wrap graph node execution with logging."""
+
+    def _wrapped(state: GraphState) -> GraphState:
+        logger.info("LangGraph node '%s' starting", node_name)
+        new_state = fn(state)
+        logger.info("LangGraph node '%s' completed with state update: %s", node_name, _serialize_state(new_state))
+        return new_state
+
+    return _wrapped
 
 
 def route_after_planner(state: GraphState) -> str:
@@ -46,12 +69,13 @@ def create_pipeline(client: _ReasoningModelClient) -> StateGraph:
     workflow = StateGraph(GraphState)
     
     # Add nodes
-    workflow.add_node("planner", lambda state: planner_node(state, client))
-    workflow.add_node("research", lambda state: research_node(state, client))
-    workflow.add_node("execute_tools", execute_tools_node)
-    workflow.add_node("analyze", lambda state: analyze_results_node(state, client))
-    workflow.add_node("synthesize", lambda state: synthesize_answer_node(state, client))
-    workflow.add_node("fast_answer", lambda state: fast_answer_node(state, client))
+    workflow.add_node("planner", _wrap_graph_node("planner", lambda state: planner_node(state, client)))
+    workflow.add_node("research", _wrap_graph_node("research", lambda state: research_node(state, client)))
+    workflow.add_node("execute_tools", _wrap_graph_node("execute_tools", execute_tools_node))
+    workflow.add_node("analyze", _wrap_graph_node("analyze", lambda state: analyze_results_node(state, client)))
+    workflow.add_node("synthesize", _wrap_graph_node("synthesize", lambda state: synthesize_answer_node(state, client)))
+    workflow.add_node("fast_answer", _wrap_graph_node("fast_answer", lambda state: fast_answer_node(state, client)))
+    logger.info("LangGraph nodes registered: %s", ["planner", "research", "execute_tools", "analyze", "synthesize", "fast_answer"])
     
     # Set entry point
     workflow.set_entry_point("planner")
