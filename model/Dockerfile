@@ -5,18 +5,7 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends tini curl; \
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /opt/ollama
-COPY .env /opt/ollama/.env
-COPY model/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-# Normalize Windows CRLF to Unix LF to avoid '/usr/bin/env: bash\r' errors
-RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
-
-ENV OLLAMA_ENV_FILE=/opt/ollama/.env
-
 EXPOSE 11434/tcp
 
-ENTRYPOINT ["tini","--","/usr/local/bin/entrypoint.sh"]
-
+ENTRYPOINT ["tini","--","ollama"]
 CMD ["serve"]
