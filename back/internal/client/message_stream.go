@@ -10,12 +10,18 @@ import (
 	"time"
 )
 
+type Message struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
 // PayloadStream структура для входных данных
 type PayloadStream struct {
-	Messages []struct {
-		Role    string `json:"role"`
-		Content string `json:"content"`
-	} `json:"messages"`
+	Messages   []Message `json:"messages"`
+	Tag        string    `json:"tag"`
+	QuestionID int       `json:"question_id"`
+	Mode       string    `json:"mode"`
+	System     string    `json:"system"`
 }
 
 // StreamMessage представляет структуру сообщения из стрима
@@ -45,14 +51,15 @@ type MessageContent struct {
 
 // StreamMessageClient клиент для работы с потоковыми сообщениями
 type StreamMessageClient struct {
-	method string
-	url    string
-	path   string
-	client *http.Client
+	method     string
+	url        string
+	path       string
+	client     *http.Client
+	HistoryLen int
 }
 
 // NewStreamMessageClient создает новый клиент
-func NewStreamMessageClient(method, url, path string) *StreamMessageClient {
+func NewStreamMessageClient(method, url, path string, historyLen int) *StreamMessageClient {
 	return &StreamMessageClient{
 		method: method,
 		url:    url,
@@ -60,6 +67,7 @@ func NewStreamMessageClient(method, url, path string) *StreamMessageClient {
 		client: &http.Client{
 			Timeout: 0, // Без таймаута для long-polling соединений
 		},
+		HistoryLen: historyLen,
 	}
 }
 

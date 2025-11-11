@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"jabki/internal/client"
 	"jabki/internal/database"
 	"strconv"
 	"strings"
@@ -41,7 +42,7 @@ func (hh *History) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	messages, err := database.GetHistory(hh.db, chatID, hh.logger)
+	messages, err := database.GetHistory(hh.db, chatID, uuid.String(), hh.logger, -1)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error in database",
@@ -52,14 +53,20 @@ func (hh *History) Handler(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	const prefix = "Token "
 	if strings.HasPrefix(authHeader, prefix) {
-		var messageToModel messageOutToModel
+		var messageToModel client.PayloadStream
 		for _, message := range messages {
 			messageToModel.Messages = append(messageToModel.Messages,
-				messageModel{
+				struct {
+					Role    string `json:"role"`
+					Content string `json:"content"`
+				}{
 					Role:    "user",
 					Content: message.Question,
 				},
-				messageModel{
+				struct {
+					Role    string `json:"role"`
+					Content string `json:"content"`
+				}{
 					Role:    "assistant",
 					Content: message.Answer,
 				},
@@ -69,13 +76,4 @@ func (hh *History) Handler(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(messages)
-}
-
-type messageOutToModel struct {
-	Messages []messageModel `json:"messages"`
-}
-
-type messageModel struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
 }

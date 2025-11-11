@@ -7,16 +7,17 @@ import (
 )
 
 func TestMessageStream(t *testing.T) {
-	client := NewStreamMessageClient("POST", "http://localhost:8000", "/message_stream")
+	client := NewStreamMessageClient("POST", "http://localhost:8000", "/message_stream", 5)
 
 	// Создаем payload с правильной структурой
 	payload := PayloadStream{
-		Messages: []struct {
-			Role    string `json:"role"`
-			Content string `json:"content"`
-		}{
-			{Role: "user", Content: "Рецепт блинов"},
+		Messages: []Message{
+			{Role: "user", Content: "напиши hello world на java"},
 		},
+		Tag:        "",
+		QuestionID: 0,
+		Mode:       "",
+		System:     "",
 	}
 
 	// Получаем канал для чтения StreamMessage
