@@ -1,4 +1,5 @@
-from typing import Dict, Any, Iterator
+from typing import Any, Dict, Iterator, List, Optional
+from weakref import WeakKeyDictionary
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from ml.agent.graph.state import GraphState
@@ -83,53 +84,59 @@ def create_pipeline(client: _ReasoningModelClient) -> StateGraph:
     app = workflow.compile(checkpointer=memory)
     
     return app
+
+
+_PIPELINE_CACHE: "WeakKeyDictionary[_ReasoningModelClient, Any]" = WeakKeyDictionary()
+
+
+def _get_compiled_app(client: _ReasoningModelClient):
+    app = _PIPELINE_CACHE.get(client)
+    if app is None:
+        app = create_pipeline(client)
+        _PIPELINE_CACHE[client] = app
+    return app
+
+
 def run_pipeline_stream(
     client: _ReasoningModelClient,
-    messages: list[Dict[str, str]],
-    config: Dict[str, Any] = None
+    messages: List[Dict[str, str]],
+    config: Optional[Dict[str, Any]] = None
 ) -> Iterator[ChatResponse]:
-    """Run pipeline and stream only the final answer generation."""
-    # Run pipeline up to the point where we generate the final answer
-    # We'll manually execute the nodes to prepare messages for streaming
-    
-    # Convert messages to Message objects
-    message_objects = []
+    """Run pipeline through LangGraph and stream the final answer generation."""
+
+    app = _get_compiled_app(client)
+
+    # Convert payload messages to Message objects
+    message_objects: List[Message] = []
     for msg in messages:
         try:
             role = Role(msg["role"])
             message_objects.append(Message(role=role, content=msg["content"]))
-        except (ValueError, KeyError) as e:
-            logger.warning(f"Invalid message format: {msg}, error: {e}")
-            # Skip invalid messages
+        except (ValueError, KeyError) as exc:  # pragma: no cover - defensive logging
+            logger.warning("Invalid message format: %s, error: %s", msg, exc)
             continue
-    
-    # Initialize state and run planning
+
     state = GraphState(messages=message_objects)
-    state = planner_node(state, client)
-    
-    # Prepare streaming messages based on mode
-    stream_messages = []
-    
+
+    invoke_config = config or None
+    final_state = app.invoke(state, config=invoke_config)
+    if not isinstance(final_state, GraphState):
+        final_state = GraphState.model_validate(final_state)
+
+    stream_messages = getattr(final_state, "stream_messages", None)
+    if not stream_messages:
+        stream_messages = _build_stream_messages(final_state)
+
+    if not stream_messages:
+        logger.warning("No streamable messages produced by pipeline; aborting stream.")
+        return
+
+    yield from client.stream(stream_messages)
+
+
+def _build_stream_messages(state: GraphState) -> List[Dict[str, str]]:
     if state.mode == "research":
-        # Run research pipeline
-        state = research_node(state, client)
-        state = execute_tools_node(state)
-        state = analyze_results_node(state, client)
-        
-        # Continue research loop if needed
-        while state.needs_more_research and state.research_iteration < state.max_research_iterations:
-            state = research_node(state, client)
-            state = execute_tools_node(state)
-            state = analyze_results_node(state, client)
-        
-        # Prepare synthesis messages for streaming
-        user_message = None
-        for msg in reversed(state.messages):
-            if msg.role == Role.user:
-                user_message = msg.content
-                break
-        
-        # Prepare search results context
+        user_message = _extract_last_user_message(state.messages)
         results_context = "Результаты поиска:\n\n"
         for result in state.tool_results:
             if result.get("type") == "search_result" and result.get("success"):
@@ -141,19 +148,24 @@ def run_pipeline_stream(
                     results_context += f"{i}. {res.get('title', '')}\n"
                     results_context += f"   URL: {res.get('url', '')}\n"
                     results_context += f"   {res.get('snippet', '')}\n\n"
-        
-        stream_messages = [
+
+        return [
             {"role": "system", "content": SYNTHESIS_PROMPT},
-            {"role": "user", "content": f"Запрос пользователя: {user_message}\n\n{results_context}"}
+            {"role": "user", "content": f"Запрос пользователя: {user_message}\n\n{results_context}"},
         ]
-    else:
-        # Fast answer mode - use conversation history
-        stream_messages = [{"role": "system", "content": FAST_ANSWER_PROMPT}]
-        for msg in state.messages:
-            stream_messages.append({
-                "role": msg.role.value,
-                "content": msg.content
-            })
-    
-    # Stream the final answer generation
-    yield from client.stream(stream_messages)
+
+    messages = [{"role": "system", "content": FAST_ANSWER_PROMPT}]
+    for msg in state.messages:
+        messages.append({
+            "role": msg.role.value,
+            "content": msg.content,
+        })
+
+    return messages
+
+
+def _extract_last_user_message(messages: List[Message]) -> str:
+    for msg in reversed(messages):
+        if msg.role == Role.user:
+            return msg.content
+    return ""
