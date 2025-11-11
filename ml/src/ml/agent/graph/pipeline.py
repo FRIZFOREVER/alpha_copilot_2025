@@ -9,6 +9,7 @@ from ml.agent.graph.nodes import (
     planner_node,
     research_node,
     execute_tools_node,
+    extract_evidence_node,
     analyze_results_node,
     synthesize_answer_node,
     fast_answer_node,
@@ -17,6 +18,7 @@ from ml.agent.calls.model_calls import _ReasoningModelClient
 from ml.configs.message import Message, Role
 from ml.agent.prompts.synthesis_prompt import PROMPT as SYNTHESIS_PROMPT
 from ml.agent.prompts.fast_answer_prompt import PROMPT as FAST_ANSWER_PROMPT
+from ml.agent.graph.nodes.evidence import format_evidence_context
 from ollama import ChatResponse
 import logging
 
@@ -49,6 +51,7 @@ def create_pipeline(client: _ReasoningModelClient) -> StateGraph:
     workflow.add_node("planner", lambda state: planner_node(state, client))
     workflow.add_node("research", lambda state: research_node(state, client))
     workflow.add_node("execute_tools", execute_tools_node)
+    workflow.add_node("extract_evidence", lambda state: extract_evidence_node(state, client))
     workflow.add_node("analyze", lambda state: analyze_results_node(state, client))
     workflow.add_node("synthesize", lambda state: synthesize_answer_node(state, client))
     workflow.add_node("fast_answer", lambda state: fast_answer_node(state, client))
@@ -67,7 +70,8 @@ def create_pipeline(client: _ReasoningModelClient) -> StateGraph:
     )
     
     workflow.add_edge("research", "execute_tools")
-    workflow.add_edge("execute_tools", "analyze")
+    workflow.add_edge("execute_tools", "extract_evidence")
+    workflow.add_edge("extract_evidence", "analyze")
     
     workflow.add_conditional_edges(
         "analyze",
@@ -159,26 +163,7 @@ def _ensure_invoke_config(config: Optional[Dict[str, Any]]) -> Dict[str, Any]:
 def _build_stream_messages(state: GraphState) -> List[Dict[str, str]]:
     if state.mode == "research":
         user_message = _extract_last_user_message(state.messages)
-        results_context = "Результаты поиска:\n\n"
-        for result in state.tool_results:
-            if result.get("type") == "search_result" and result.get("success"):
-                search_data = result.get("data", {})
-                query = search_data.get("query", "")
-                results = search_data.get("results", [])
-                results_context += f"Запрос: {query}\n"
-                for i, res in enumerate(results, 1):
-                    excerpt = res.get("excerpt") or res.get("snippet", "")
-                    preview = res.get("content", "")
-                    results_context += f"{i}. {res.get('title', '')}\n"
-                    results_context += f"   URL: {res.get('url', '')}\n"
-                    if excerpt:
-                        results_context += f"   {excerpt}\n"
-                    if preview:
-                        short_preview = preview[:300].rstrip()
-                        if len(preview) > 300:
-                            short_preview += "..."
-                        results_context += f"   [Контент] {short_preview}\n"
-                    results_context += "\n"
+        results_context = format_evidence_context(state)
 
         return [
             {"role": "system", "content": SYNTHESIS_PROMPT},
