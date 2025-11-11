@@ -9,6 +9,7 @@ import { routesWithHoc } from "@/shared/lib/routesWithHoc";
 
 const DashboardPage = lazy(() => import("@/pages/(main)/dashboardPage"));
 const ProfilePage = lazy(() => import("@/pages/(main)/profilePage"));
+const AnalyticsPage = lazy(() => import("@/pages/(main)/analyticsPage"));
 const CopilotChatPage = lazy(() => import("@/pages/(main)/copilotChatPage"));
 
 const LandingPage = lazy(() => import("@/pages/(main)/landingPage"));
@@ -28,7 +29,7 @@ export const routes = createBrowserRouter([
           children: [
             {
               path: ERouteNames.EMPTY_ROUTE,
-              element: <Navigate to={ERouteNames.LANDING_ROUTE} replace />,
+              element: <Navigate to={ERouteNames.DASHBOARD_ROUTE} replace />,
             },
             {
               path: ERouteNames.DASHBOARD_ROUTE,
@@ -55,6 +56,10 @@ export const routes = createBrowserRouter([
                 {
                   path: ERouteNames.PROFILE_ROUTE,
                   element: <ProfilePage />,
+                },
+                {
+                  path: ERouteNames.ANALYTICS_ROUTE,
+                  element: <AnalyticsPage />,
                 },
               ],
             },

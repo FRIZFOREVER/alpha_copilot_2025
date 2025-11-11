@@ -3,6 +3,7 @@ export const enum ERouteNames {
   EMPTY_ROUTE = "",
   DASHBOARD_ROUTE = "dashboard",
   PROFILE_ROUTE = "profile",
+  ANALYTICS_ROUTE = "analytics",
   LANDING_ROUTE = "landing",
   AUTH_ROUTE = "auth",
   LOGIN_ROUTE = "login",

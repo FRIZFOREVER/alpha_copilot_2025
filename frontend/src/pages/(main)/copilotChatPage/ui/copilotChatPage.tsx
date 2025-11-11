@@ -8,6 +8,7 @@ import { useMemo, useRef, useEffect } from "react";
 import type { MessageData } from "@/features/chat/ui/messageList/messageList";
 import { ERouteNames } from "@/shared/lib/routeVariables";
 import { capitalizeFirst } from "@/shared/lib/utils/userHelpers";
+import { type Suggestion } from "@/features/chat/ui/suggestions";
 
 const CopilotChatPage = () => {
   const params = useParams<{ chatId?: string }>();
@@ -114,6 +115,37 @@ const CopilotChatPage = () => {
     chatIdRef.current = chatId;
   }, [chatId]);
 
+  const mockSuggestions: Suggestion[] = useMemo(
+    () => [
+      {
+        id: "1",
+        title: "Design a database schema",
+        subtitle: "for an online merch store",
+      },
+      {
+        id: "2",
+        title: "Explain airplane",
+        subtitle: "to someone 5 years old",
+      },
+      {
+        id: "3",
+        title: "Create a marketing plan",
+        subtitle: "for a small business",
+      },
+      // {
+      //   id: "4",
+      //   title: "Write a business proposal",
+      //   subtitle: "for a new product launch",
+      // },
+      // {
+      //   id: "5",
+      //   title: "Analyze financial data",
+      //   subtitle: "and provide insights",
+      // },
+    ],
+    []
+  );
+
   return (
     <Chat
       messages={messagesWithTyping}
@@ -122,6 +154,7 @@ const CopilotChatPage = () => {
       isLoading={
         isLoadingHistory || isSendingMessage || isSendingVoice || isCreatingChat
       }
+      suggestions={mockSuggestions}
     />
   );
 };

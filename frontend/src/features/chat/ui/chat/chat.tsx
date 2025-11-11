@@ -1,12 +1,14 @@
 import { ChatHeader } from "../chatHeader";
 import { MessageList, type MessageData } from "../messageList";
 import { ChatInput } from "../chatInput";
+import { type Suggestion } from "../suggestions";
 
 export interface ChatProps {
   messages?: MessageData[];
   onSendMessage?: (message: string) => void;
   onSendVoice?: (voiceBlob: Blob) => void;
   isLoading?: boolean;
+  suggestions?: Suggestion[];
 }
 
 export const Chat = ({
@@ -14,6 +16,7 @@ export const Chat = ({
   onSendMessage,
   onSendVoice,
   isLoading = false,
+  suggestions,
 }: ChatProps) => {
   return (
     <div className="flex h-full flex-col bg-white overflow-hidden">
@@ -25,6 +28,7 @@ export const Chat = ({
         onSend={onSendMessage}
         onSendVoice={onSendVoice}
         disabled={isLoading}
+        suggestions={suggestions}
       />
     </div>
   );
