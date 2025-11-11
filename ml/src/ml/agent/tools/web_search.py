@@ -1,5 +1,5 @@
 from typing import Any, Dict
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 from ml.agent.tools.base import BaseTool, ToolResult
 import logging
 
