@@ -84,5 +84,5 @@ func InitPrivateRoutes(
 
 	
 	stream := handlers.NewStream(streamClient, db, streamClient.HistoryLen, logger)
-	server.Post("message_stream", stream.Handler)
+	server.Post("message_stream/:chat_id", stream.Handler)
 }

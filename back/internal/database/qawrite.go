@@ -49,17 +49,17 @@ func WriteMessage(
 		}
 	}()
 
-	if answer != "" {
-		err = tx.QueryRow(answerQuery, answerTime, answer, chatID).Scan(&answerID)
-		if err != nil {
-			logger.WithError(err).Error("Failed to insert answer")
-			return 0, 0, err
-		}
-		logger.WithFields(logrus.Fields{
-			"answer_id": answerID,
-			"chat_id":   chatID,
-		}).Info("Answer inserted successfully")
+	
+	err = tx.QueryRow(answerQuery, answerTime, answer, chatID).Scan(&answerID)
+	if err != nil {
+		logger.WithError(err).Error("Failed to insert answer")
+		return 0, 0, err
 	}
+	logger.WithFields(logrus.Fields{
+		"answer_id": answerID,
+		"chat_id":   chatID,
+	}).Info("Answer inserted successfully")
+	
 
 	err = tx.QueryRow(questionQuery, questionTime, question, chatID, answerID, voiceURL).Scan(&questionID)
 	if err != nil {
