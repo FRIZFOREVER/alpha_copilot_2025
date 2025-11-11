@@ -160,7 +160,6 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 				// Отправляем чанк
 				chunkOut := streamChunckOut{
 					Content:  message.Message.Content,
-					Thinking: message.Message.Thinking,
 					Time:     time.Now().UTC(),
 					Done:     false,
 				}
@@ -181,7 +180,6 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 					// Отправляем финальный чанк с флагом Done
 					finalChunk := streamChunckOut{
 						Content:  "",
-						Thinking: "",
 						Time:     time.Now().UTC(),
 						Done:     true,
 					}
@@ -218,7 +216,6 @@ type streamMetaOut struct {
 
 type streamChunckOut struct {
 	Content  string    `json:"content"`
-	Thinking string    `json:"thinking"`
 	Time     time.Time `json:"time"`
 	Done     bool      `json:"done"`
 }
