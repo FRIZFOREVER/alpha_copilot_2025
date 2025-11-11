@@ -1,4 +1,5 @@
 import { axiosAuth } from "@/shared/api/baseQueryInstance";
+import { getAccessToken } from "@/entities/token";
 import {
   CreateChatDto,
   CreateChatResponse,
@@ -9,7 +10,13 @@ import {
   SendMessageDto,
   SendMessageResponse,
   SendVoiceResponse,
+  SendMessageStreamDto,
+  SendMessageStreamCallbacks,
+  StreamInitialResponse,
+  StreamChunk,
 } from "../types/types";
+
+const API_BASE_URL = "http://localhost:8080";
 
 class ChatService {
   public async createChat(
@@ -37,11 +44,11 @@ class ChatService {
   }
 
   public async likeMessage(
-    answerId: number,
+    chatId: number,
     likeDto: LikeMessageDto
   ): Promise<LikeMessageResponse> {
     const { data } = await axiosAuth.put<LikeMessageResponse>(
-      `/like/${answerId}`,
+      `/like/${chatId}`,
       likeDto as unknown as Record<string, unknown>
     );
 
@@ -58,6 +65,169 @@ class ChatService {
     );
 
     return data;
+  }
+
+  public async sendMessageStream(
+    chatId: number,
+    sendMessageDto: SendMessageStreamDto,
+    callbacks: SendMessageStreamCallbacks
+  ): Promise<void> {
+    const token = getAccessToken();
+
+    if (!token) {
+      callbacks.onError?.(new Error("Токен авторизации не найден"));
+      return;
+    }
+
+    try {
+      const baseURL = API_BASE_URL.endsWith("/")
+        ? API_BASE_URL.slice(0, -1)
+        : API_BASE_URL;
+      const url = `${baseURL}/message_stream/${chatId}`;
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          question: sendMessageDto.question,
+          voice_url: sendMessageDto.voice_url || "",
+          tag: sendMessageDto.tag || "",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => "Unknown error");
+        throw new Error(
+          `HTTP error! status: ${response.status}, message: ${errorText}`
+        );
+      }
+
+      if (!response.body) {
+        throw new Error("Response body is null");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let isInitialReceived = false;
+
+      const processSSEEvent = (data: string): boolean => {
+        if (!data.trim()) return false;
+
+        try {
+          const json = JSON.parse(data);
+
+          if (!isInitialReceived) {
+            const initialData = json as StreamInitialResponse;
+            callbacks.onInitial?.(initialData);
+            isInitialReceived = true;
+            return false;
+          } else {
+            const chunk = json as StreamChunk;
+            callbacks.onChunk?.(chunk);
+
+            if (chunk.done) {
+              callbacks.onComplete?.();
+              return true;
+            }
+            return false;
+          }
+        } catch (error) {
+          console.error("Ошибка при парсинге JSON:", error, data);
+          return false;
+        }
+      };
+
+      const processBuffer = (): boolean => {
+        let eventEndIndex: number;
+
+        while ((eventEndIndex = buffer.indexOf("\n\n")) !== -1) {
+          const eventData = buffer.substring(0, eventEndIndex);
+          buffer = buffer.substring(eventEndIndex + 2);
+
+          const lines = eventData.split("\n");
+          let jsonData: string | null = null;
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+
+            if (trimmed.startsWith("data: ")) {
+              jsonData = trimmed.substring(6).trim();
+              break;
+            }
+
+            if (trimmed.startsWith("{")) {
+              jsonData = trimmed;
+              break;
+            }
+          }
+
+          if (jsonData) {
+            const shouldStop = processSSEEvent(jsonData);
+            if (shouldStop) {
+              return true;
+            }
+          }
+        }
+
+        return false;
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+
+        const shouldStop = processBuffer();
+        if (shouldStop) {
+          return;
+        }
+      }
+
+      if (buffer.trim()) {
+        const lines = buffer.split("\n");
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          if (trimmed.startsWith("data: ")) {
+            const jsonData = trimmed.substring(6).trim();
+            const shouldStop = processSSEEvent(jsonData);
+            if (shouldStop) {
+              return;
+            }
+            break;
+          }
+
+          if (trimmed.startsWith("{")) {
+            const shouldStop = processSSEEvent(trimmed);
+            if (shouldStop) {
+              return;
+            }
+            break;
+          }
+        }
+      }
+
+      if (!isInitialReceived) {
+        callbacks.onError?.(new Error("Начальный ответ не был получен"));
+        return;
+      }
+
+      callbacks.onComplete?.();
+    } catch (error) {
+      callbacks.onError?.(
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
   }
 
   public async sendVoice(voiceBlob: Blob): Promise<SendVoiceResponse> {
@@ -79,5 +249,6 @@ export const {
   getHistory,
   likeMessage,
   sendMessage,
+  sendMessageStream,
   sendVoice,
 } = new ChatService();

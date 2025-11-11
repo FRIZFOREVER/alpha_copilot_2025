@@ -92,14 +92,14 @@ export const Suggestions = ({
         </Button>
       )}
 
-      <div ref={scrollContainerRef} className="overflow-x-auto scrollbar-hide ">
+      <div ref={scrollContainerRef} className="overflow-x-auto scrollbar-hide">
         <div className="flex gap-3 min-w-max pb-2">
           {suggestions.map((suggestion) => (
             <button
               key={suggestion.id}
               onClick={() => onSelect(suggestion)}
               className={cn(
-                "px-4 py-3 rounded-2xl cursor-pointer",
+                "px-4 py-2.5 rounded-2xl cursor-pointer",
                 "bg-gray-100 hover:bg-gray-200 active:bg-gray-200",
                 "border border-gray-200",
                 "text-left transition-all duration-200",
@@ -108,7 +108,7 @@ export const Suggestions = ({
                 "flex-shrink-0"
               )}
             >
-              <div className="font-semibold text-gray-900 text-sm mb-1">
+              <div className="font-semibold text-gray-900 text-sm">
                 {suggestion.title}
               </div>
               <div className="text-xs text-gray-600 leading-relaxed">

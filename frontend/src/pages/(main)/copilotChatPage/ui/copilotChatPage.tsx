@@ -28,6 +28,17 @@ const CopilotChatPage = () => {
   const messagesWithTyping = useMemo<MessageData[]>(() => {
     if (!isSendingMessage && !isSendingVoice) return messages;
 
+    const lastMessage = messages[messages.length - 1];
+    const hasLastAnswerWithContent =
+      lastMessage &&
+      !lastMessage.isUser &&
+      lastMessage.content &&
+      lastMessage.content.trim() !== "";
+
+    if (hasLastAnswerWithContent) {
+      return messages;
+    }
+
     const hasTypingIndicator = messages.some((msg) => msg.isTyping);
     if (hasTypingIndicator) return messages;
 

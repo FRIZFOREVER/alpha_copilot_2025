@@ -6,8 +6,6 @@ import {
   ChevronDown,
   ChevronUp,
   ChevronRight,
-  Eye,
-  Bot,
   ChartArea,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
@@ -182,8 +180,11 @@ export const Sidebar = () => {
                   "w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer",
                   "text-gray-600 hover:bg-gray-100"
                 )}
+                onClick={() => {
+                  openModal(EModalVariables.SEARCH_CHATS_MODAL);
+                }}
               >
-                <Eye className="h-5 w-5" />
+                <Search className="h-5 w-5" />
               </button>
               <button
                 onClick={() => {
@@ -199,17 +200,6 @@ export const Sidebar = () => {
                 title="Аналитика"
               >
                 <ChartArea className="h-5 w-5" />
-              </button>
-              <button
-                className={cn(
-                  "w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer",
-                  expandedSections.has("chats")
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:bg-gray-100"
-                )}
-                onClick={() => toggleSection("chats")}
-              >
-                <Bot className="h-5 w-5" />
               </button>
             </div>
           ) : (
@@ -321,15 +311,20 @@ export const Sidebar = () => {
           )}
         </div>
 
-        <div className="py-3 border-t border-gray-200/50 bg-[#0000000f] rounded-2xl m-2">
+        <div
+          className={cn(
+            "py-3 border-t border-gray-200/50 bg-[#0000000f] rounded-2xl m-2",
+            isCollapsed && "bg-[#f9f9f9]"
+          )}
+        >
           {isCollapsed ? (
             <div className="flex flex-col items-center gap-2 cursor-pointer">
               <button
                 onClick={handleProfileClick}
-                className="h-10 w-10 rounded-lg hover:bg-gray-100 transition-all flex items-center justify-center"
+                className="h-10 w-10 rounded-lg transition-all flex items-center justify-center cursor-pointer"
               >
-                <Avatar className="h-8 w-8 border-2 border-gray-200 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg">
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white rounded-lg text-xs font-semibold">
+                <Avatar className="h-10 w-10 border-2 border-gray-200 bg-gradient-to-br from-red-500 to-pink-500 rounded-full shrink-0">
+                  <AvatarFallback className="bg-gradient-to-br from-red-500 to-pink-500 text-white rounded-full text-xs font-semibold">
                     {userInitials}
                   </AvatarFallback>
                 </Avatar>

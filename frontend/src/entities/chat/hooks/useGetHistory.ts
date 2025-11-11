@@ -30,7 +30,11 @@ export const useGetHistoryQuery = (chatId: number | undefined) => {
           rating: historyItem.rating,
         });
 
-        if (historyItem.answer && historyItem.answer.trim() !== "") {
+        if (
+          historyItem.answer_id &&
+          historyItem.answer &&
+          historyItem.answer.trim() !== ""
+        ) {
           result.push({
             id: `answer-${historyItem.answer_id}`,
             content: historyItem.answer,
