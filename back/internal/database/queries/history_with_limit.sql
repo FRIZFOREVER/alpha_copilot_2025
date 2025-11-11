@@ -6,6 +6,7 @@ SELECT
     q.time_utc as question_time,
     a.time_utc as answer_time,
     q.voice_url,
+    q.file_url,
     a.rating
 FROM questions q
 LEFT JOIN answers a ON q.answer_id = a.answer_id

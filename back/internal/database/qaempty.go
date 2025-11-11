@@ -8,22 +8,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//go:embed queries/question.sql
-var questionQuery string
-
-//go:embed queries/answer.sql
-var answerQuery string
-
-//go:embed queries/update_answer.sql
-var updateAnswerQuery string
-
-func WriteMessage(
+func WriteEmptyMessage(
 	db *sql.DB,
 	chatID int,
-	question, answer string,
 	questionTime, answerTime time.Time,
 	voiceURL string,
-	fileURL string,
 	logger *logrus.Logger,
 ) (
 	questionID int,
@@ -50,7 +39,7 @@ func WriteMessage(
 		}
 	}()
 
-	err = tx.QueryRow(answerQuery, answerTime, answer, chatID).Scan(&answerID)
+	err = tx.QueryRow(answerQuery, answerTime, "", chatID).Scan(&answerID)
 	if err != nil {
 		logger.WithError(err).Error("Failed to insert answer")
 		return 0, 0, err
@@ -60,43 +49,16 @@ func WriteMessage(
 		"chat_id":   chatID,
 	}).Info("Answer inserted successfully")
 
-	err = tx.QueryRow(questionQuery, questionTime, question, chatID, answerID, voiceURL, fileURL).Scan(&questionID)
+	err = tx.QueryRow(questionQuery, questionTime, "", chatID, answerID, voiceURL).Scan(&questionID)
 	if err != nil {
 		logger.WithError(err).Error("Failed to insert question")
 		return 0, 0, err
 	}
+	
 	logger.WithFields(logrus.Fields{
 		"question_id": questionID,
 		"chat_id":     chatID,
 	}).Info("Question inserted successfully")
 
 	return questionID, answerID, nil
-}
-
-func UpdateAnswer(
-	db *sql.DB,
-	answerID int,
-	answer string,
-	logger *logrus.Logger,
-) (rowsAffected int64, err error) {
-	result, err := db.Exec(updateAnswerQuery, answer, time.Now().UTC(), answerID)
-	if err != nil {
-		logger.WithError(err).WithFields(logrus.Fields{
-			"answer_id": answerID,
-		}).Error("Failed to update answer")
-		return 0, err
-	}
-
-	rowsAffected, err = result.RowsAffected()
-	if err != nil {
-		logger.WithError(err).Error("Failed to get rows affected")
-		return 0, err
-	}
-
-	logger.WithFields(logrus.Fields{
-		"answer_id":     answerID,
-		"rows_affected": rowsAffected,
-	}).Info("Answer updated successfully")
-
-	return rowsAffected, nil
 }
