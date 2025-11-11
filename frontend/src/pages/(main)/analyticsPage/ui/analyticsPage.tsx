@@ -4,19 +4,14 @@ import {
   BarChart3,
   Clock,
   FileText,
-  TrendingUp,
-  DollarSign,
-  Target,
   CheckCircle2,
   Sparkles,
-  Calendar,
   ArrowUp,
   ArrowDown,
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ERouteNames } from "@/shared/lib/routeVariables";
 import { cn } from "@/shared/lib/mergeClass";
 import { analyticsData } from "../lib/constants";
 
@@ -112,7 +107,9 @@ const AnalyticsPage = () => {
                 className="rounded-xl cursor-pointer p-4 bg-gray-50/50 hover:bg-gray-100/50 transition-all text-center border border-gray-100"
               >
                 <stat.icon className="h-6 w-6 text-gray-700 mx-auto mb-2" />
-                <p className="text-xl font-medium text-gray-900">{stat.value}</p>
+                <p className="text-xl font-medium text-gray-900">
+                  {stat.value}
+                </p>
                 <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
               </div>
             ))}
@@ -232,8 +229,7 @@ const AnalyticsPage = () => {
                           "text-green-600"
                         )}
                       >
-                        <ArrowUp className="h-3 w-3" />
-                        +{feature.trend}
+                        <ArrowUp className="h-3 w-3" />+{feature.trend}
                       </div>
                     </div>
                   </div>
@@ -295,7 +291,10 @@ const AnalyticsPage = () => {
                 </div>
                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div
-                    className={cn("h-full rounded-full transition-all", category.color)}
+                    className={cn(
+                      "h-full rounded-full transition-all",
+                      category.color
+                    )}
                     style={{ width: `${category.percentage}%` }}
                   />
                 </div>
@@ -309,4 +308,3 @@ const AnalyticsPage = () => {
 };
 
 export default AnalyticsPage;
-
