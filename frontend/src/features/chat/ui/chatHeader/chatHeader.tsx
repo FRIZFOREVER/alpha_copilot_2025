@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { SquarePen, Sparkles, Zap, Brain, Settings } from "lucide-react";
+import { SquarePen, Sparkles, Zap, Brain, Settings, Minimize2, Maximize2 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import {
   Select,
@@ -10,6 +10,7 @@ import {
 } from "@/shared/ui/select/select";
 import { useNavigate } from "react-router-dom";
 import { ERouteNames } from "@/shared/lib/routeVariables";
+import { useChatCollapse } from "@/shared/lib/chatCollapse";
 
 const modelOptions = [
   {
@@ -42,6 +43,7 @@ export const ChatHeader = () => {
   const [selectedModel, setSelectedModel] = useState<string>("thinking");
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
+  const { isCollapsed, toggleCollapse } = useChatCollapse();
 
   const currentModel = modelOptions.find((m) => m.value === selectedModel);
 
@@ -107,6 +109,19 @@ export const ChatHeader = () => {
           title="Новый чат"
         >
           <SquarePen className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleCollapse}
+          className="h-9 w-9 rounded-xl hover:bg-gray-100 text-gray-900 transition-all cursor-pointer"
+          title={isCollapsed ? "Развернуть чат" : "Свернуть чат"}
+        >
+          {isCollapsed ? (
+            <Maximize2 className="h-4 w-4" />
+          ) : (
+            <Minimize2 className="h-4 w-4" />
+          )}
         </Button>
       </div>
     </div>

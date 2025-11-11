@@ -11,7 +11,7 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { cn } from "@/shared/lib/mergeClass";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ERouteNames } from "@/shared/lib/routeVariables";
 import { useGetChatsQuery } from "@/entities/chat/hooks/useGetChats";
 import { Chat } from "@/entities/chat/types/types";
@@ -24,6 +24,7 @@ import {
 } from "@/shared/lib/utils/userHelpers";
 import { getChatIcon, getChatInitial } from "@/shared/lib/utils/chatHelpers";
 import { Icon, IconTypes } from "@/shared/ui/icon";
+import { useChatCollapse } from "@/shared/lib/chatCollapse";
 
 export interface ChatItem {
   id: string;
@@ -39,12 +40,23 @@ export const Sidebar = () => {
     new Set(["chats"])
   );
   const navigate = useNavigate();
+  const location = useLocation();
   const params = useParams<{ chatId?: string }>();
   const currentChatId = params.chatId;
+  const { isCollapsed: isChatCollapsed } = useChatCollapse();
 
   const { data: chatsData, isLoading: isLoadingChats } = useGetChatsQuery();
   const { data: profileData } = useGetProfileQuery();
   const { openModal } = useModal();
+
+  // Проверяем, находимся ли мы на странице чата
+  const isChatRoute =
+    location.pathname.includes(`/${ERouteNames.CHAT_ROUTE}`) ||
+    location.pathname === `/${ERouteNames.DASHBOARD_ROUTE}` ||
+    location.pathname === `/${ERouteNames.DASHBOARD_ROUTE}/`;
+
+  // Скрываем сайдбар, если чат свернут И мы на странице чата
+  const shouldHideSidebar = isChatCollapsed && isChatRoute;
 
   const chats: ChatItem[] = useMemo(() => {
     if (!chatsData) return [];
@@ -119,7 +131,7 @@ export const Sidebar = () => {
 
   return (
     <>
-      {isMobileOpen && (
+      {isMobileOpen && !shouldHideSidebar && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
           onClick={handleBackdropClick}
@@ -132,7 +144,8 @@ export const Sidebar = () => {
           "bg-[#f9f9f9]",
           "md:static md:z-auto",
           isCollapsed ? "w-16 md:w-16" : "w-64 md:w-72",
-          isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          isMobileOpen && !shouldHideSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          shouldHideSidebar && "hidden md:hidden"
         )}
       >
         <div className="flex items-center justify-between px-3.5 py-3 pb-0">
@@ -351,14 +364,16 @@ export const Sidebar = () => {
         </div>
       </aside>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed cursor-pointer top-2.5 left-2 z-30 md:hidden h-10 w-10 rounded-xl bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20"
-        onClick={handleOpenMobile}
-      >
-        <Icon type={IconTypes.MENU_OUTLINED} />
-      </Button>
+      {!shouldHideSidebar && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed cursor-pointer top-2.5 left-2 z-30 md:hidden h-10 w-10 rounded-xl bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20"
+          onClick={handleOpenMobile}
+        >
+          <Icon type={IconTypes.MENU_OUTLINED} />
+        </Button>
+      )}
     </>
   );
 };
