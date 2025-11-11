@@ -1,4 +1,5 @@
 from typing import Any, Dict, Iterator, Union
+import json
 import logging
 
 from ml.agent.calls.model_calls import make_client, _ReasoningModelClient
@@ -7,7 +8,7 @@ from ml.configs.message import Message
 from ml.agent.graph.pipeline import run_pipeline, run_pipeline_stream
 from ollama import ChatResponse
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app.router")
 
 _MODEL_CLIENTS: Dict[str, Any] = {}
 
@@ -25,7 +26,14 @@ def chat_completion(client: _ReasoningModelClient, payload: Dict[str, Any]) -> s
     """Run pipeline and return final answer as string."""
     messages = payload.get("messages", [])
     final_state = run_pipeline(client=client, messages=messages)
-    print(f"Final state: {final_state}")
+    if final_state is not None:
+        try:
+            state_payload = final_state.model_dump()
+        except AttributeError:
+            state_payload = final_state
+    else:
+        state_payload = None
+    logger.info("Final state:\n%s", json.dumps(state_payload, ensure_ascii=False, indent=2))
     if final_state and final_state.final_answer:
         return final_state.final_answer
     else:

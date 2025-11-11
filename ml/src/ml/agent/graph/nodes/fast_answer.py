@@ -1,22 +1,14 @@
 from ml.agent.graph.state import GraphState
 from ml.agent.calls.model_calls import _ReasoningModelClient
 from ml.configs.message import Role, Message
-import os
+from ml.agent.prompts.fast_answer_prompt import PROMPT as FAST_ANSWER_PROMPT
 
 
 def fast_answer_node(state: GraphState, client: _ReasoningModelClient) -> GraphState:
     """Generate fast answer without tools."""
     
-    # Load fast answer prompt
-    prompt_path = os.path.join(
-        os.path.dirname(__file__),
-        "..", "..", "prompts", "fast_answer_prompt.txt"
-    )
-    with open(prompt_path, "r", encoding="utf-8") as f:
-        fast_answer_prompt = f.read()
-    
     # Prepare messages with conversation history
-    messages = [{"role": "system", "content": fast_answer_prompt}]
+    messages = [{"role": "system", "content": FAST_ANSWER_PROMPT}]
     
     # Add conversation history
     for msg in state.messages:
@@ -33,4 +25,3 @@ def fast_answer_node(state: GraphState, client: _ReasoningModelClient) -> GraphS
         state.final_answer = f"Извините, произошла ошибка при генерации ответа: {str(e)}"
     
     return state
-

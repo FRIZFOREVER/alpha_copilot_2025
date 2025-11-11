@@ -12,6 +12,8 @@ from ml.agent.graph.nodes import (
 )
 from ml.agent.calls.model_calls import _ReasoningModelClient
 from ml.configs.message import Message, Role
+from ml.agent.prompts.synthesis_prompt import PROMPT as SYNTHESIS_PROMPT
+from ml.agent.prompts.fast_answer_prompt import PROMPT as FAST_ANSWER_PROMPT
 from ollama import ChatResponse
 import logging
 
@@ -114,7 +116,18 @@ def run_pipeline(
     
     final_state = None
     for state in app.stream(initial_state, config=config):
-        final_state = list(state.values())[0]
+        state_value = list(state.values())[0]
+        if isinstance(state_value, GraphState):
+            final_state = state_value
+        elif isinstance(state_value, dict):
+            try:
+                final_state = GraphState(**state_value)
+            except Exception as exc:
+                logger.warning("Failed to convert state dict to GraphState: %s", exc)
+                final_state = None
+        else:
+            logger.warning("Unexpected state type from pipeline: %s", type(state_value))
+            final_state = None
     
     return final_state
 
@@ -125,10 +138,8 @@ def run_pipeline_stream(
     config: Dict[str, Any] = None
 ) -> Iterator[ChatResponse]:
     """Run pipeline and stream only the final answer generation."""
-    
     # Run pipeline up to the point where we generate the final answer
     # We'll manually execute the nodes to prepare messages for streaming
-    import os
     
     # Convert messages to Message objects
     message_objects = []
@@ -167,14 +178,6 @@ def run_pipeline_stream(
                 user_message = msg.content
                 break
         
-        # Load synthesis prompt
-        prompt_path = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)),
-            "prompts", "synthesis_prompt.txt"
-        )
-        with open(prompt_path, "r", encoding="utf-8") as f:
-            synthesis_prompt = f.read()
-        
         # Prepare search results context
         results_context = "Результаты поиска:\n\n"
         for result in state.tool_results:
@@ -189,19 +192,12 @@ def run_pipeline_stream(
                     results_context += f"   {res.get('snippet', '')}\n\n"
         
         stream_messages = [
-            {"role": "system", "content": synthesis_prompt},
+            {"role": "system", "content": SYNTHESIS_PROMPT},
             {"role": "user", "content": f"Запрос пользователя: {user_message}\n\n{results_context}"}
         ]
     else:
         # Fast answer mode - use conversation history
-        prompt_path = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)),
-            "prompts", "fast_answer_prompt.txt"
-        )
-        with open(prompt_path, "r", encoding="utf-8") as f:
-            fast_answer_prompt = f.read()
-        
-        stream_messages = [{"role": "system", "content": fast_answer_prompt}]
+        stream_messages = [{"role": "system", "content": FAST_ANSWER_PROMPT}]
         for msg in state.messages:
             stream_messages.append({
                 "role": msg.role.value,
@@ -210,4 +206,3 @@ def run_pipeline_stream(
     
     # Stream the final answer generation
     yield from client.stream(stream_messages)
-
