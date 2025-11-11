@@ -1,11 +1,9 @@
-from typing import Any, Dict, Iterator, Union
-import json
+from typing import Any, Dict, Iterator, Optional
 import logging
 
 from ml.agent.calls.model_calls import make_client, _ReasoningModelClient
 from ml.configs.model_config import ModelSettings
-from ml.configs.message import Message
-from ml.agent.graph.pipeline import run_pipeline, run_pipeline_stream
+from ml.agent.graph.pipeline import run_pipeline_stream
 from ollama import ChatResponse
 
 logger = logging.getLogger("app.router")
@@ -13,37 +11,79 @@ logger = logging.getLogger("app.router")
 _MODEL_CLIENTS: Dict[str, Any] = {}
 
 
-def workflow(payload: Dict[str, Any], streaming=False) -> Union[str, Iterator[ChatResponse]]:
-    """Main workflow function that routes to LangGraph pipeline."""
-    client: _ReasoningModelClient = _MODEL_CLIENTS["chat"]
-    if streaming:
-        answer: Iterator[ChatResponse] = chat_completion_stream(client=client, payload=payload)
-    else:
-        answer: str = chat_completion(client=client, payload=payload)
-    return answer
-    
-def chat_completion(client: _ReasoningModelClient, payload: Dict[str, Any]) -> str:
-    """Run pipeline and return final answer as string."""
-    messages = payload.get("messages", [])
-    final_state = run_pipeline(client=client, messages=messages)
-    if final_state is not None:
-        try:
-            state_payload = final_state.model_dump()
-        except AttributeError:
-            state_payload = final_state
-    else:
-        state_payload = None
-    logger.info("Final state:\n%s", json.dumps(state_payload, ensure_ascii=False, indent=2))
-    if final_state and final_state.final_answer:
-        return final_state.final_answer
-    else:
-        return "Извините, не удалось сгенерировать ответ."
+def workflow_stream(payload: Dict[str, Any]) -> Iterator[ChatResponse]:
+    """Stream workflow responses chunk by chunk."""
 
-def chat_completion_stream(client: _ReasoningModelClient, payload: Dict[str, Any]) -> Iterator[ChatResponse]:
-    """Run pipeline and stream final answer generation."""
+    stream = _prepare_workflow_stream(payload)
+    buffer: list[str] = []
+
+    for chunk in stream:
+        content = _extract_assistant_content(chunk)
+        if content is not None:
+            buffer.append(content)
+        yield chunk
+
+    _log_final_response(buffer)
+
+
+def workflow_collect(payload: Dict[str, Any]) -> str:
+    """Collect workflow response into a single string."""
+
+    stream = _prepare_workflow_stream(payload)
+    buffer: list[str] = []
+
+    for chunk in stream:
+        content = _extract_assistant_content(chunk)
+        if content is not None:
+            buffer.append(content)
+
+    _log_final_response(buffer)
+
+    if buffer:
+        return "".join(buffer)
+
+    return "Извините, не удалось сгенерировать ответ."
+
+
+def _prepare_workflow_stream(payload: Dict[str, Any]) -> Iterator[ChatResponse]:
+    """Prepare the LangGraph workflow stream for the given payload."""
+
+    client: _ReasoningModelClient = _MODEL_CLIENTS["chat"]
     messages = payload.get("messages", [])
     return run_pipeline_stream(client=client, messages=messages)
-    
+
+
+def _extract_assistant_content(chunk: ChatResponse) -> Optional[str]:
+    """Extract assistant message content from a chat chunk when present."""
+
+    message = getattr(chunk, "message", None)
+    if message is None:
+        logger.debug("Received chunk without message: %s", chunk)
+        return None
+
+    role = getattr(message, "role", None)
+    if role != "assistant":
+        logger.debug("Skipping chunk with non-assistant role '%s': %s", role, chunk)
+        return None
+
+    content = getattr(message, "content", None)
+    if not isinstance(content, str):
+        logger.debug("Skipping chunk with invalid content: %s", chunk)
+        return None
+
+    return content
+
+
+def _log_final_response(chunks: list[str]) -> None:
+    """Log the final assistant response assembled from streamed chunks."""
+
+    if not chunks:
+        logger.warning("Workflow stream finished without assistant content")
+        return
+
+    final_answer = "".join(chunks)
+    logger.info("Final assistant response: %s", final_answer)
+
 
 async def init_models() -> Dict[str, Any]:
     modes = ("chat", "reranker", "embeddings")
