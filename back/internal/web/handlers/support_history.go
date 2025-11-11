@@ -49,7 +49,7 @@ func (sh *supportHistory) GetSupportsHistoryHandler(c *fiber.Ctx) error {
 			"chat_id":   chatID,
 			"error":     err.Error(),
 		}).Error("Failed to get supports from database")
-		
+
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to retrieve support messages",
 			"details": err.Error(),
