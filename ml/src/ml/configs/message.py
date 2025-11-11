@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from enum import Enum
 from typing import List, Dict
 
@@ -15,11 +15,12 @@ class Message(BaseModel):
 
 
 class ChatHistory(BaseModel):
-    messages: List[Message] = []
+    messages: List[Message] = Field(default_factory=list)
 
     def add_system(self, content: str) -> Message:
         msg = Message(role=Role.system, content=content)
         self.messages.append(msg)
+        return msg
 
     def add_user(self, content: str) -> Message:
         msg = Message(role=Role.user, content=content)
