@@ -1,20 +1,21 @@
-import {
-  Sparkles,
-  Zap,
-  Shield,
-  MessageSquare,
-  ArrowRight,
-  Bot,
-  Check,
-} from "lucide-react";
+import { Sparkles, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ERouteNames } from "@/shared/lib/routeVariables";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
 import { getAccessToken } from "@/entities/token/lib/tokenService";
 import { useMemo } from "react";
-import { motion, Variants } from "framer-motion";
+import { motion } from "framer-motion";
 import { Image } from "@/shared/ui/image/image";
+import {
+  containerVariants,
+  itemVariants,
+  cardVariants,
+  imageVariants,
+  floatingVariants,
+  features,
+  benefits,
+} from "../lib/constants";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -33,107 +34,6 @@ const LandingPage = () => {
       navigate(`/${ERouteNames.AUTH_ROUTE}/${ERouteNames.REGISTER_ROUTE}`);
     }
   };
-
-  // Animation variants
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut",
-      },
-    },
-  };
-
-  const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 30, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut",
-      },
-    },
-    hover: {
-      y: -8,
-      scale: 1.02,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut",
-      },
-    },
-  };
-
-  const imageVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.8, x: 50 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      x: 0,
-      transition: {
-        duration: 0.8,
-        ease: "easeOut",
-      },
-    },
-  };
-
-  const floatingVariants: Variants = {
-    animate: {
-      y: [0, -20, 0],
-      transition: {
-        duration: 4,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    },
-  };
-
-  const features = [
-    {
-      icon: Zap,
-      title: "Мгновенные ответы",
-      description: "Получайте качественные ответы от AI за секунды",
-    },
-    {
-      icon: Shield,
-      title: "Безопасность данных",
-      description: "Ваши данные защищены и конфиденциальны",
-    },
-    {
-      icon: MessageSquare,
-      title: "Умный диалог",
-      description: "Естественное общение с искусственным интеллектом",
-    },
-    {
-      icon: Bot,
-      title: "Разнопрофильные вопросы",
-      description: "Задавайте вопросы из любой области знаний",
-    },
-  ];
-
-  const benefits = [
-    "Экономия времени на поиске информации",
-    "Профессиональные консультации 24/7",
-    "Поддержка принятия решений",
-    "Автоматизация рутинных задач",
-    "Персонализированные рекомендации",
-    "Масштабируемость для бизнеса",
-  ];
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background overflow-hidden">

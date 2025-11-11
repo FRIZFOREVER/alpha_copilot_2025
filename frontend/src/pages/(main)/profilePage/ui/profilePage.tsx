@@ -5,12 +5,8 @@ import {
   LogOut,
   ArrowLeft,
   MessageSquare,
-  Zap,
   BarChart3,
-  Target,
   Clock,
-  Star,
-  Crown,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
@@ -22,25 +18,7 @@ import {
   getUserInitials,
   getDisplayName,
 } from "@/shared/lib/utils/userHelpers";
-
-const mockData = {
-  joinDate: "15 января 2024",
-  plan: "Pro",
-  level: 5,
-  xp: 1247,
-  xpToNext: 1500,
-  usage: {
-    messages: 1247,
-    chats: 24,
-    daysActive: 12,
-  },
-  achievements: [
-    { icon: Zap, label: "Молния", unlocked: true },
-    { icon: Star, label: "Звезда", unlocked: true },
-    { icon: Crown, label: "Корона", unlocked: false },
-    { icon: Target, label: "Цель", unlocked: true },
-  ],
-};
+import { mockData } from "../lib/constants";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
