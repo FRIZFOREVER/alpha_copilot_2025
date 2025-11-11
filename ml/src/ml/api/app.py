@@ -7,7 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
 import ollama
 
-from ml.agent.router import workflow, init_models
+from ml.agent.router import init_models, workflow_collect, workflow_stream
 from ml.configs.message import RequestPayload
 
 logger = logging.getLogger(__name__)
@@ -39,8 +39,18 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=503, detail="Models are still initialising")
 
         logger.info("Handling /message request with payload")
-        answer = workflow(payload.model_dump())
-        return {"message": answer}
+
+        try:
+            message_text = workflow_collect(payload)
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.exception("Failed to generate response from workflow")
+            raise HTTPException(
+                status_code=500, detail="Failed to generate response from workflow"
+            ) from exc
+
+        return {"message": message_text}
     
     @app.post("/message_stream")
     async def message_stream(payload: RequestPayload) -> StreamingResponse:
@@ -52,7 +62,7 @@ def create_app() -> FastAPI:
         logger.info("Handling /message_stream request with payload")
 
         def event_generator():
-            stream = workflow(payload.model_dump(), streaming=True)
+            stream = workflow_stream(payload)
             for chunk in stream:
                 yield f"data: {chunk.model_dump_json()}\n\n"
 
