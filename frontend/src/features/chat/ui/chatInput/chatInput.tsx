@@ -3,6 +3,7 @@ import { Button } from "@/shared/ui/button";
 import { Plus, Mic, ChevronUp, X, Check } from "lucide-react";
 import { cn } from "@/shared/lib/mergeClass";
 import { useComputerVoiceRecorder } from "@/entities/chat/hooks/useComputerVoiceRecorder";
+import { formatTime } from "@/shared/lib/utils/timeHelpers";
 
 export interface ChatInputProps {
   onSend?: (message: string) => void;
@@ -51,12 +52,6 @@ export const ChatInput = ({
 
     setNeedsScrollbar(scrollHeight > 200);
   };
-
-  useEffect(() => {
-    requestAnimationFrame(() => {
-      updateTextareaHeight();
-    });
-  }, [message]);
 
   const handleSend = () => {
     if (message.trim() && !disabled) {
@@ -111,33 +106,21 @@ export const ChatInput = ({
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
-  };
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      updateTextareaHeight();
+    });
+  }, [message]);
 
   return (
     <div className="bg-white">
       <div className="mx-auto max-w-[832px] px-4 md:px-8 py-4 md:pt-6">
         <div className="relative">
           {isRecording ? (
-            <div
-              className={cn(
-                "w-full min-h-[52px] rounded-[24px] shadow-sm mb-[18px]",
-                "px-12 py-3 pr-20",
-                "bg-white border border-gray-200",
-                "flex items-center",
-                "relative"
-              )}
-            >
+            <div className="w-full min-h-[52px] rounded-[24px] shadow-sm mb-[18px] px-12 py-3 pr-20 bg-white border border-gray-200 flex items-center relative">
               <button
                 type="button"
-                className={cn(
-                  "absolute left-3 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200"
-                )}
+                className="absolute left-3 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200"
                 disabled={disabled}
               >
                 <Plus className="h-5 w-5" />
@@ -152,18 +135,17 @@ export const ChatInput = ({
 
               <button
                 type="button"
-                onClick={handleCancelRecording}
                 className={cn(
                   "absolute right-12 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200"
                 )}
                 disabled={disabled}
+                onClick={handleCancelRecording}
               >
                 <X className="h-5 w-5" />
               </button>
 
               <button
                 type="button"
-                onClick={handleSendVoice}
                 disabled={disabled}
                 className={cn(
                   "absolute right-2 h-8 w-8 rounded-full cursor-pointer",
@@ -172,6 +154,7 @@ export const ChatInput = ({
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                   "active:scale-95 flex items-center justify-center"
                 )}
+                onClick={handleSendVoice}
               >
                 <Check className="h-4 w-4" />
               </button>
@@ -181,8 +164,6 @@ export const ChatInput = ({
               <textarea
                 ref={textareaRef}
                 value={message}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 disabled={disabled}
                 rows={1}
@@ -200,6 +181,8 @@ export const ChatInput = ({
                 style={{
                   height: "auto",
                 }}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
               />
               <button
                 type="button"
@@ -214,13 +197,13 @@ export const ChatInput = ({
 
               <button
                 type="button"
-                onClick={handleMicClick}
                 className={cn(
                   "absolute right-12 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
                   isMultiLine ? "bottom-5" : "top-[45%] -translate-y-1/2",
                   isRecording && "text-red-500"
                 )}
                 disabled={disabled}
+                onClick={handleMicClick}
               >
                 <Mic className="h-5 w-5" />
               </button>
