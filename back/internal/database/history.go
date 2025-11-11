@@ -52,6 +52,7 @@ func GetHistory(
 			&msg.QuestionTime,
 			&msg.AnswerTime,
 			&msg.VoiceURL,
+			&msg.FileURL,
 			&msg.Rating,
 		)
 		if err != nil {
@@ -77,5 +78,6 @@ type Message struct {
 	QuestionTime time.Time `json:"question_time"`
 	AnswerTime   time.Time `json:"answer_time"`
 	VoiceURL     string    `json:"voice_url"`
+	FileURL      string    `json:"file_url"`
 	Rating       *int      `json:"rating"`
 }
