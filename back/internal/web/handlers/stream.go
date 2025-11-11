@@ -35,6 +35,7 @@ func NewStream(client *client.StreamMessageClient, db *sql.DB, historyLen int, l
 type streamIn struct {
 	Question string `json:"question"`
 	VoiceURL string `json:"voice_url"`
+	FileURL  string `json:"file_url"`
 	Tag      string `json:"tag"`
 }
 
@@ -117,8 +118,10 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 	}
 
 	messageToModel.Tag = streamIn.Tag
-	
+
 	messageToModel.IsVoice = len(streamIn.VoiceURL) > 0
+
+	messageToModel.FileURL = streamIn.FileURL
 
 	messageChan, err := sh.client.StreamRequestToModel(messageToModel)
 	if err != nil {

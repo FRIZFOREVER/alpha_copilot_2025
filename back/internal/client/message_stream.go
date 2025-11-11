@@ -22,6 +22,7 @@ type PayloadStream struct {
 	QuestionID int       `json:"question_id"`
 	Mode       string    `json:"mode"`
 	System     string    `json:"system"`
+	FileURL    string    `json:"file_url"`
 	IsVoice    bool      `json:"is_voice"`
 }
 
