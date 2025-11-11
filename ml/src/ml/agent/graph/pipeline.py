@@ -1,5 +1,7 @@
 from typing import Any, Dict, Iterator, List, Optional
 from weakref import WeakKeyDictionary
+from uuid import uuid4
+
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from ml.agent.graph.state import GraphState
@@ -118,7 +120,7 @@ def run_pipeline_stream(
 
     state = GraphState(messages=message_objects)
 
-    invoke_config = config or None
+    invoke_config = _ensure_invoke_config(config)
     final_state = app.invoke(state, config=invoke_config)
     if not isinstance(final_state, GraphState):
         final_state = GraphState.model_validate(final_state)
@@ -134,6 +136,24 @@ def run_pipeline_stream(
         return
 
     yield from client.stream(final_prompt_messages)
+
+
+def _ensure_invoke_config(config: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Ensure invoke config contains checkpointer identifiers for LangGraph."""
+
+    if config is None:
+        config = {}
+    else:
+        config = dict(config)
+
+    configurable = dict(config.get("configurable") or {})
+    if not any(
+        key in configurable for key in ("thread_id", "checkpoint_ns", "checkpoint_id")
+    ):
+        configurable["thread_id"] = str(uuid4())
+
+    config["configurable"] = configurable
+    return config
 
 
 def _build_stream_messages(state: GraphState) -> List[Dict[str, str]]:
