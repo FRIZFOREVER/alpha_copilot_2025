@@ -8,10 +8,21 @@ import (
 	"github.com/minio/minio-go"
 )
 
+// MaxFileSize определяет максимальный размер файла (100 МБ в байтах)
+const MaxFileSize = 100 * 1024 * 1024 // 100 МБ
 
-
-// UploadFileToMinIO загружает любой файл в MinIO
+// UploadFileToMinIO загружает любой файл в MinIO с проверкой размера
 func UploadFileToMinIO(s3 *minio.Client, bucketName, uuid, fileExtension string, fileData []byte, contentType string) (string, error) {
+	// Проверяем размер файла
+	fileSize := int64(len(fileData))
+	if fileSize > MaxFileSize {
+		return "", fmt.Errorf("размер файла превышает максимально допустимый: %d байт > %d байт", fileSize, MaxFileSize)
+	}
+
+	if fileSize == 0 {
+		return "", fmt.Errorf("файл пустой")
+	}
+
 	// Генерируем имя файла с временной меткой и оригинальным расширением
 	fileName := fmt.Sprintf("%s_%d%s", uuid, time.Now().Unix(), fileExtension)
 
@@ -22,7 +33,7 @@ func UploadFileToMinIO(s3 *minio.Client, bucketName, uuid, fileExtension string,
 		contentType = getContentTypeByExtension(fileExtension)
 	}
 
-	info, err := s3.PutObject(bucketName, fileName, reader, int64(len(fileData)), minio.PutObjectOptions{
+	info, err := s3.PutObject(bucketName, fileName, reader, fileSize, minio.PutObjectOptions{
 		ContentType: contentType,
 	})
 	if err != nil {
@@ -58,12 +69,34 @@ func GetFile(s3 *minio.Client, bucket, fileName string) (*minio.Object, error) {
 	}
 
 	// Получаем информацию об объекте
-	_, err = object.Stat()
+	objectInfo, err := object.Stat()
 	if err != nil {
 		return nil, ErrFailedToGetFileInfo
 	}
 
+	// Проверяем размер файла (опционально)
+	if objectInfo.Size > MaxFileSize {
+		return nil, fmt.Errorf("размер файла превышает максимально допустимый")
+	}
+
 	return object, nil
+}
+
+// ValidateFileSize проверяет размер файла перед загрузкой
+func ValidateFileSize(fileData []byte) error {
+	fileSize := int64(len(fileData))
+	if fileSize > MaxFileSize {
+		return fmt.Errorf("размер файла превышает максимально допустимый: %d байт > %d байт", fileSize, MaxFileSize)
+	}
+	if fileSize == 0 {
+		return fmt.Errorf("файл пустой")
+	}
+	return nil
+}
+
+// GetMaxFileSize возвращает максимальный разрешенный размер файла
+func GetMaxFileSize() int64 {
+	return MaxFileSize
 }
 
 // getContentTypeByExtension определяет Content-Type по расширению файла
