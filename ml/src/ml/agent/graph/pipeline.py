@@ -83,55 +83,6 @@ def create_pipeline(client: _ReasoningModelClient) -> StateGraph:
     app = workflow.compile(checkpointer=memory)
     
     return app
-
-
-def run_pipeline(
-    client: _ReasoningModelClient,
-    messages: list[Dict[str, str]],
-    config: Dict[str, Any] = None
-) -> GraphState:
-    """Run the pipeline and return final state."""
-    
-    # Create pipeline
-    app = create_pipeline(client)
-    
-    # Convert messages to Message objects
-    message_objects = []
-    for msg in messages:
-        try:
-            role = Role(msg["role"])
-            message_objects.append(Message(role=role, content=msg["content"]))
-        except (ValueError, KeyError) as e:
-            logger.warning(f"Invalid message format: {msg}, error: {e}")
-            # Skip invalid messages
-            continue
-    
-    # Initialize state
-    initial_state = GraphState(messages=message_objects)
-    
-    # Run pipeline
-    config = config or {}
-    config.setdefault("configurable", {})
-    config["configurable"].setdefault("thread_id", "default")
-    
-    final_state = None
-    for state in app.stream(initial_state, config=config):
-        state_value = list(state.values())[0]
-        if isinstance(state_value, GraphState):
-            final_state = state_value
-        elif isinstance(state_value, dict):
-            try:
-                final_state = GraphState(**state_value)
-            except Exception as exc:
-                logger.warning("Failed to convert state dict to GraphState: %s", exc)
-                final_state = None
-        else:
-            logger.warning("Unexpected state type from pipeline: %s", type(state_value))
-            final_state = None
-    
-    return final_state
-
-
 def run_pipeline_stream(
     client: _ReasoningModelClient,
     messages: list[Dict[str, str]],
