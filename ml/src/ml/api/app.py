@@ -39,8 +39,38 @@ def create_app() -> FastAPI:
 
         payload: Dict[str, Any] = await request.json()
         logger.info("Handling /message request with payload")
-        answer = workflow(payload)
-        return {"message": answer}
+
+        buffer: list[str] = []
+
+        try:
+            for chunk in workflow(payload, streaming=True):
+                message = getattr(chunk, "message", None)
+                if message is None:
+                    logger.warning("Skipping chunk without message: %s", chunk)
+                    continue
+
+                role = getattr(message, "role", None)
+                if role != "assistant":
+                    logger.warning(
+                        "Skipping chunk with non-assistant role '%s': %s", role, chunk
+                    )
+                    continue
+
+                content = getattr(message, "content", None)
+                if not isinstance(content, str):
+                    logger.warning("Skipping chunk with invalid content: %s", chunk)
+                    continue
+
+                buffer.append(content)
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.exception("Failed to generate response from workflow")
+            raise HTTPException(
+                status_code=500, detail="Failed to generate response from workflow"
+            ) from exc
+
+        return {"message": "".join(buffer)}
     
     @app.post("/message_stream")
     async def message_stream(request: Request) -> StreamingResponse:
