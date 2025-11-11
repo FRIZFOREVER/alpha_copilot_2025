@@ -1,0 +1,2 @@
+export { MinimizedChat } from "./minimizedChat";
+
