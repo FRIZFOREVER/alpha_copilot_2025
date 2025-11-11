@@ -7,9 +7,10 @@ import { formatTime } from "@/shared/lib/utils/timeHelpers";
 import { Suggestions, type Suggestion } from "../suggestions";
 import { useFileAttachments } from "../../hooks/useFileAttachments";
 import { FileBadge } from "../fileBadge";
+import { uploadFile } from "@/entities/chat/api/chatService";
 
 export interface ChatInputProps {
-  onSend?: (message: string) => void;
+  onSend?: (data: { message: string; file_url?: string }) => void;
   onSendVoice?: (voiceBlob: Blob) => void;
   placeholder?: string;
   disabled?: boolean;
@@ -61,9 +62,21 @@ export const ChatInput = ({
     setNeedsScrollbar(scrollHeight > 200);
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (message.trim() && !disabled) {
-      onSend?.(message.trim());
+      let fileUrl: string | undefined;
+
+      if (files.length > 0) {
+        try {
+          const uploadPromises = files.map((file) => uploadFile(file.file));
+          const uploadResults = await Promise.all(uploadPromises);
+          fileUrl = uploadResults[0]?.file_url;
+        } catch (error) {
+          console.error("Ошибка при загрузке файла:", error);
+        }
+      }
+
+      onSend?.({ message: message.trim(), file_url: fileUrl });
       setMessage("");
       clearFiles();
       if (textareaRef.current) {

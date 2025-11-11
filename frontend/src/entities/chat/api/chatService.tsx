@@ -10,6 +10,7 @@ import {
   SendMessageDto,
   SendMessageResponse,
   SendVoiceResponse,
+  UploadFileResponse,
   SendMessageStreamDto,
   SendMessageStreamCallbacks,
   StreamInitialResponse,
@@ -94,6 +95,7 @@ class ChatService {
         body: JSON.stringify({
           question: sendMessageDto.question,
           voice_url: sendMessageDto.voice_url || "",
+          file_url: sendMessageDto.file_url || "",
           tag: sendMessageDto.tag || "",
         }),
       });
@@ -241,6 +243,18 @@ class ChatService {
 
     return data;
   }
+
+  public async uploadFile(file: File): Promise<UploadFileResponse> {
+    const formData = new FormData();
+    formData.append("file", file, file.name);
+
+    const { data } = await axiosAuth.post<UploadFileResponse>(
+      "/file",
+      formData as unknown as Record<string, unknown>
+    );
+
+    return data;
+  }
 }
 
 export const {
@@ -251,4 +265,5 @@ export const {
   sendMessage,
   sendMessageStream,
   sendVoice,
+  uploadFile,
 } = new ChatService();
