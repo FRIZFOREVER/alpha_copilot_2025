@@ -117,5 +117,6 @@ services:
 
 volumes:
   ollama:
+
   postgres_data:
   minio-data: {}
