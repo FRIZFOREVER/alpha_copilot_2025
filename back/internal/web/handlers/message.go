@@ -61,7 +61,7 @@ func (mh *Message) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	messages, err := database.GetHistory(mh.db, chatID, mh.logger)
+	messages, err := database.GetHistory(mh.db, chatID, uuid.String(), mh.logger, -1)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error in database",
@@ -69,14 +69,14 @@ func (mh *Message) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	var messageHistory messageOutToModel
+	var messageHistory client.PayloadStream
 	for _, message := range messages {
 		messageHistory.Messages = append(messageHistory.Messages,
-			messageModel{
+			client.Message{
 				Role:    "user",
 				Content: message.Question,
 			},
-			messageModel{
+			client.Message{
 				Role:    "assistant",
 				Content: message.Answer,
 			},
@@ -84,7 +84,7 @@ func (mh *Message) Handler(c *fiber.Ctx) error {
 	}
 
 	// Добавляем последний вопрос в конец.
-	messageHistory.Messages = append(messageHistory.Messages, messageModel{
+	messageHistory.Messages = append(messageHistory.Messages, client.Message{
 		Role:    "user",
 		Content: messageIn.Question,
 	})

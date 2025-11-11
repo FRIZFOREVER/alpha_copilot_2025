@@ -11,20 +11,36 @@ import (
 //go:embed queries/history.sql
 var historyQuery string
 
+//go:embed queries/history_with_limit.sql
+var historyWithLimitQuery string
+
 func GetHistory(
 	db *sql.DB,
 	chatID int,
+	uuid string,
 	logger *logrus.Logger,
+	historyLen int,
 ) (
 	messages []Message,
 	err error,
 ) {
-	rows, err := db.Query(historyQuery, chatID)
-	if err != nil {
-		logger.WithError(err).Error("Failed to query history")
-		return nil, err
+	var rows *sql.Rows
+
+	if historyLen < 0 {
+		rows, err = db.Query(historyQuery, chatID)
+		if err != nil {
+			logger.WithError(err).Error("Failed to query history")
+			return nil, err
+		}
+		defer rows.Close()
+	} else {
+		rows, err = db.Query(historyWithLimitQuery, uuid, historyLen)
+		if err != nil {
+			logger.WithError(err).Error("Failed to query history")
+			return nil, err
+		}
+		defer rows.Close()
 	}
-	defer rows.Close()
 
 	for rows.Next() {
 		var msg Message

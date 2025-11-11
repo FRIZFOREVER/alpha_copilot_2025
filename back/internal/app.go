@@ -7,6 +7,7 @@ import (
 	"jabki/internal/s3"
 	"jabki/internal/settings"
 	"jabki/internal/web"
+	"net/http"
 
 	"database/sql"
 
@@ -68,11 +69,12 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 		logger.Infof("AssemblyAI API ключ установлен: %s", maskedKey)
 	}
 	recognizerClient := client.NewRecognizerClient("https://api.assemblyai.com/v2", "", config.RecognizerAPIKey)
+	streamClient := client.NewStreamMessageClient(http.MethodPost, config.Model, "message_stream", config.HistoryLen)
 
 	web.InitServiceRoutes(server, db, config.SecretSerice, logger)
 	web.InitPublicRoutes(server, db, config.SecretUser, config.FrontOrigin, logger)
 	web.InitJWTMiddleware(server, config.SecretUser, config.FrontOrigin, logger)
-	web.InitPrivateRoutes(server, db, s3client, modelClient, recognizerClient, logger)
+	web.InitPrivateRoutes(server, db, s3client, modelClient, recognizerClient, streamClient, logger)
 
 	return newApp(config, server, db, s3client, logger), nil
 }
