@@ -9,7 +9,7 @@ import ollama
 
 from ml.agent.router import init_models, workflow_collect, workflow_stream
 from ml.configs.message import RequestPayload
-from ml.utils.fetch_model import fetch_models
+from ml.utils.fetch_model import delete_models, fetch_models
 from ml.utils.warmup import warmup_models
 
 
@@ -37,6 +37,13 @@ async def lifespan(app: FastAPI):
     app.state.models_task = asyncio.create_task(_init())
 
     yield
+
+    try:
+        await delete_models()
+    except Exception as exc:
+        logger.warning(f"Failed to delete models: {exc}")
+
+    
 
 
 def create_app() -> FastAPI:
