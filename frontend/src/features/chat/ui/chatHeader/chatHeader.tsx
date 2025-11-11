@@ -1,13 +1,5 @@
-import { useState } from "react";
-import {
-  Share2,
-  Copy,
-  MoreVertical,
-  Sparkles,
-  Zap,
-  Brain,
-  Settings,
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import { SquarePen, Sparkles, Zap, Brain, Settings } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import {
   Select,
@@ -16,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select/select";
+import { useNavigate } from "react-router-dom";
+import { ERouteNames } from "@/shared/lib/routeVariables";
 
 const modelOptions = [
   {
@@ -46,20 +40,37 @@ const modelOptions = [
 
 export const ChatHeader = () => {
   const [selectedModel, setSelectedModel] = useState<string>("thinking");
+  const [isMobile, setIsMobile] = useState(false);
+  const navigate = useNavigate();
 
   const currentModel = modelOptions.find((m) => m.value === selectedModel);
 
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const handleNewChat = () => {
+    navigate(`/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}`);
+  };
+
   return (
     <div className="flex items-center justify-between bg-white px-4 md:px-6 py-3 border-b border-[#0d0d0d0d]">
-      <div className="flex items-center gap-4 pl-8 md:pl-0">
+      <div className="flex items-center justify-center flex-1 md:flex-none pl-8 md:pl-0">
         <Select value={selectedModel} onValueChange={setSelectedModel}>
           <SelectTrigger className="h-auto p-0 border-0 bg-transparent hover:bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg md:text-xl font-medium text-gray-900 gap-1.5 hover:text-gray-700 transition-colors cursor-pointer data-[state=open]:text-gray-700 [&>svg]:opacity-60 [&>svg]:hover:opacity-100 [&_[data-slot=select-value]]:hidden">
             <span>{currentModel?.label || "FinAi"}</span>
             <SelectValue placeholder="FinAi" />
           </SelectTrigger>
           <SelectContent
-            align="start"
-            alignOffset={-10}
+            align={isMobile ? "center" : "start"}
+            alignOffset={isMobile ? undefined : -10}
             className="bg-white border-gray-200 shadow-lg min-w-[300px] p-1.5 rounded-2xl"
           >
             {modelOptions.map((model) => {
@@ -91,23 +102,11 @@ export const ChatHeader = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 rounded-xl hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all"
+          onClick={handleNewChat}
+          className="h-9 w-9 rounded-xl hover:bg-gray-100 text-gray-900 transition-all cursor-pointer"
+          title="Новый чат"
         >
-          <Share2 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 rounded-xl hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all"
-        >
-          <Copy className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 rounded-xl hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all"
-        >
-          <MoreVertical className="h-4 w-4" />
+          <SquarePen className="h-4 w-4" />
         </Button>
       </div>
     </div>
