@@ -23,7 +23,7 @@ type StreamMessage struct {
 	Model              string         `json:"model"`
 	CreatedAt          string         `json:"created_at"`
 	Done               bool           `json:"done"`
-	DoneReason         *string        `json:"done_reason"`
+	DoneReason         string         `json:"done_reason"`
 	TotalDuration      *int64         `json:"total_duration"`
 	LoadDuration       *int64         `json:"load_duration"`
 	PromptEvalCount    *int           `json:"prompt_eval_count"`

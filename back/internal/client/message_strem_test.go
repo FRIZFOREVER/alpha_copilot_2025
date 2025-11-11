@@ -15,7 +15,7 @@ func TestMessageStream(t *testing.T) {
 			Role    string `json:"role"`
 			Content string `json:"content"`
 		}{
-			{Role: "user", Content: "Hello! How are you?"},
+			{Role: "user", Content: "Рецепт блинов"},
 		},
 	}
 
@@ -28,16 +28,9 @@ func TestMessageStream(t *testing.T) {
 	// Читаем сообщения из канала
 	for message := range messageChan {
 		if message != nil {
-			fmt.Printf("Model: %s\n", message.Model)
-			fmt.Printf("Done: %t\n", message.Done)
-			fmt.Printf("Thinking: %s\n", message.Message.Thinking)
-			fmt.Printf("Content: %s\n", message.Message.Content)
-			fmt.Printf("Created At: %s\n", message.CreatedAt)
-			fmt.Println("---")
-
+			fmt.Print(message.Message.Content)
 			// Проверяем завершение стрима
 			if message.Done {
-				fmt.Println("Stream completed")
 				break
 			}
 		}
