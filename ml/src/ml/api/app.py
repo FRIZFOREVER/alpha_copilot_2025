@@ -2,12 +2,13 @@ import asyncio
 import logging
 from typing import Any, Dict
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
 import ollama
 
 from ml.agent.router import workflow, init_models
+from ml.configs.message import RequestPayload
 
 logger = logging.getLogger(__name__)
 
@@ -31,29 +32,27 @@ def create_app() -> FastAPI:
     logger.info("FastAPI application initialised")
 
     @app.post("/message")
-    async def message(request: Request) -> Dict[str, str]:
+    async def message(payload: RequestPayload) -> Dict[str, str]:
         models_ready = app.state.models_ready
 
         if not models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
 
-        payload: Dict[str, Any] = await request.json()
         logger.info("Handling /message request with payload")
-        answer = workflow(payload)
+        answer = workflow(payload.model_dump())
         return {"message": answer}
     
     @app.post("/message_stream")
-    async def message_stream(request: Request) -> StreamingResponse:
+    async def message_stream(payload: RequestPayload) -> StreamingResponse:
         models_ready = app.state.models_ready
 
         if not models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
 
-        payload: Dict[str, Any] = await request.json()
         logger.info("Handling /message_stream request with payload")
 
         def event_generator():
-            stream = workflow(payload, streaming=True)
+            stream = workflow(payload.model_dump(), streaming=True)
             for chunk in stream:
                 yield f"data: {chunk.model_dump_json()}\n\n"
 

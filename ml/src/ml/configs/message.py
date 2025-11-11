@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 
 class Role(str, Enum):
@@ -12,6 +12,21 @@ class Role(str, Enum):
 class Message(BaseModel):
     role: Role
     content: str
+
+
+class ModelMode(str, Enum):
+    Fast = "Fast"
+    Thiking = "Thiking"
+    Research = "Research"
+    Auto = "Auto"
+
+
+class RequestPayload(BaseModel):
+    messages: List[Message]
+    tag: Optional[str] = None
+    message_id: Optional[int] = None
+    mode: Optional[ModelMode] = None
+    system: Optional[str] = None
 
 
 class ChatHistory(BaseModel):
