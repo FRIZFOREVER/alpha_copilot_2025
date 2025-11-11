@@ -1,15 +1,19 @@
 from typing import Any, Dict, Iterator, Union
+import logging
 
 from ml.agent.calls.model_calls import make_client, _ReasoningModelClient
 from ml.configs.model_config import ModelSettings
 from ml.configs.message import Message
+from ml.agent.graph.pipeline import run_pipeline, run_pipeline_stream
 from ollama import ChatResponse
 
+logger = logging.getLogger(__name__)
 
 _MODEL_CLIENTS: Dict[str, Any] = {}
 
 
 def workflow(payload: Dict[str, Any], streaming=False) -> Union[str, Iterator[ChatResponse]]:
+    """Main workflow function that routes to LangGraph pipeline."""
     client: _ReasoningModelClient = _MODEL_CLIENTS["chat"]
     if streaming:
         answer: Iterator[ChatResponse] = chat_completion_stream(client=client, payload=payload)
@@ -18,11 +22,19 @@ def workflow(payload: Dict[str, Any], streaming=False) -> Union[str, Iterator[Ch
     return answer
     
 def chat_completion(client: _ReasoningModelClient, payload: Dict[str, Any]) -> str:
-    answer: Message = client.call(payload["messages"])
-    return answer.content
+    """Run pipeline and return final answer as string."""
+    messages = payload.get("messages", [])
+    final_state = run_pipeline(client=client, messages=messages)
+    print(f"Final state: {final_state}")
+    if final_state and final_state.final_answer:
+        return final_state.final_answer
+    else:
+        return "Извините, не удалось сгенерировать ответ."
 
 def chat_completion_stream(client: _ReasoningModelClient, payload: Dict[str, Any]) -> Iterator[ChatResponse]:
-    return client.stream(payload["messages"])
+    """Run pipeline and stream final answer generation."""
+    messages = payload.get("messages", [])
+    return run_pipeline_stream(client=client, messages=messages)
     
 
 async def init_models() -> Dict[str, Any]:

@@ -2,7 +2,12 @@
 from ml.configs.model_config import ModelSettings
 from ml.configs.message import Message
 from ollama import chat, ChatResponse, embed
-from typing import Union, List, Dict, Iterator
+from typing import Union, List, Dict, Iterator, Type, Any
+from pydantic import BaseModel
+import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class _ReasoningModelClient:
@@ -32,6 +37,60 @@ class _ReasoningModelClient:
             },
             stream=True,
         )
+    
+    def call_structured(
+        self, 
+        messages: List[Dict[str, str]], 
+        output_schema: Union[Dict[str, Any], Type[BaseModel]]
+    ) -> Union[Dict[str, Any], BaseModel]:
+        """
+        Call model with structured output format.
+        
+        Args:
+            messages: List of messages in Ollama format
+            output_schema: Either a JSON schema dict or a Pydantic model class
+            
+        Returns:
+            Parsed structured output (dict if schema provided, Pydantic model if model class provided)
+        """
+        # Convert Pydantic model to JSON schema if needed
+        if isinstance(output_schema, type) and issubclass(output_schema, BaseModel):
+            schema = output_schema.model_json_schema()
+        else:
+            schema = output_schema
+        
+        response: ChatResponse = chat(
+            model=self.s.model,
+            messages=messages,
+            format=schema,
+            options={
+                "temperature": self.s.temperature,
+                "top_p": self.s.top_p,
+            },
+        )
+        
+        # Parse response content
+        content = response.message.content
+        if isinstance(content, str):
+            try:
+                parsed = json.loads(content)
+            except json.JSONDecodeError:
+                # If JSON parsing fails, try to extract JSON from the string
+                # Some models might return text with JSON embedded
+                logger.warning(f"Failed to parse JSON from response: {content[:100]}")
+                parsed = {"error": "Invalid JSON response", "raw": content}
+        else:
+            parsed = content
+        
+        # If output_schema is a Pydantic model class, return parsed model instance
+        if isinstance(output_schema, type) and issubclass(output_schema, BaseModel):
+            try:
+                return output_schema.model_validate(parsed)
+            except Exception as e:
+                logger.error(f"Failed to validate structured output: {e}")
+                raise
+        
+        return parsed
 
 class _RerankModelClient:
     """Utility wrapper for using chat models as lightweight rerankers."""
