@@ -10,6 +10,7 @@ export interface ChatProps {
   isLoading?: boolean;
   suggestions?: Suggestion[];
   hideHeader?: boolean;
+  isCompact?: boolean;
 }
 
 export const Chat = ({
@@ -19,18 +20,24 @@ export const Chat = ({
   isLoading = false,
   suggestions,
   hideHeader = false,
+  isCompact = false,
 }: ChatProps) => {
   return (
     <div className="flex h-full flex-col bg-white overflow-hidden">
       {!hideHeader && <ChatHeader />}
       <div className="flex-1 overflow-hidden flex justify-center">
-        <MessageList messages={messages} isLoading={isLoading} />
+        <MessageList
+          messages={messages}
+          isLoading={isLoading}
+          isCompact={isCompact}
+        />
       </div>
       <ChatInput
         onSend={onSendMessage}
         onSendVoice={onSendVoice}
         disabled={isLoading}
         suggestions={suggestions}
+        isCompact={isCompact}
       />
     </div>
   );

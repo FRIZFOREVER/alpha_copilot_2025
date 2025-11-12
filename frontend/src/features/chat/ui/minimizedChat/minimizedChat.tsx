@@ -14,7 +14,11 @@ import { ERouteNames } from "@/shared/lib/routeVariables";
 import { capitalizeFirst } from "@/shared/lib/utils/userHelpers";
 import { type Suggestion } from "../suggestions";
 
-export const MinimizedChat = () => {
+export const MinimizedChat = ({
+  isCompact = false,
+}: {
+  isCompact?: boolean;
+}) => {
   const { isCollapsed, toggleCollapse, setMinimizedChatVisible } =
     useChatCollapse();
   const params = useParams<{ chatId?: string }>();
@@ -29,29 +33,22 @@ export const MinimizedChat = () => {
     location.pathname === `/${ERouteNames.DASHBOARD_ROUTE}/`;
 
   const handleExpandChat = () => {
-    // Навигируем на страницу чата, если еще не там
     if (!isChatRoute) {
       navigate(`/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}`);
     }
-    // Показываем minimizedChat, если он был скрыт
     setMinimizedChatVisible(true);
-    // Разворачиваем чат на весь экран
     if (isCollapsed) {
       toggleCollapse();
     }
   };
 
   const handleCollapseChat = () => {
-    // Убеждаемся, что мы на странице чата, чтобы кнопка с логотипом была видна
     if (!isChatRoute) {
       navigate(`/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}`);
     }
-    // Убеждаемся, что чат свернут (если развернут, сворачиваем)
     if (!isCollapsed) {
       toggleCollapse();
     }
-    // Скрываем minimizedChat, но остаемся на странице чата
-    // Кнопка с логотипом останется видимой для открытия чата
     setMinimizedChatVisible(false);
   };
 
@@ -216,7 +213,7 @@ export const MinimizedChat = () => {
             variant="ghost"
             size="icon"
             onClick={handleExpandChat}
-            className="h-7 w-7 rounded-lg hover:bg-gray-100"
+            className="h-7 w-7 rounded-lg hover:bg-gray-100 cursor-pointer"
             title="Развернуть чат"
           >
             <Maximize2 className="h-3.5 w-3.5" />
@@ -225,7 +222,7 @@ export const MinimizedChat = () => {
             variant="ghost"
             size="icon"
             onClick={handleCollapseChat}
-            className="h-7 w-7 rounded-lg hover:bg-gray-100"
+            className="h-7 w-7 rounded-lg hover:bg-gray-100 cursor-pointer"
             title="Свернуть чат"
           >
             <X className="h-3.5 w-3.5" />
@@ -245,6 +242,7 @@ export const MinimizedChat = () => {
           }
           hideHeader={true}
           suggestions={mockSuggestions}
+          isCompact={isCompact}
         />
       </div>
     </div>

@@ -18,11 +18,13 @@ export interface MessageData {
 export interface MessageListProps {
   messages: MessageData[];
   isLoading?: boolean;
+  isCompact?: boolean;
 }
 
 export const MessageList = ({
   messages,
   isLoading = false,
+  isCompact = false,
 }: MessageListProps) => {
   const { contentRef } = useScrollBottom([
     messages.length,
@@ -37,11 +39,12 @@ export const MessageList = ({
         )}
       >
         {messages.length === 0 ? (
-          <ChatEmptyState />
+          <ChatEmptyState isCompact={isCompact} />
         ) : (
           messages.map((message) => (
             <Message
               key={message.id}
+              isCompact={isCompact}
               content={message.content}
               isUser={message.isUser}
               answerId={message.answerId}
