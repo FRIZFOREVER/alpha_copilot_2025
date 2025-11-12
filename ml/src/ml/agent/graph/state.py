@@ -8,6 +8,9 @@ class GraphState(BaseModel):
 
     messages: List[Message] = Field(default_factory=list)
     mode: Optional[Literal["research", "fast_answer"]] = None
+    thread_id: Optional[str] = None
+    checkpoint_ns: Optional[str] = None
+    checkpoint_id: Optional[str] = None
     planning_decision: Optional[Dict] = None
     tool_results: List[Dict] = Field(default_factory=list)
     search_history: List[Dict] = Field(default_factory=list)
