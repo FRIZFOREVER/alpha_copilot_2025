@@ -5,7 +5,6 @@ import pytest
 from ml.agent.calls.model_calls import (
     _EmbeddingModelClient,
     _ReasoningModelClient,
-    _RerankModelClient,
 )
 from ml.configs.model_config import ModelSettings
 from ml.utils.warmup import warmup_models
@@ -71,17 +70,6 @@ def test_embedding_client_passes_keep_alive(monkeypatch: pytest.MonkeyPatch) -> 
     assert all(call["keep_alive"] == "5m" for call in calls)
 
 
-def test_rerank_client_passes_keep_alive(monkeypatch: pytest.MonkeyPatch) -> None:
-    calls: List[Dict[str, Any]] = []
-    monkeypatch.setattr("ml.agent.calls.model_calls.chat", _chat_stub_factory(calls))
-
-    settings = ModelSettings(api_mode="reranker", model="rerank-model", keep_alive="20m")
-    client = _RerankModelClient(settings)
-
-    assert client.call([{"role": "user", "content": "pick"}]) is True
-    assert [call["keep_alive"] for call in calls] == ["20m"]
-
-
 @pytest.mark.asyncio
 async def test_warmup_models_runs_reasoning_last(monkeypatch: pytest.MonkeyPatch) -> None:
     chat_calls: List[Dict[str, Any]] = []
@@ -100,12 +88,10 @@ async def test_warmup_models_runs_reasoning_last(monkeypatch: pytest.MonkeyPatch
 
     reasoning_settings = ModelSettings(api_mode="chat", model="chat-model", keep_alive="30m")
     embedding_settings = ModelSettings(api_mode="embeddings", model="embed-model", keep_alive="10m")
-    rerank_settings = ModelSettings(api_mode="reranker", model="rerank-model", keep_alive="12m")
 
     clients = [
         _ReasoningModelClient(reasoning_settings),
         _EmbeddingModelClient(embedding_settings),
-        _RerankModelClient(rerank_settings),
     ]
 
     await warmup_models(clients)
