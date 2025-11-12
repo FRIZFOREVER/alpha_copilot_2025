@@ -1,21 +1,16 @@
-import logging
 from typing import Dict
 
 from ml.agent.graph.state import GraphState
 from ml.agent.tools.registry import get_tool_registry
-from ml.agent.graph.logging_utils import log_pipeline_event
 
 
 def execute_tools_node(state: GraphState) -> GraphState:
     """Execute tools based on tool_results."""
 
-    log_pipeline_event(
+    state.record_event(
         "node.enter",
-        state=state,
-        extra={
-            "node": "execute_tools",
-            "pending_requests": len(state.tool_results),
-        },
+        node="execute_tools",
+        pending_requests=len(state.tool_results),
     )
 
     registry = get_tool_registry()
@@ -37,18 +32,17 @@ def execute_tools_node(state: GraphState) -> GraphState:
             # Get web_search tool
             tool = registry.get("web_search")
             if not tool:
-                log_pipeline_event(
+                state.record_event(
                     "tools.missing_tool",
-                    state=state,
-                    level=logging.WARNING,
-                    extra={"node": "execute_tools", "tool_name": "web_search"},
+                    node="execute_tools",
+                    tool_name="web_search",
                 )
                 continue
 
-            log_pipeline_event(
+            state.record_event(
                 "tools.query_issued",
-                state=state,
-                extra={"node": "execute_tools", "query": query},
+                node="execute_tools",
+                query=query,
             )
 
             # Execute search
@@ -68,16 +62,13 @@ def execute_tools_node(state: GraphState) -> GraphState:
             else:
                 error_message = result.error
 
-            log_pipeline_event(
+            state.record_event(
                 "tools.query_result",
-                state=state,
-                extra={
-                    "node": "execute_tools",
-                    "query": query,
-                    "success": result.success,
-                    "result_count": result_count,
-                    "error": error_message,
-                },
+                node="execute_tools",
+                query=query,
+                success=result.success,
+                result_count=result_count,
+                error=error_message,
             )
 
             # Also add to search history
@@ -87,29 +78,23 @@ def execute_tools_node(state: GraphState) -> GraphState:
                 "result_count": len(result.data.get("results", [])) if result.success else 0
             })
 
-            log_pipeline_event(
+            state.record_event(
                 "tools.history_recorded",
-                state=state,
-                extra={
-                    "node": "execute_tools",
-                    "query": query,
-                    "success": result.success,
-                    "result_count": state.search_history[-1]["result_count"],
-                },
+                node="execute_tools",
+                query=query,
+                success=result.success,
+                result_count=state.search_history[-1]["result_count"],
             )
 
     # Combine existing results with new results
     state.tool_results = existing_results + executed_results
     state.research_iteration += 1
 
-    log_pipeline_event(
+    state.record_event(
         "tools.execution_complete",
-        state=state,
-        extra={
-            "node": "execute_tools",
-            "total_results": len(state.tool_results),
-            "iteration": state.research_iteration,
-        },
+        node="execute_tools",
+        total_results=len(state.tool_results),
+        iteration=state.research_iteration,
     )
 
     return state

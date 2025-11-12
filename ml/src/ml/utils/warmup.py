@@ -1,6 +1,5 @@
 import asyncio
-import logging
-from typing import List
+from typing import Dict, List
 
 from ml.agent.calls.model_calls import (
     ModelClient,
@@ -8,14 +7,10 @@ from ml.agent.calls.model_calls import (
     _ReasoningModelClient,
     _RerankModelClient,
 )
-from logging import getLogger
-
-logger = getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
-async def warmup_models(clients: List[ModelClient]) -> None:
-    logger.debug("Start warmup")
+async def warmup_models(clients: List[ModelClient]) -> Dict[str, bool]:
+    """Warm up provided model clients and return per-model outcomes."""
 
     embedding_and_rerank_clients: List[ModelClient] = []
     reasoning_clients: List[ModelClient] = []
@@ -26,24 +21,27 @@ async def warmup_models(clients: List[ModelClient]) -> None:
         else:
             embedding_and_rerank_clients.append(client)
 
+    results: Dict[str, bool] = {}
+
     if embedding_and_rerank_clients:
-        await asyncio.gather(
+        statuses = await asyncio.gather(
             *(_warmup_client(client) for client in embedding_and_rerank_clients)
         )
+        for client, status in zip(embedding_and_rerank_clients, statuses):
+            results[client.s.model] = status
 
     for client in reasoning_clients:
-        await _warmup_client(client)
+        results[client.s.model] = await _warmup_client(client)
+
+    return results
 
 
-async def _warmup_client(client: ModelClient) -> None:
-    logger.debug("Start warmup %s", client.s.model)
-
+async def _warmup_client(client: ModelClient) -> bool:
     try:
         await _invoke_warmup_call(client)
-    except Exception as exc:  # pragma: no cover - logging path
-        logger.warning("Model %s warm-up failed", client.s.model, exc_info=exc)
-    else:
-        logger.info("Model %s warmed up", client.s.model)
+    except Exception:
+        return False
+    return True
 
 
 async def _invoke_warmup_call(client: ModelClient) -> None:

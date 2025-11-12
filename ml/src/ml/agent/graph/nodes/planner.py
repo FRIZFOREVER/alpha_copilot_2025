@@ -3,7 +3,6 @@ from ml.agent.graph.state import GraphState
 from ml.agent.calls.model_calls import _ReasoningModelClient
 from ml.configs.message import Role, Message
 from ml.agent.prompts.planner_prompt import PROMPT as PLANNER_PROMPT
-from ml.agent.graph.logging_utils import log_pipeline_event
 
 
 class PlanningDecision(BaseModel):
@@ -16,10 +15,10 @@ class PlanningDecision(BaseModel):
 def planner_node(state: GraphState, client: _ReasoningModelClient) -> GraphState:
     """Plan the execution mode based on user request."""
 
-    log_pipeline_event(
+    state.record_event(
         "node.enter",
-        state=state,
-        extra={"node": "planner", "message_count": len(state.messages)},
+        node="planner",
+        message_count=len(state.messages),
     )
 
     # Get the last user message
@@ -36,10 +35,10 @@ def planner_node(state: GraphState, client: _ReasoningModelClient) -> GraphState
     else:
         preview = None
 
-    log_pipeline_event(
+    state.record_event(
         "planner.input",
-        state=state,
-        extra={"node": "planner", "user_message_preview": preview},
+        node="planner",
+        user_message_preview=preview,
     )
 
     if not user_message:
@@ -50,10 +49,10 @@ def planner_node(state: GraphState, client: _ReasoningModelClient) -> GraphState
             "reasoning": "No user message found",
             "requires_tools": False
         }
-        log_pipeline_event(
+        state.record_event(
             "planner.decision",
-            state=state,
-            extra={"node": "planner", "decision": state.planning_decision},
+            node="planner",
+            decision=state.planning_decision,
         )
         return state
     
@@ -76,13 +75,10 @@ def planner_node(state: GraphState, client: _ReasoningModelClient) -> GraphState
             "reasoning": decision.reasoning,
             "requires_tools": decision.requires_tools
         }
-        log_pipeline_event(
+        state.record_event(
             "planner.decision",
-            state=state,
-            extra={
-                "node": "planner",
-                "decision": state.planning_decision,
-            },
+            node="planner",
+            decision=state.planning_decision,
         )
     except Exception as e:
         # Fallback to fast_answer on error
@@ -92,14 +88,11 @@ def planner_node(state: GraphState, client: _ReasoningModelClient) -> GraphState
             "reasoning": f"Error in planning: {str(e)}",
             "requires_tools": False
         }
-        log_pipeline_event(
+        state.record_event(
             "planner.error",
-            state=state,
-            extra={
-                "node": "planner",
-                "error": str(e),
-                "decision": state.planning_decision,
-            },
+            node="planner",
+            error=str(e),
+            decision=state.planning_decision,
         )
 
     return state
