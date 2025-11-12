@@ -28,7 +28,7 @@ class RequestPayload(BaseModel):
     mode: Optional[ModelMode] = None
     system: Optional[str] = None
     voice: Optional[bool] = False
-    fileurl: Optional[str] = None
+    file_url: Optional[str] = None
 
 
 class ChatHistory(BaseModel):
