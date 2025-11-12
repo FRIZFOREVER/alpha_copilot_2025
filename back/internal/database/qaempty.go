@@ -54,7 +54,7 @@ func WriteEmptyMessage(
 		logger.WithError(err).Error("Failed to insert question")
 		return 0, 0, err
 	}
-	
+
 	logger.WithFields(logrus.Fields{
 		"question_id": questionID,
 		"chat_id":     chatID,
