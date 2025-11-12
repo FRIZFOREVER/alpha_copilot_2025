@@ -2,7 +2,10 @@ from typing import Any, Dict, List
 
 import pytest
 
-from ml.agent.calls.model_calls import _EmbeddingModelClient, _ReasoningModelClient
+from ml.agent.calls.model_calls import (
+    _EmbeddingModelClient,
+    _ReasoningModelClient,
+)
 from ml.configs.model_config import ModelSettings
 from ml.utils.warmup import warmup_models
 
@@ -85,6 +88,7 @@ async def test_warmup_models_runs_reasoning_last(monkeypatch: pytest.MonkeyPatch
 
     reasoning_settings = ModelSettings(api_mode="chat", model="chat-model", keep_alive="30m")
     embedding_settings = ModelSettings(api_mode="embeddings", model="embed-model", keep_alive="10m")
+
     clients = [
         _ReasoningModelClient(reasoning_settings),
         _EmbeddingModelClient(embedding_settings),

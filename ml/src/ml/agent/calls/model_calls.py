@@ -100,41 +100,6 @@ class _ReasoningModelClient(ModelClient):
 
         return parsed
 
-class _RerankModelClient(ModelClient):
-    """Utility wrapper for using chat models as lightweight rerankers."""
-
-    # WARNING: If you want to get score, we should switch this model to vLLM serving and take logits 
-    # on Yes/No probability
-    # Default ollama serving doesn't support logits parsing
-    def call(self, messages: List[Dict[str, str]]) -> bool:
-        response: ChatResponse = chat(
-            model=self.s.model,
-            messages=messages,
-            format=self.s.rerank_json_schema,
-            options={
-                "temperature": self.s.temperature,
-                "top_p": self.s.top_p,
-            },
-            keep_alive=self.s.keep_alive,
-        )
-        
-        content = response.message.content
-        if isinstance(content, str):
-            try:
-                content = json.loads(content)
-            except json.JSONDecodeError:
-                raise ValueError(f"Rerank model returned non-JSON content: {response.message.content!r}")
-
-        label = content.get("label")
-        if label not in {"yes", "no"}:
-            raise ValueError(f"Unexpected label '{label}' from rerank model")
-
-        return label == "yes"
-    
-    def call_batch(self, messages: List[List[Dict[str,str]]])  -> List[bool]:
-        return [self.call(item) for item in messages]
-
-
 class _EmbeddingModelClient(ModelClient):
     """Batch-friendly helper for producing embeddings via `ollama.embed`."""
 
@@ -168,12 +133,9 @@ class _EmbeddingModelClient(ModelClient):
 _CLIENTS = {
     "chat": _ReasoningModelClient,
     "embeddings": _EmbeddingModelClient,
-    "reranker": _RerankModelClient,
 }
 
 
 # Function for export. Takes ModelSettings.api_mode to determinate model
-def make_client(settings: ModelSettings) -> Union[_ReasoningModelClient, 
-                                                  _EmbeddingModelClient, 
-                                                  _RerankModelClient]:
+def make_client(settings: ModelSettings) -> Union[_ReasoningModelClient, _EmbeddingModelClient]:
     return _CLIENTS[settings.api_mode](settings)
