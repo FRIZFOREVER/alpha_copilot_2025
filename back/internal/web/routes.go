@@ -16,6 +16,18 @@ func InitServiceRoutes(server *fiber.App, db *sql.DB, secretServie string, logge
 	history := handlers.NewHistory(db, logger)
 	serviceAuthentication := middlewares.NewServiceAuthentication(secretServie, logger)
 	server.Get("/historyForModel/:uuid/:chat_id", serviceAuthentication.Handler, history.Handler)
+	server.Get(
+		"/graph_log_writer/:chat_id",
+		serviceAuthentication.Handler, func(c *fiber.Ctx) error {
+			// Проверяем, является ли запрос WebSocket upgrade
+			if websocket.IsWebSocketUpgrade(c) {
+				c.Locals("allowed", true)
+				return c.Next()
+			}
+			return fiber.ErrUpgradeRequired
+		},
+		handlers.GraphLogHandler(db, logger),
+	)
 }
 
 func InitPublicRoutes(server *fiber.App, db *sql.DB, secretUser, frontOrigin string, logger *logrus.Logger) {
@@ -88,4 +100,15 @@ func InitPrivateRoutes(
 
 	file := handlers.NewFile(s3, logger)
 	server.Post("/file", file.Handler)
+
+	server.Use("/graph_log", func(c *fiber.Ctx) error {
+		// Проверяем, является ли запрос WebSocket upgrade
+		if websocket.IsWebSocketUpgrade(c) {
+			c.Locals("allowed", true)
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	})
+
+	server.Get("/graph_log/:chat_id", handlers.GraphLogHandler(db, logger))
 }
