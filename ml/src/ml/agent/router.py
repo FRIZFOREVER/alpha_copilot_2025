@@ -1,14 +1,12 @@
 from typing import Any, Dict, Iterator, Optional
-import logging
 
 from ml.agent.calls.model_calls import make_client, _ReasoningModelClient
 from ml.configs.model_config import ModelSettings
 from ml.agent.graph.pipeline import run_pipeline_stream
 from ollama import ChatResponse
 
-logger = logging.getLogger("app.router")
-
 _MODEL_CLIENTS: Dict[str, Any] = {}
+_LAST_RESPONSE: Optional[str] = None
 
 
 def workflow_stream(payload: Dict[str, Any]) -> Iterator[ChatResponse]:
@@ -23,7 +21,7 @@ def workflow_stream(payload: Dict[str, Any]) -> Iterator[ChatResponse]:
             buffer.append(content)
         yield chunk
 
-    _log_final_response(buffer)
+    _record_final_response(buffer)
 
 
 def workflow_collect(payload: Dict[str, Any]) -> str:
@@ -37,10 +35,10 @@ def workflow_collect(payload: Dict[str, Any]) -> str:
         if content is not None:
             buffer.append(content)
 
-    _log_final_response(buffer)
+    final_response = _record_final_response(buffer)
 
-    if buffer:
-        return "".join(buffer)
+    if final_response:
+        return final_response
 
     return "Извините, не удалось сгенерировать ответ."
 
@@ -58,35 +56,41 @@ def _extract_assistant_content(chunk: ChatResponse) -> Optional[str]:
 
     message = getattr(chunk, "message", None)
     if message is None:
-        logger.debug("Received chunk without message: %s", chunk)
         return None
 
     role = getattr(message, "role", None)
     if role != "assistant":
-        logger.debug("Skipping chunk with non-assistant role '%s': %s", role, chunk)
         return None
 
     content = getattr(message, "content", None)
     if not isinstance(content, str):
-        logger.debug("Skipping chunk with invalid content: %s", chunk)
         return None
 
     return content
 
 
-def _log_final_response(chunks: list[str]) -> None:
-    """Log the final assistant response assembled from streamed chunks."""
+def _record_final_response(chunks: list[str]) -> Optional[str]:
+    """Store the final assistant response assembled from streamed chunks."""
+
+    global _LAST_RESPONSE
 
     if not chunks:
-        logger.warning("Workflow stream finished without assistant content")
-        return
+        _LAST_RESPONSE = None
+        return None
 
     final_answer = "".join(chunks)
-    logger.info("Final assistant response: %s", final_answer)
+    _LAST_RESPONSE = final_answer
+    return final_answer
+
+
+def get_last_response() -> Optional[str]:
+    """Return the most recent assembled assistant response, if available."""
+
+    return _LAST_RESPONSE
 
 
 async def init_models() -> Dict[str, Any]:
-    modes = ("chat", "reranker", "embeddings")
+    modes = ("chat", "embeddings")
     global _MODEL_CLIENTS
     _MODEL_CLIENTS = {mode: make_client(ModelSettings(api_mode=mode)) for mode in modes}
     return _MODEL_CLIENTS
