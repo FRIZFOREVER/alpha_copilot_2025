@@ -28,6 +28,7 @@ export const useGetHistoryQuery = (chatId: number | undefined) => {
           timestamp: historyItem.question_time,
           answerId: historyItem.answer_id,
           rating: historyItem.rating,
+          file_url: historyItem.file_url,
         });
 
         if (

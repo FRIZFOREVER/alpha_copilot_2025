@@ -7,6 +7,7 @@ import { TypingIndicator } from "./typingIndicator";
 import { useCopied } from "@/shared/hooks/useCopy";
 import { Image } from "@/shared/ui/image/image";
 import { useParams } from "react-router-dom";
+import { FileMessage } from "./fileMessage";
 
 export interface MessageProps {
   content: string;
@@ -14,6 +15,7 @@ export interface MessageProps {
   answerId?: number;
   rating?: number | null;
   isTyping?: boolean;
+  file_url?: string;
 }
 
 export const Message = ({
@@ -22,6 +24,7 @@ export const Message = ({
   answerId,
   rating,
   isTyping = false,
+  file_url,
 }: MessageProps) => {
   const chatId = useParams().chatId;
 
@@ -67,22 +70,35 @@ export const Message = ({
             </span>
           </div>
         )}
-        <div
-          className={cn(
-            "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed",
-            isUser
-              ? "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
-              : "text-foreground rounded-xl py-0 px-0 dark:border-gray-700"
-          )}
-        >
-          {isTyping ? (
-            <TypingIndicator />
-          ) : isUser ? (
-            content
-          ) : (
-            <MarkdownContent content={content} />
-          )}
-        </div>
+        {file_url && isUser && <FileMessage fileUrl={file_url} />}
+        {file_url && isUser && content && content.trim() && (
+          <div
+            className={cn(
+              "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed mt-2",
+              "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
+            )}
+          >
+            {content}
+          </div>
+        )}
+        {!file_url && (
+          <div
+            className={cn(
+              "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed",
+              isUser
+                ? "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
+                : "text-foreground rounded-xl py-0 px-0 dark:border-gray-700"
+            )}
+          >
+            {isTyping ? (
+              <TypingIndicator />
+            ) : isUser ? (
+              content
+            ) : (
+              <MarkdownContent content={content} />
+            )}
+          </div>
+        )}
         {!isUser && !isTyping && (
           <div className="flex items-center gap-2 mt-1">
             {!isCopied ? (

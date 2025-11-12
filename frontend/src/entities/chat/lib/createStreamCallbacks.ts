@@ -44,6 +44,7 @@ export const createStreamCallbacks = ({
             question_time: data.question_time,
             answer_time: data.question_time,
             voice_url: sendMessageDto.voice_url || "",
+            file_url: sendMessageDto.file_url,
             rating: null,
           };
 

@@ -22,6 +22,7 @@ export interface HistoryMessage {
   question_time: string;
   answer_time: string;
   voice_url: string;
+  file_url?: string;
   rating: number | null;
 }
 

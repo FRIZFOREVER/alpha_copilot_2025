@@ -124,5 +124,5 @@ export class AxiosClient {
   }
 }
 
-export const axiosNoAuth = new AxiosClient("http://localhost:8080/");
-export const axiosAuth = new AxiosClient("http://localhost:8080/", true);
+export const axiosNoAuth = new AxiosClient("http://127.0.0.1:8080/");
+export const axiosAuth = new AxiosClient("http://127.0.0.1:8080/", true);
