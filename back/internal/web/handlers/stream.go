@@ -85,20 +85,17 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 	for _, message := range messages {
 		messageToModel.Messages = append(messageToModel.Messages,
 			client.Message{
+				ID:      message.QuestionID,
 				Role:    "user",
 				Content: message.Question,
 			},
 			client.Message{
+				ID:      message.AnswerID,
 				Role:    "assistant",
 				Content: message.Answer,
 			},
 		)
 	}
-
-	messageToModel.Messages = append(messageToModel.Messages, client.Message{
-		Role:    "user",
-		Content: streamIn.Question,
-	})
 
 	questionID, answerID, err := database.WriteMessage(
 		sh.db,
@@ -118,11 +115,21 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		})
 	}
 
+	messageToModel.Messages = append(messageToModel.Messages, client.Message{
+		ID:      questionID,
+		Role:    "user",
+		Content: streamIn.Question,
+	})
+
 	messageToModel.Tag = streamIn.Tag
 
 	messageToModel.IsVoice = len(streamIn.VoiceURL) > 0
 
 	messageToModel.FileURL = streamIn.FileURL
+
+	messageToModel.ChatID = chatIDStr
+
+	messageToModel.Mode = "auto" //TODO
 
 	messageChan, err := sh.client.StreamRequestToModel(messageToModel)
 	if err != nil {
