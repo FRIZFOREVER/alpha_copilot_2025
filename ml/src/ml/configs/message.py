@@ -27,7 +27,7 @@ class RequestPayload(BaseModel):
     message_id: Optional[int] = None
     mode: Optional[ModelMode] = None
     system: Optional[str] = None
-    voice: Optional[bool] = False
+    is_voice: Optional[bool] = False
     file_url: Optional[str] = None
 
 
