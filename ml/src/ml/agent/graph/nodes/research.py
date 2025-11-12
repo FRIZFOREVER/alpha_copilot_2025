@@ -1,7 +1,7 @@
 from typing import List
 from pydantic import BaseModel
 from ml.agent.graph.state import GraphState
-from ml.agent.calls.model_calls import _ReasoningModelClient
+from ml.api.ollama_calls import _ReasoningModelClient
 from ml.configs.message import Role, Message
 from ml.agent.prompts.research_prompt import PROMPT as RESEARCH_PROMPT
 from ml.agent.prompts.analysis_prompt import PROMPT as ANALYSIS_PROMPT

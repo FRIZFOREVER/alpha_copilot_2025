@@ -13,7 +13,7 @@ from ml.configs.message import Message
 
 class ModelClient(ABC):
     def __init__(self, settings: ModelSettings):
-        self.s: ModelSettings = settings
+        self.settings: ModelSettings = settings
     
     @abstractmethod
     def call(self, messages: Any) -> Message:
@@ -25,26 +25,26 @@ class _ReasoningModelClient(ModelClient):
 
     def call(self, messages: List[Dict[str, str]]) -> Message:
         response: ChatResponse = chat(
-            model=self.s.model,
+            model=self.settings.model,
             messages=messages,
             options={
-                "temperature": self.s.temperature,
-                "top_p": self.s.top_p,
+                "temperature": self.settings.temperature,
+                "top_p": self.settings.top_p,
             },
-            keep_alive=self.s.keep_alive,
+            keep_alive=self.settings.keep_alive,
         )
         return Message(role=response.message.role, content=response.message.content)
 
     def stream(self, messages: List[Dict[str, str]]) -> Iterator[ChatResponse]:
         return chat(
-            model=self.s.model,
+            model=self.settings.model,
             messages=messages,
             options={
-                "temperature": self.s.temperature,
-                "top_p": self.s.top_p,
+                "temperature": self.settings.temperature,
+                "top_p": self.settings.top_p,
             },
             stream=True,
-            keep_alive=self.s.keep_alive,
+            keep_alive=self.settings.keep_alive,
         )
     
     def call_structured(
@@ -69,14 +69,14 @@ class _ReasoningModelClient(ModelClient):
             schema = output_schema
         
         response: ChatResponse = chat(
-            model=self.s.model,
+            model=self.settings.model,
             messages=messages,
             format=schema,
             options={
-                "temperature": self.s.temperature,
-                "top_p": self.s.top_p,
+                "temperature": self.settings.temperature,
+                "top_p": self.settings.top_p,
             },
-            keep_alive=self.s.keep_alive,
+            keep_alive=self.settings.keep_alive,
         )
         
         # Parse response content
@@ -105,9 +105,9 @@ class _EmbeddingModelClient(ModelClient):
 
     def call(self, content: str) -> List[float]:
         response = embed(
-            model=self.s.model,
+            model=self.settings.model,
             input=content,
-            keep_alive=self.s.keep_alive,
+            keep_alive=self.settings.keep_alive,
         )
         return response["embeddings"][0]
 
@@ -115,15 +115,15 @@ class _EmbeddingModelClient(ModelClient):
         if not isinstance(inputs, list):
             raise TypeError("Embedding client expects input text as a list of strings.")
 
-        batch_size = max(1, self.s.embed_batch_size)
+        batch_size = max(1, self.settings.embed_batch_size)
         embeddings: List[List[float]] = []
 
         for idx in range(0, len(inputs), batch_size):
             batch_inputs = inputs[idx : idx + batch_size]
             response = embed(
-                model=self.s.model,
+                model=self.settings.model,
                 input=batch_inputs,
-                keep_alive=self.s.keep_alive,
+                keep_alive=self.settings.keep_alive,
             )
             embeddings.extend(response["embeddings"])
 

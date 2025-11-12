@@ -7,7 +7,7 @@ from typing import Any, Dict, Iterable, List, Tuple
 from pydantic import BaseModel, Field
 
 from ml.agent.graph.state import GraphState
-from ml.agent.calls.model_calls import _ReasoningModelClient
+from ml.api.ollama_calls import _ReasoningModelClient
 from ml.agent.prompts.evidence_prompt import PROMPT as EVIDENCE_PROMPT
 
 

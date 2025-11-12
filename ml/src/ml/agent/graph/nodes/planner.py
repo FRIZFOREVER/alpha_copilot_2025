@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from ml.agent.graph.state import GraphState
-from ml.agent.calls.model_calls import _ReasoningModelClient
+from ml.api.ollama_calls import _ReasoningModelClient
 from ml.configs.message import Role, Message
 from ml.agent.prompts.planner_prompt import PROMPT as PLANNER_PROMPT
 
