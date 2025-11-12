@@ -8,6 +8,8 @@ import { cn } from "@/shared/lib/mergeClass";
 import { Icon, IconTypes } from "@/shared/ui/icon";
 import { useResize } from "@/shared/hooks/useResize";
 import { useEffect, useRef } from "react";
+import { Onboarding } from "@/widgets/onboarding";
+import { useOnboarding } from "@/shared/lib/onboarding";
 
 const DashboardPage = () => {
   const location = useLocation();
@@ -18,6 +20,8 @@ const DashboardPage = () => {
     toggleCollapse,
     setMinimizedChatVisible,
   } = useChatCollapse();
+  const { isOnboardingCompleted, startOnboarding, skipOnboarding } =
+    useOnboarding();
 
   const isChatRoute =
     location.pathname.includes(`/${ERouteNames.CHAT_ROUTE}`) ||
@@ -25,14 +29,9 @@ const DashboardPage = () => {
     location.pathname === `/${ERouteNames.DASHBOARD_ROUTE}/`;
 
   const prevIsLgViewRef = useRef<boolean | null>(null);
+  const chatButtonRef = useRef<HTMLButtonElement>(null);
 
   const { isLgView } = useResize();
-
-  useEffect(() => {
-    if (prevIsLgViewRef.current === null) {
-      prevIsLgViewRef.current = isLgView;
-    }
-  }, [isLgView]);
 
   const showWelcomeContent = isCollapsed && isChatRoute;
 
@@ -43,6 +42,30 @@ const DashboardPage = () => {
     isCollapsed &&
     isChatRoute &&
     (isLgView || (!isLgView && !isMinimizedChatVisible));
+
+  useEffect(() => {
+    if (prevIsLgViewRef.current === null) {
+      prevIsLgViewRef.current = isLgView;
+    }
+  }, [isLgView]);
+
+  useEffect(() => {
+    if (isChatRoute && showWelcomeContent && !isOnboardingCompleted) {
+      const timer = setTimeout(() => {
+        if (showMobileChatButton || chatButtonRef.current) {
+          startOnboarding();
+        }
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [
+    isChatRoute,
+    showWelcomeContent,
+    isOnboardingCompleted,
+    startOnboarding,
+    showMobileChatButton,
+  ]);
 
   const handleMobileChatClick = () => {
     if (!isChatRoute) {
@@ -80,9 +103,15 @@ const DashboardPage = () => {
             )}
             {showMobileChatButton && (
               <button
-                onClick={handleMobileChatClick}
+                ref={chatButtonRef}
+                onClick={() => {
+                  if (!isOnboardingCompleted) {
+                    skipOnboarding();
+                  }
+                  handleMobileChatClick();
+                }}
                 className={cn(
-                  "fixed bottom-6 right-6 z-50 cursor-pointer",
+                  "fixed bottom-6 right-6 z-[105] cursor-pointer",
                   "w-14 h-14 rounded-full",
                   "bg-red-500 hover:bg-red-600",
                   "flex items-center justify-center",
@@ -91,6 +120,7 @@ const DashboardPage = () => {
                   "active:scale-95"
                 )}
                 aria-label="Открыть чат"
+                style={{ pointerEvents: "auto" }}
               >
                 <Icon
                   type={IconTypes.LOGO_OUTLINED_V2}
@@ -110,6 +140,7 @@ const DashboardPage = () => {
           </div>
         )}
       </div>
+      <Onboarding />
     </div>
   );
 };

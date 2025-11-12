@@ -6,6 +6,7 @@ import { RouterProvider } from "react-router-dom";
 import { ModalProvider as ModalContextProvider } from "@/shared/lib/modal/context";
 import { ModalProvider } from "../modal/modalProvider";
 import { ChatCollapseProvider } from "../chatCollapse";
+import { OnboardingProvider } from "../onboarding";
 
 export const Providers = () => {
   return (
@@ -13,8 +14,10 @@ export const Providers = () => {
       <ViewerProvider>
         <ModalContextProvider>
           <ChatCollapseProvider>
-            <RouterProvider router={routes} />
-            <ModalProvider />
+            <OnboardingProvider>
+              <RouterProvider router={routes} />
+              <ModalProvider />
+            </OnboardingProvider>
           </ChatCollapseProvider>
         </ModalContextProvider>
       </ViewerProvider>
