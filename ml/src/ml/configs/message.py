@@ -10,25 +10,26 @@ class Role(str, Enum):
 
 
 class Message(BaseModel):
+    id: int
     role: Role
     content: str
 
 
 class ModelMode(str, Enum):
-    Fast = "Fast"
-    Thiking = "Thiking"
-    Research = "Research"
-    Auto = "Auto"
+    Fast = "fast"
+    Thiking = "thiking"
+    Research = "research"
+    Auto = "auto"
 
 
 class RequestPayload(BaseModel):
     messages: List[Message]
+    chat_id: Optional[str] = None
     tag: Optional[str] = None
-    question_id: Optional[int] = None
     mode: Optional[ModelMode] = None
     system: Optional[str] = None
     file_url: Optional[str] = None
-    is_voice: Optional[bool] = False
+    is_voice: Optional[bool] = None
 
 
 class ChatHistory(BaseModel):

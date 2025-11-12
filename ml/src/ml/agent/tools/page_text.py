@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import logging
 import re
 
 import httpx
 from bs4 import BeautifulSoup
-
-logger = logging.getLogger(__name__)
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -65,9 +62,8 @@ def fetch_page_html(url: str, timeout: float, max_bytes: int) -> str:
                 content = b"".join(collected)
                 encoding = response.encoding or "utf-8"
                 return content.decode(encoding, errors="ignore")
-    except httpx.HTTPError as exc:  # pragma: no cover - defensive logging
+    except httpx.HTTPError as exc:  # pragma: no cover - defensive guard
         message = f"Failed to fetch URL {url}: {exc}"
-        logger.debug(message, exc_info=True)
         raise RuntimeError(message) from exc
 
     return ""

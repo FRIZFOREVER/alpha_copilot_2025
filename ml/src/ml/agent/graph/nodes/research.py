@@ -7,7 +7,6 @@ from ml.agent.prompts.research_prompt import PROMPT as RESEARCH_PROMPT
 from ml.agent.prompts.analysis_prompt import PROMPT as ANALYSIS_PROMPT
 from ml.agent.prompts.synthesis_prompt import PROMPT as SYNTHESIS_PROMPT
 from ml.agent.graph.nodes.evidence import format_evidence_context
-from ml.agent.graph.logging_utils import log_pipeline_event
 
 
 class SearchQueries(BaseModel):
@@ -26,10 +25,10 @@ class AnalysisResult(BaseModel):
 def research_node(state: GraphState, client: _ReasoningModelClient) -> GraphState:
     """Generate search queries for research."""
 
-    log_pipeline_event(
+    state.record_event(
         "node.enter",
-        state=state,
-        extra={"node": "research", "iteration": state.research_iteration},
+        node="research",
+        iteration=state.research_iteration,
     )
 
     # Get user message
@@ -46,18 +45,17 @@ def research_node(state: GraphState, client: _ReasoningModelClient) -> GraphStat
     else:
         preview = None
 
-    log_pipeline_event(
+    state.record_event(
         "research.input",
-        state=state,
-        extra={"node": "research", "user_message_preview": preview},
+        node="research",
+        user_message_preview=preview,
     )
 
     if not user_message:
         state.needs_more_research = False
-        log_pipeline_event(
+        state.record_event(
             "research.no_user_message",
-            state=state,
-            extra={"node": "research"},
+            node="research",
         )
         return state
     
@@ -85,27 +83,21 @@ def research_node(state: GraphState, client: _ReasoningModelClient) -> GraphStat
         state.tool_results = [
             {"type": "search_query", "query": q} for q in queries_output.queries
         ]
-        log_pipeline_event(
+        state.record_event(
             "research.queries_generated",
-            state=state,
-            extra={
-                "node": "research",
-                "queries": queries_output.queries,
-            },
+            node="research",
+            queries=queries_output.queries,
         )
     except Exception as e:
         # Fallback: use user message as query
         state.tool_results = [
             {"type": "search_query", "query": user_message}
         ]
-        log_pipeline_event(
+        state.record_event(
             "research.error",
-            state=state,
-            extra={
-                "node": "research",
-                "error": str(e),
-                "fallback_query": user_message,
-            },
+            node="research",
+            error=str(e),
+            fallback_query=user_message,
         )
 
     return state
@@ -114,10 +106,10 @@ def research_node(state: GraphState, client: _ReasoningModelClient) -> GraphStat
 def analyze_results_node(state: GraphState, client: _ReasoningModelClient) -> GraphState:
     """Analyze search results and decide if more research is needed."""
 
-    log_pipeline_event(
+    state.record_event(
         "node.enter",
-        state=state,
-        extra={"node": "analyze", "evidence_count": len(state.evidence)},
+        node="analyze",
+        evidence_count=len(state.evidence),
     )
 
     # Get user message
@@ -134,18 +126,17 @@ def analyze_results_node(state: GraphState, client: _ReasoningModelClient) -> Gr
     else:
         preview = None
 
-    log_pipeline_event(
+    state.record_event(
         "analyze.input",
-        state=state,
-        extra={"node": "analyze", "user_message_preview": preview},
+        node="analyze",
+        user_message_preview=preview,
     )
 
     if not user_message:
         state.needs_more_research = False
-        log_pipeline_event(
+        state.record_event(
             "analyze.no_user_message",
-            state=state,
-            extra={"node": "analyze"},
+            node="analyze",
         )
         return state
     
@@ -173,16 +164,13 @@ def analyze_results_node(state: GraphState, client: _ReasoningModelClient) -> Gr
         analysis_summary = analysis.analysis[:500]
         if len(analysis.analysis) > 500:
             analysis_summary += "…"
-        log_pipeline_event(
+        state.record_event(
             "analyze.result",
-            state=state,
-            extra={
-                "node": "analyze",
-                "sufficient": analysis.sufficient,
-                "needs_more_research": analysis.needs_more_research,
-                "missing_info": analysis.missing_info,
-                "analysis_summary": analysis_summary,
-            },
+            node="analyze",
+            sufficient=analysis.sufficient,
+            needs_more_research=analysis.needs_more_research,
+            missing_info=analysis.missing_info,
+            analysis_summary=analysis_summary,
         )
     except Exception as e:
         # Default: don't need more research if we have some results
@@ -190,14 +178,11 @@ def analyze_results_node(state: GraphState, client: _ReasoningModelClient) -> Gr
             len(state.tool_results) == 0
             and state.research_iteration < state.max_research_iterations
         )
-        log_pipeline_event(
+        state.record_event(
             "analyze.error",
-            state=state,
-            extra={
-                "node": "analyze",
-                "error": str(e),
-                "fallback_needs_more_research": state.needs_more_research,
-            },
+            node="analyze",
+            error=str(e),
+            fallback_needs_more_research=state.needs_more_research,
         )
 
     return state
@@ -206,10 +191,10 @@ def analyze_results_node(state: GraphState, client: _ReasoningModelClient) -> Gr
 def synthesize_answer_node(state: GraphState, _client: _ReasoningModelClient) -> GraphState:
     """Prepare synthesis prompt from search results."""
 
-    log_pipeline_event(
+    state.record_event(
         "node.enter",
-        state=state,
-        extra={"node": "synthesize", "evidence_count": len(state.evidence)},
+        node="synthesize",
+        evidence_count=len(state.evidence),
     )
 
     # Get user message
@@ -226,20 +211,19 @@ def synthesize_answer_node(state: GraphState, _client: _ReasoningModelClient) ->
     else:
         preview = None
 
-    log_pipeline_event(
+    state.record_event(
         "synthesize.input",
-        state=state,
-        extra={"node": "synthesize", "user_message_preview": preview},
+        node="synthesize",
+        user_message_preview=preview,
     )
 
     if not user_message:
         state.final_answer = "Извините, не удалось найти запрос пользователя."
         state.stream_messages = []
         state.final_prompt_messages = []
-        log_pipeline_event(
+        state.record_event(
             "synthesize.no_user_message",
-            state=state,
-            extra={"node": "synthesize"},
+            node="synthesize",
         )
         return state
     
@@ -256,13 +240,10 @@ def synthesize_answer_node(state: GraphState, _client: _ReasoningModelClient) ->
     state.stream_messages = messages
     state.final_answer = None
 
-    log_pipeline_event(
+    state.record_event(
         "synthesize.prompt_prepared",
-        state=state,
-        extra={
-            "node": "synthesize",
-            "message_count": len(messages),
-        },
+        node="synthesize",
+        message_count=len(messages),
     )
 
     return state
