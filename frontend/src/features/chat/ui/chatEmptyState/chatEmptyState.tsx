@@ -5,7 +5,11 @@ import { cn } from "@/shared/lib/mergeClass";
 const WELCOME_TEXT =
   "Задавайте любые бизнес-вопросы — получите точный ответ за секунды.";
 
-export const ChatEmptyState = () => {
+export const ChatEmptyState = ({
+  isCompact = false,
+}: {
+  isCompact?: boolean;
+}) => {
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -36,8 +40,18 @@ export const ChatEmptyState = () => {
   }, [imageLoaded]);
 
   return (
-    <div className="flex items-center justify-center px-3 sm:px-4 md:px-8 py-6 sm:py-8 md:py-12 w-full">
-      <div className="flex flex-col items-center justify-center space-y-4 sm:space-y-6 md:space-y-8 max-w-2xl w-full">
+    <div
+      className={cn(
+        "flex items-center justify-center px-3 sm:px-4 md:px-8 py-6 sm:py-8 md:py-12 w-full",
+        isCompact && "px-3 py-6 md:px-3 md:py-6"
+      )}
+    >
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center space-y-4 sm:space-y-6 md:space-y-8 max-w-2xl w-full",
+          isCompact && "space-y-4 md:space-y-4"
+        )}
+      >
         <div className="relative">
           <div className="absolute inset-0 -z-10 bg-gradient-to-br from-red-500/20 to-pink-600/20 rounded-full blur-3xl animate-pulse scale-125 sm:scale-150" />
           <div
@@ -51,7 +65,10 @@ export const ChatEmptyState = () => {
             <Image
               src="/images/meditation-yaga.png"
               alt="AI Consultant"
-              className="w-32 sm:w-40 md:w-48 lg:w-64 h-auto drop-shadow-2xl select-none"
+              className={cn(
+                "w-32 sm:w-40 md:w-48 lg:w-64 h-auto drop-shadow-2xl select-none",
+                isCompact && "w-24 sm:w-32 md:w-40 lg:w-48"
+              )}
               loading="eager"
               onLoad={() => setImageLoaded(true)}
             />
@@ -64,7 +81,12 @@ export const ChatEmptyState = () => {
             imageLoaded ? "opacity-100" : "opacity-0"
           )}
         >
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-medium text-gray-800 leading-relaxed">
+          <p
+            className={cn(
+              "text-base sm:text-lg md:text-xl lg:text-2xl font-medium text-gray-800 leading-relaxed",
+              isCompact && "text-base sm:text-base md:text-base lg:text-base"
+            )}
+          >
             {displayedText}
             {isTyping && (
               <span className="inline-block w-0.5 sm:w-1 h-4 sm:h-5 md:h-6 bg-red-500 ml-1 align-middle cursor-blink" />

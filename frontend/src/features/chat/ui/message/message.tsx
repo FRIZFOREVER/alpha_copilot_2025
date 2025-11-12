@@ -16,6 +16,7 @@ export interface MessageProps {
   rating?: number | null;
   isTyping?: boolean;
   file_url?: string;
+  isCompact?: boolean;
 }
 
 export const Message = ({
@@ -25,6 +26,7 @@ export const Message = ({
   rating,
   isTyping = false,
   file_url,
+  isCompact = false,
 }: MessageProps) => {
   const chatId = useParams().chatId;
 
@@ -45,7 +47,8 @@ export const Message = ({
     <div
       className={cn(
         "flex gap-4 px-4 md:px-8 py-4 md:py-6",
-        isUser ? "justify-end" : "justify-start"
+        isUser ? "justify-end" : "justify-start",
+        isCompact && "px-4 md:px-4 py-4 md:py-4"
       )}
     >
       {!isUser && (
@@ -60,7 +63,8 @@ export const Message = ({
       <div
         className={cn(
           "flex flex-col max-w-[85%] md:max-w-[80%]",
-          isUser ? "items-end" : "items-start"
+          isUser ? "items-end" : "items-start",
+          isCompact && "max-w-[85%] md:max-w-[85%]"
         )}
       >
         {!isUser && !isTyping && (
@@ -87,7 +91,8 @@ export const Message = ({
               "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed",
               isUser
                 ? "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
-                : "text-foreground rounded-xl py-0 px-0 dark:border-gray-700"
+                : "text-foreground rounded-xl py-0 px-0 dark:border-gray-700",
+              isCompact && "text-sm md:text-sm"
             )}
           >
             {isTyping ? (

@@ -15,6 +15,7 @@ export interface ChatInputProps {
   placeholder?: string;
   disabled?: boolean;
   suggestions?: Suggestion[];
+  isCompact?: boolean;
 }
 
 const MIN_HEIGHT = 52;
@@ -25,6 +26,7 @@ export const ChatInput = ({
   placeholder = "Спросите что-нибудь...",
   disabled = false,
   suggestions,
+  isCompact = false,
 }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -151,7 +153,12 @@ export const ChatInput = ({
 
   return (
     <div className="bg-white">
-      <div className="mx-auto max-w-[832px] px-4 md:px-8 py-4">
+      <div
+        className={cn(
+          "mx-auto max-w-[832px] px-4 md:px-8 py-4",
+          isCompact && "px-4 md:px-4"
+        )}
+      >
         {suggestions && suggestions.length > 0 && (
           <Suggestions
             suggestions={suggestions}
