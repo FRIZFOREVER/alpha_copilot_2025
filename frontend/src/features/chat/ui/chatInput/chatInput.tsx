@@ -163,6 +163,7 @@ export const ChatInput = ({
           <Suggestions
             suggestions={suggestions}
             onSelect={handleSuggestionSelect}
+            isCompact={isCompact}
             className="mb-2"
           />
         )}

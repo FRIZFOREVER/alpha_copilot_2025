@@ -49,13 +49,11 @@ export const Sidebar = () => {
   const { data: profileData } = useGetProfileQuery();
   const { openModal } = useModal();
 
-  // Проверяем, находимся ли мы на странице чата
   const isChatRoute =
     location.pathname.includes(`/${ERouteNames.CHAT_ROUTE}`) ||
     location.pathname === `/${ERouteNames.DASHBOARD_ROUTE}` ||
     location.pathname === `/${ERouteNames.DASHBOARD_ROUTE}/`;
 
-  // Скрываем сайдбар, если чат свернут И мы на странице чата
   const shouldHideSidebar = isChatCollapsed && isChatRoute;
 
   const chats: ChatItem[] = useMemo(() => {
@@ -144,7 +142,9 @@ export const Sidebar = () => {
           "bg-[#f9f9f9]",
           "md:static md:z-auto",
           isCollapsed ? "w-16 md:w-16" : "w-64 md:w-72",
-          isMobileOpen && !shouldHideSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          isMobileOpen && !shouldHideSidebar
+            ? "translate-x-0"
+            : "-translate-x-full md:translate-x-0",
           shouldHideSidebar && "hidden md:hidden"
         )}
       >
