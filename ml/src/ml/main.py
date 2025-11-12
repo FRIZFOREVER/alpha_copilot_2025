@@ -1,5 +1,3 @@
-import logging
-
 from dotenv import load_dotenv
 
 from ml.api.app import create_app

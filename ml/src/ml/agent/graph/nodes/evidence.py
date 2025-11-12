@@ -4,13 +4,11 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Tuple
 
-import logging
 from pydantic import BaseModel, Field
 
 from ml.agent.graph.state import GraphState
 from ml.agent.calls.model_calls import _ReasoningModelClient
 from ml.agent.prompts.evidence_prompt import PROMPT as EVIDENCE_PROMPT
-from ml.agent.graph.logging_utils import log_pipeline_event
 
 
 class EvidenceSummary(BaseModel):
@@ -29,13 +27,10 @@ def extract_evidence_node(
 ) -> GraphState:
     """Produce structured evidence entries for each successful search result."""
 
-    log_pipeline_event(
+    state.record_event(
         "node.enter",
-        state=state,
-        extra={
-            "node": "extract_evidence",
-            "search_result_count": len(state.tool_results),
-        },
+        node="extract_evidence",
+        search_result_count=len(state.tool_results),
     )
 
     evidence_entries: List[Dict[str, Any]] = []
@@ -61,16 +56,12 @@ def extract_evidence_node(
         summary: EvidenceSummary | None = None
         try:
             summary = client.call_structured(messages=messages, output_schema=EvidenceSummary)
-        except Exception as exc:  # pragma: no cover - defensive logging
-            log_pipeline_event(
+        except Exception as exc:  # pragma: no cover - defensive guard
+            state.record_event(
                 "evidence.summary_error",
-                state=state,
-                level=logging.WARNING,
-                extra={
-                    "node": "extract_evidence",
-                    "source": url or title,
-                    "error": str(exc),
-                },
+                node="extract_evidence",
+                source=url or title,
+                error=str(exc),
             )
 
         facts: List[str] = []
@@ -86,14 +77,11 @@ def extract_evidence_node(
                 fallback_used = True
                 truncated = fallback_fact[:280].strip()
                 facts = [truncated] if truncated else []
-                log_pipeline_event(
+                state.record_event(
                     "evidence.fallback_used",
-                    state=state,
-                    extra={
-                        "node": "extract_evidence",
-                        "url": url,
-                        "query": query,
-                    },
+                    node="extract_evidence",
+                    url=url,
+                    query=query,
                 )
 
         if not facts:
@@ -110,26 +98,20 @@ def extract_evidence_node(
             }
         )
 
-        log_pipeline_event(
+        state.record_event(
             "evidence.entry_recorded",
-            state=state,
-            extra={
-                "node": "extract_evidence",
-                "url": url,
-                "query": query,
-                "facts": facts[:3],
-                "fallback": fallback_used,
-            },
+            node="extract_evidence",
+            url=url,
+            query=query,
+            facts=facts[:3],
+            fallback=fallback_used,
         )
 
     state.evidence = evidence_entries
-    log_pipeline_event(
+    state.record_event(
         "evidence.summary_complete",
-        state=state,
-        extra={
-            "node": "extract_evidence",
-            "evidence_count": len(evidence_entries),
-        },
+        node="extract_evidence",
+        evidence_count=len(evidence_entries),
     )
     return state
 

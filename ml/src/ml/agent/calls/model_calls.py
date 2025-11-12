@@ -1,6 +1,5 @@
 # from ml.utils.formats import _rstrip_slash
 import json
-import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterator, List, Type, Union
 
@@ -9,8 +8,6 @@ from pydantic import BaseModel
 
 from ml.configs.model_config import ModelSettings
 from ml.configs.message import Message
-
-logger = logging.getLogger(__name__)
 
 
 
@@ -90,19 +87,17 @@ class _ReasoningModelClient(ModelClient):
             except json.JSONDecodeError:
                 # If JSON parsing fails, try to extract JSON from the string
                 # Some models might return text with JSON embedded
-                logger.warning(f"Failed to parse JSON from response: {content[:100]}")
                 parsed = {"error": "Invalid JSON response", "raw": content}
         else:
             parsed = content
-        
+
         # If output_schema is a Pydantic model class, return parsed model instance
         if isinstance(output_schema, type) and issubclass(output_schema, BaseModel):
             try:
                 return output_schema.model_validate(parsed)
             except Exception as e:
-                logger.error(f"Failed to validate structured output: {e}")
-                raise
-        
+                raise ValueError(f"Failed to validate structured output: {e}") from e
+
         return parsed
 
 class _RerankModelClient(ModelClient):
@@ -135,42 +130,6 @@ class _RerankModelClient(ModelClient):
             raise ValueError(f"Unexpected label '{label}' from rerank model")
 
         return label == "yes"
-        
-        content = response.message.content
-
-        if isinstance(content, str):
-            try:
-                content = json.loads(content)
-            except json.JSONDecodeError:
-                logger.warning(
-                    "Rerank model returned non-JSON response, defaulting to False: %s",
-                    content,
-                )
-                return False
-
-        if not isinstance(content, dict):
-            logger.warning(
-                "Rerank model response has unexpected type %s, defaulting to False",
-                type(content).__name__,
-            )
-            return False
-
-        label = content.get("label")
-        if not isinstance(label, str):
-            logger.warning("Rerank model response missing 'label', defaulting to False")
-            return False
-
-        normalized_label = label.strip().lower()
-        if normalized_label == "yes":
-            return True
-
-        if normalized_label != "no":
-            logger.warning(
-                "Rerank model response has unexpected label '%s', defaulting to False",
-                label,
-            )
-
-        return False
     
     def call_batch(self, messages: List[List[Dict[str,str]]])  -> List[bool]:
         return [self.call(item) for item in messages]
