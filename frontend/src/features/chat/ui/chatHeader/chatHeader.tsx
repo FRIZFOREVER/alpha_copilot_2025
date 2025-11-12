@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { SquarePen, Sparkles, Zap, Brain, Settings, Minimize2, Maximize2 } from "lucide-react";
+import {
+  SquarePen,
+  Sparkles,
+  Zap,
+  Brain,
+  Settings,
+  Minimize2,
+  Maximize2,
+} from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import {
   Select,

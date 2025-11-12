@@ -25,18 +25,18 @@ export const ChatCollapseProvider = ({ children }: { children: ReactNode }) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem(STORAGE_KEY);
-      return stored === "true";
+      return stored !== null ? stored === "true" : true;
     }
-    return false;
+    return true;
   });
 
   const [isMinimizedChatVisible, setIsMinimizedChatVisible] = useState<boolean>(
     () => {
       if (typeof window !== "undefined") {
         const stored = localStorage.getItem(MINIMIZED_CHAT_VISIBLE_KEY);
-        return stored !== "false"; // По умолчанию видим, если не установлено явно
+        return stored !== null ? stored === "true" : false;
       }
-      return true;
+      return false;
     }
   );
 

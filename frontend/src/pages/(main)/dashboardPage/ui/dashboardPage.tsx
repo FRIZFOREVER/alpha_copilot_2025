@@ -16,7 +16,6 @@ const DashboardPage = () => {
     isCollapsed,
     isMinimizedChatVisible,
     toggleCollapse,
-    setCollapsed,
     setMinimizedChatVisible,
   } = useChatCollapse();
 
@@ -27,24 +26,7 @@ const DashboardPage = () => {
 
   const prevIsLgViewRef = useRef<boolean | null>(null);
 
-  const { isLgView } = useResize(() => {
-    const wasLgView = prevIsLgViewRef.current;
-    const nowIsLgView = window.innerWidth < 1024;
-
-    if (wasLgView === false && nowIsLgView && !isCollapsed && isChatRoute) {
-      setCollapsed(true);
-      setMinimizedChatVisible(false);
-    } else if (
-      wasLgView === true &&
-      !nowIsLgView &&
-      isCollapsed &&
-      isChatRoute
-    ) {
-      setMinimizedChatVisible(true);
-    }
-
-    prevIsLgViewRef.current = nowIsLgView;
-  }, [isCollapsed, isChatRoute]);
+  const { isLgView } = useResize();
 
   useEffect(() => {
     if (prevIsLgViewRef.current === null) {
