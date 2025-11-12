@@ -7,6 +7,13 @@ from typing import Any, Dict, Mapping, Optional
 
 from ml.configs.runtime_flags import PIPELINE_LOGGING_ENABLED
 
+
+_IDENTIFIER_ATTRS = {
+    "thread_id": "thread_id",
+    "checkpoint_ns": "checkpoint_namespace",
+    "checkpoint_id": "checkpoint_identifier",
+}
+
 if False:  # pragma: no cover - typing imports
     from ml.agent.graph.state import GraphState
 
@@ -51,15 +58,15 @@ def _extract_identifiers(
     if config:
         configurable = config.get("configurable") or {}
 
-    for key in ("thread_id", "checkpoint_ns", "checkpoint_id"):
+    for key, state_attr in _IDENTIFIER_ATTRS.items():
         value = None
         if isinstance(configurable, Mapping):
             value = configurable.get(key)
         if state is not None and not value:
-            value = getattr(state, key, None)
-        elif state is not None and getattr(state, key, None):
+            value = getattr(state, state_attr, None)
+        elif state is not None and getattr(state, state_attr, None):
             # Prefer identifiers explicitly stored on the state object.
-            value = getattr(state, key)
+            value = getattr(state, state_attr)
         if value:
             identifiers[key] = value
 
