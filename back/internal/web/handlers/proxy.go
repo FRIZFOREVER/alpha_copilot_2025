@@ -30,7 +30,7 @@ func NewProxy(s3 *minio.Client, logger *logrus.Logger) *Proxy {
 
 func (ph *Proxy) HandlerWebm(c *fiber.Ctx) error {
 	fileName := c.Params("file_name")
-	
+
 	// Проверяем что файл имеет расширение .webm
 	if !strings.HasSuffix(fileName, ".webm") {
 		fileName = fileName + ".webm"
@@ -62,7 +62,7 @@ func (ph *Proxy) HandlerWebm(c *fiber.Ctx) error {
 
 func (ph *Proxy) HandlerFile(c *fiber.Ctx) error {
 	fileName := c.Params("file_name")
-	
+
 	bucket := "files"
 
 	object, err := s3.GetFile(ph.s3, bucket, fileName)
@@ -85,7 +85,7 @@ func (ph *Proxy) HandlerFile(c *fiber.Ctx) error {
 
 	// Определяем Content-Type и настройки отдачи
 	contentType, disposition := getContentDisposition(objectInfo.ContentType, fileName)
-	
+
 	c.Set("Content-Type", contentType)
 	c.Set("Content-Disposition", disposition)
 	c.Set("Cache-Control", "public, max-age=3600")
