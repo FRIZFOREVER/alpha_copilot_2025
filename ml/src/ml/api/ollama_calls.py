@@ -1,85 +1,49 @@
 # from ml.utils.formats import _rstrip_slash
 import json
-from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterator, List, Type, Union
 
 from ollama import ChatResponse, chat, embed
 from pydantic import BaseModel
 
-from ml.configs.model_config import ModelSettings
-from ml.configs.message import Message
+from ml.configs.model_config import EmbeddingClientSettings, ReasoningClientSettings
+from ml.configs.message import ChatHistory
 
+class ReasoningModelClient:
+    def __init__(self, settings: ReasoningClientSettings):
+        self.settings: ReasoningClientSettings = settings
 
-
-class ModelClient(ABC):
-    def __init__(self, settings: ModelSettings):
-        self.settings: ModelSettings = settings
-    
-    @abstractmethod
-    def call(self, messages: Any) -> Message:
-        pass
-    
-
-class _ReasoningModelClient(ModelClient):
-    """Thin wrapper around `ollama.chat` for conversational reasoning models."""
-
-    def call(self, messages: List[Dict[str, str]]) -> Message:
-        response: ChatResponse = chat(
-            model=self.settings.model,
-            messages=messages,
-            options={
-                "temperature": self.settings.temperature,
-                "top_p": self.settings.top_p,
-            },
-            keep_alive=self.settings.keep_alive,
-        )
-        return Message(role=response.message.role, content=response.message.content)
-
-    def stream(self, messages: List[Dict[str, str]]) -> Iterator[ChatResponse]:
+    def call(self, messages: ChatHistory, **kwargs) -> str:
         return chat(
             model=self.settings.model,
-            messages=messages,
-            options={
-                "temperature": self.settings.temperature,
-                "top_p": self.settings.top_p,
-            },
-            stream=True,
+            messages=messages.messages_list(),
+            options=self.settings.options.model_dump() | kwargs,
             keep_alive=self.settings.keep_alive,
+            stream=False
+        ).message.content
+
+    def stream(self, messages: ChatHistory, **kwargs) -> Iterator[ChatResponse]:
+        return chat(
+            model=self.settings.model,
+            messages=messages.messages_list(),
+            options=self.settings.options.model_dump() | kwargs,
+            keep_alive=self.settings.keep_alive,
+            stream=True,
         )
     
-    def call_structured(
-        self, 
-        messages: List[Dict[str, str]], 
-        output_schema: Union[Dict[str, Any], Type[BaseModel]]
-    ) -> Union[Dict[str, Any], BaseModel]:
-        """
-        Call model with structured output format.
-        
-        Args:
-            messages: List of messages in Ollama format
-            output_schema: Either a JSON schema dict or a Pydantic model class
-            
-        Returns:
-            Parsed structured output (dict if schema provided, Pydantic model if model class provided)
-        """
-        # Convert Pydantic model to JSON schema if needed
-        if isinstance(output_schema, type) and issubclass(output_schema, BaseModel):
-            schema = output_schema.model_json_schema()
-        else:
-            schema = output_schema
+    def call_structured(self, 
+                        messages: ChatHistory, 
+                        output_schema: Dict[str, Any],
+                        **kwargs
+                        ) -> Union[Dict[str, Any], BaseModel]:
         
         response: ChatResponse = chat(
             model=self.settings.model,
             messages=messages,
-            format=schema,
-            options={
-                "temperature": self.settings.temperature,
-                "top_p": self.settings.top_p,
-            },
+            format=output_schema, # pass via BaseModel.model_json_schema()
+            options=self.settings.options | kwargs,
             keep_alive=self.settings.keep_alive,
         )
         
-        # Parse response content
         content = response.message.content
         if isinstance(content, str):
             try:

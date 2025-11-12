@@ -14,7 +14,7 @@ from ml.agent.graph.nodes import (
     synthesize_answer_node,
     fast_answer_node,
 )
-from ml.agent.calls.model_calls import _ReasoningModelClient
+from ml.api.ollama_calls import _ReasoningModelClient
 from ml.configs.message import Message, Role
 from ml.agent.prompts.synthesis_prompt import PROMPT as SYNTHESIS_PROMPT
 from ml.agent.prompts.fast_answer_prompt import PROMPT as FAST_ANSWER_PROMPT

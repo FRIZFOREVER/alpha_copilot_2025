@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from typing import Any, Dict, List, Literal
@@ -21,6 +22,8 @@ _MODEL_ENV_VARS = [
     "OLLAMA_EMBEDDING_MODEL",
 ]
 
+MODEL_CLIENTS: Dict[str, Any] = {}
+
 async def get_models_from_env() -> List[str]:
     """Read .env to get the configured model identifiers."""
 
@@ -29,23 +32,6 @@ async def get_models_from_env() -> List[str]:
         model_name = os.getenv(key)
         requested_model_names.append(model_name)
     return requested_model_names
-
-
-async def fetch_available_models() -> List[str]:
-    """Return Ollama's reported model names and log what is available."""
-
-    response = ollama.list()
-    json_models = jsonable_encoder(response)
-    entries = json_models.get("models", []) or []
-
-    model_names = [entry["model"] for entry in entries if isinstance(entry, dict)]
-
-    if model_names:
-        logger.info("Available Ollama models: %s", ", ".join(model_names))
-    else:
-        logger.info("No Ollama models are currently downloaded.")
-
-    return model_names
 
 
 async def download_missing_models(
@@ -64,11 +50,12 @@ async def download_missing_models(
 async def init_models() -> Dict[str, Any]:
     """Prepare LangGraph clients for every supported mode."""
 
-    model_clients = {
+    global MODEL_CLIENTS
+    MODEL_CLIENTS = {
         "chat": _create_reasoning_client(),
         "embeddings": _create_embeddings_client(),
     }
-    return model_clients
+    return MODEL_CLIENTS
 
 
 def _create_reasoning_client() -> Any:
@@ -77,6 +64,46 @@ def _create_reasoning_client() -> Any:
 
 def _create_embeddings_client() -> Any:
     return make_client(ModelSettings(api_mode="embeddings", keep_alive=-1))
+
+async def fetch_available_models() -> List[str]:
+    """Return Ollama's reported model names and log what is available."""
+
+    response = ollama.list()
+    json_models = jsonable_encoder(response)
+    entries = json_models.get("models", []) or []
+
+    model_names = [entry["model"] for entry in entries if isinstance(entry, dict)]
+
+    if model_names:
+        logger.info("Available Ollama models: %s", ", ".join(model_names))
+    else:
+        logger.info("No Ollama models are currently downloaded.")
+
+    return model_names
+
+async def fetch_running_models() -> List[str]:
+    """Return the names of currently running Ollama models."""
+
+    response = ollama.ps()
+    json_models = jsonable_encoder(response)
+    entries = (
+        json_models.get("models", [])
+        or json_models.get("running", [])
+        or json_models.get("processes", [])
+    )
+
+    running = [
+        entry["model"]
+        for entry in entries
+        if isinstance(entry, dict) and isinstance(entry.get("model"), str)
+    ]
+
+    if running:
+        logger.info("Running Ollama models: %s", ", ".join(running))
+    else:
+        logger.info("No Ollama models are currently running.")
+
+    return running
 
 
 async def warmup_models(clients: Dict[Literal["embeddings", "chat"], ModelClient]) -> None:
@@ -88,7 +115,7 @@ async def warmup_models(clients: Dict[Literal["embeddings", "chat"], ModelClient
 
 async def _warmup_embedding(client: _EmbeddingModelClient) -> None:
     try:
-        await client.call("Test")
+        await asyncio.to_thread(client.call, "Test")
         logger.info("Embedding warmup successful")
     except Exception as exc:
         logger.exception("Embedding warmup failed")
@@ -96,16 +123,15 @@ async def _warmup_embedding(client: _EmbeddingModelClient) -> None:
 
 
 async def _warmup_reasoner(client: _ReasoningModelClient) -> None:
-    try:
-        await client.call(
-            [
+    messages: List[Dict[str, str]] = [
                 {
                     "role": "system",
                     "content": "This is just model warmup call, don't think and reply as fast as possible",
                 },
                 {"role": "user", "content": "Hello, say 'hello' to me as well and nothing else"},
             ]
-        )
+    try:
+        await asyncio.to_thread(client.call, messages)
         logger.info("Reasoner warmup successful")
     except Exception as exc:
         logger.exception("Reasoner warmup failed")

@@ -1,10 +1,8 @@
 import asyncio
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from fastapi import FastAPI, HTTPException
-from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
-import ollama
 
 from ml.agent.router import workflow_collect, workflow_stream
 from ml.configs.message import RequestPayload
@@ -40,7 +38,7 @@ def create_app() -> FastAPI:
     @app.post("/message")
     async def message(payload: RequestPayload) -> Dict[str, str]:
 
-        # Check if models are initialized by now
+        # Check if models are initialized
         if not app.state.models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
 
@@ -58,7 +56,7 @@ def create_app() -> FastAPI:
     @app.post("/message_stream")
     async def message_stream(payload: RequestPayload) -> StreamingResponse:
 
-        # Check if models are initialized by now
+        # Check if models are initialized
         if not app.state.models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
 
@@ -74,16 +72,13 @@ def create_app() -> FastAPI:
         return {"message": "pong"}
 
     @app.get("/ollama")
-    async def ollama_models() -> Dict[str, Any]:
-        try:
-            models = await asyncio.to_thread(ollama.list)
-        except Exception as exc:
-            raise HTTPException(
-                status_code=503,
-                detail="Failed to fetch ollama models",
-            ) from exc
-
-        return jsonable_encoder(models)
+    async def ollama_models() -> Dict[str, List[str]]:
+        available_models = await ollama_setup.fetch_available_models()
+        running_models = await ollama_setup.fetch_running_models()
+        return {
+            "available_models": available_models or [],
+            "running_models": running_models or [],
+        }
 
     @app.get("/health")
     def healthcheck() -> dict[str, str]:

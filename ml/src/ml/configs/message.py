@@ -10,7 +10,7 @@ class Role(str, Enum):
 
 
 class Message(BaseModel):
-    id: int
+    id: Optional[int] = Field(default=None)
     role: Role
     content: str
 
@@ -35,10 +35,11 @@ class RequestPayload(BaseModel):
 class ChatHistory(BaseModel):
     messages: List[Message] = Field(default_factory=list)
 
-    def add_system(self, content: str) -> Message:
-        msg = Message(role=Role.system, content=content)
-        self.messages.append(msg)
-        return msg
+    def add_or_change_system(self, content: str) -> Message:
+        self.messages = [msg for msg in self.messages if msg.role != Role.system]
+        system_message = Message(role=Role.system, content=content)
+        self.messages.insert(0, system_message)
+        return system_message
 
     def add_user(self, content: str) -> Message:
         msg = Message(role=Role.user, content=content)
@@ -50,18 +51,5 @@ class ChatHistory(BaseModel):
         self.messages.append(msg)
         return msg
 
-    # Utilities
-    def last(self, n: int = 1) -> List[Message]:
-        return self.messages[-n:] if n > 0 else []
-
-    def messages_list(self, include_empty: bool = False) -> List[Dict[str, str]]:
-        """
-        Convert to Ollama's chat format:
-        [{"role": "system"|"user"|"assistant", "content": "..."}]
-        """
-        out: List[Dict[str, str]] = []
-        for m in self.messages:
-            if not include_empty and not (m.content and m.content.strip()):
-                continue
-            out.append({"role": m.role.value, "content": m.content or ""})
-        return out
+    def messages_list(self) -> List[Dict[str, str]]:
+        return [{"role": msg.role.value, "content": msg.content} for msg in self.messages]
