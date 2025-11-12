@@ -56,17 +56,13 @@ func (hh *History) Handler(c *fiber.Ctx) error {
 		var messageToModel client.PayloadStream
 		for _, message := range messages {
 			messageToModel.Messages = append(messageToModel.Messages,
-				struct {
-					Role    string `json:"role"`
-					Content string `json:"content"`
-				}{
+				client.Message{
+					ID:      message.QuestionID,
 					Role:    "user",
 					Content: message.Question,
 				},
-				struct {
-					Role    string `json:"role"`
-					Content string `json:"content"`
-				}{
+				client.Message{
+					ID:      message.AnswerID,
 					Role:    "assistant",
 					Content: message.Answer,
 				},

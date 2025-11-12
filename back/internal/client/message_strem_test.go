@@ -15,7 +15,6 @@ func TestMessageStream(t *testing.T) {
 			{Role: "user", Content: "напиши hello world на java"},
 		},
 		Tag:        "",
-		QuestionID: 0,
 		Mode:       "",
 		System:     "",
 	}
