@@ -1,5 +1,5 @@
 from ml.agent.graph.state import GraphState
-from ml.agent.calls.model_calls import _ReasoningModelClient
+from ml.api.ollama_calls import _ReasoningModelClient
 from ml.agent.prompts.fast_answer_prompt import PROMPT as FAST_ANSWER_PROMPT
  
 

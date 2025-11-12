@@ -1,11 +1,9 @@
 from typing import Any, Dict, Iterator, Optional
 
-from ml.agent.calls.model_calls import make_client, _ReasoningModelClient
-from ml.configs.model_config import ModelSettings
 from ml.agent.graph.pipeline import run_pipeline_stream
+from ml.api.ollama_setup import MODEL_CLIENTS
 from ollama import ChatResponse
 
-_MODEL_CLIENTS: Dict[str, Any] = {}
 _LAST_RESPONSE: Optional[str] = None
 
 
@@ -46,7 +44,7 @@ def workflow_collect(payload: Dict[str, Any]) -> str:
 def _prepare_workflow_stream(payload: Dict[str, Any]) -> Iterator[ChatResponse]:
     """Prepare the LangGraph workflow stream for the given payload."""
 
-    client: _ReasoningModelClient = _MODEL_CLIENTS["chat"]
+    client: Any = MODEL_CLIENTS["chat"]
     messages = payload.get("messages", [])
     return run_pipeline_stream(client=client, messages=messages)
 
@@ -88,9 +86,3 @@ def get_last_response() -> Optional[str]:
 
     return _LAST_RESPONSE
 
-
-async def init_models() -> Dict[str, Any]:
-    modes = ("chat", "embeddings")
-    global _MODEL_CLIENTS
-    _MODEL_CLIENTS = {mode: make_client(ModelSettings(api_mode=mode)) for mode in modes}
-    return _MODEL_CLIENTS
