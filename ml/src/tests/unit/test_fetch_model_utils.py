@@ -1,5 +1,3 @@
-import logging
-
 import pytest
 
 from ml.utils import fetch_model
@@ -9,9 +7,8 @@ class _AsyncTracker:
     def __init__(self):
         self.count = 0
 
-    async def gather(self, *coroutines, return_exceptions: bool = False):
+    async def gather(self, *coroutines):
         self.count = len(coroutines)
-        assert return_exceptions is True
         results = []
         for coroutine in coroutines:
             results.append(await coroutine)
@@ -46,14 +43,15 @@ async def test_fetch_models_dispatches_parallel_pulls(monkeypatch):
 
     monkeypatch.setattr(fetch_model.asyncio, "to_thread", fake_to_thread)
 
-    await fetch_model.fetch_models()
+    result = await fetch_model.fetch_models()
 
     assert tracker.count == 2
     assert sorted(pulled) == ["alpha", "beta"]
+    assert result == {"alpha": True, "beta": True}
 
 
 @pytest.mark.asyncio
-async def test_pull_model_logs_failures(monkeypatch, caplog):
+async def test_pull_model_returns_false_on_failure(monkeypatch):
     def fake_pull(model: str) -> None:
         raise RuntimeError("boom")
 
@@ -64,11 +62,9 @@ async def test_pull_model_logs_failures(monkeypatch, caplog):
 
     monkeypatch.setattr(fetch_model.asyncio, "to_thread", fake_to_thread)
 
-    with caplog.at_level(logging.WARNING):
-        result = await fetch_model._pull_model("broken-model")
+    result = await fetch_model._pull_model("broken-model")
 
     assert result is False
-    assert "pull failed" in caplog.text
 
 
 @pytest.mark.asyncio
@@ -93,14 +89,15 @@ async def test_prune_unconfigured_models_deletes_extras(monkeypatch):
 
     monkeypatch.setattr(fetch_model.asyncio, "to_thread", fake_to_thread)
 
-    await fetch_model.prune_unconfigured_models()
+    result = await fetch_model.prune_unconfigured_models()
 
     assert tracker.count == 2
     assert sorted(deleted) == ["drop", "extra"]
+    assert result == {"drop": True, "extra": True}
 
 
 @pytest.mark.asyncio
-async def test_prune_unconfigured_models_handles_listing_errors(monkeypatch, caplog):
+async def test_prune_unconfigured_models_propagates_listing_errors(monkeypatch):
     monkeypatch.setattr(fetch_model, "get_configured_model_ids", lambda: {"keep"})
 
     def failing_list():
@@ -118,8 +115,5 @@ async def test_prune_unconfigured_models_handles_listing_errors(monkeypatch, cap
 
     monkeypatch.setattr(fetch_model.asyncio, "to_thread", fake_to_thread)
 
-    with caplog.at_level(logging.WARNING):
+    with pytest.raises(RuntimeError, match="cannot list"):
         await fetch_model.prune_unconfigured_models()
-
-    assert "Failed to list models for pruning" in caplog.text
-*** End of File

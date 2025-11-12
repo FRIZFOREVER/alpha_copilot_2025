@@ -1,6 +1,5 @@
-import logging
 from os import getenv
-from typing import Any, Dict, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, model_validator
@@ -195,18 +194,22 @@ class ModelSettings(BaseModel):
             " overridden via environment variables or explicit configuration."
         ),
     )
+    validation_notes: List[str] = Field(
+        default_factory=list,
+        exclude=True,
+        description="Non-fatal validation notes recorded during model initialisation.",
+    )
 
     @model_validator(mode="after")
     def ensure_base_url(self):
         candidate_url = (self.base_url or "").strip()
 
         if not _is_valid_base_url(candidate_url):
-            logging.warning(
-                "Invalid base_url '%s' provided; falling back to local endpoint '%s'.",
-                candidate_url or "<empty>",
-                _DEFAULT_BASE_URL,
-            )
             self.base_url = _DEFAULT_BASE_URL
+            note = (
+                f"Invalid base_url '{candidate_url or '<empty>'}' replaced with default"
+            )
+            self.validation_notes.append(note)
         else:
             self.base_url = _rstrip_slash(candidate_url)
 
@@ -233,13 +236,9 @@ class ModelSettings(BaseModel):
         if self.chat_json_mode and self.api_mode != "chat":
             json_mode = self.chat_json_mode
             api_mode = self.api_mode
-            logging.warning(
-                "Using chat_json_mode=%s while api_mode=%s", json_mode, api_mode
-            )
-            logging.warning(
-                "Disabling chat_json_mode=%s for api_mode=%s", json_mode, api_mode
-            )
             self.chat_json_mode = False
+            note = "chat_json_mode is only available for chat api_mode; flag cleared"
+            self.validation_notes.append(note)
         return self
 
     @model_validator(mode="after")

@@ -1,14 +1,10 @@
 import asyncio
-import logging
 from collections.abc import Iterable
-from typing import Optional, Set
+from typing import Dict, Optional, Set
 
 import ollama
 
 from ml.configs.model_config import list_configured_models
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 def get_configured_model_ids() -> Set[str]:
@@ -23,24 +19,23 @@ def get_configured_model_ids() -> Set[str]:
 
 
 async def _pull_model(model: str) -> bool:
-    logger.debug("Start fetch %s", model)
     try:
         await asyncio.to_thread(ollama.pull, model)
     except Exception:
-        logger.warning("Model %s pull failed", model, exc_info=True)
         return False
 
-    logger.info("Model %s pull succeeded", model)
     return True
 
 
-async def fetch_models() -> None:
+async def fetch_models() -> Dict[str, bool]:
+    """Fetch configured models and return per-model success flags."""
+
     models = sorted(get_configured_model_ids())
     if not models:
-        logger.info("No configured models to fetch")
-        return
+        return {}
 
-    await asyncio.gather(*(_pull_model(model) for model in models), return_exceptions=True)
+    results = await asyncio.gather(*(_pull_model(model) for model in models))
+    return dict(zip(models, results))
 
 
 def _extract_model_names(raw_models: object) -> Set[str]:
@@ -70,35 +65,30 @@ def _extract_model_names(raw_models: object) -> Set[str]:
 
 
 async def _delete_model(model: str) -> bool:
-    logger.debug("Start delete %s", model)
     try:
         await asyncio.to_thread(ollama.delete, model)
     except Exception:
-        logger.warning("Model %s delete failed", model, exc_info=True)
         return False
 
-    logger.info("Model %s delete succeeded", model)
     return True
 
 
-async def prune_unconfigured_models() -> None:
+async def prune_unconfigured_models() -> Dict[str, bool]:
+    """Remove Ollama models that are not configured and return deletion results."""
+
     configured_models = get_configured_model_ids()
-
-    try:
-        listed_models = await asyncio.to_thread(ollama.list)
-    except Exception:
-        logger.warning("Failed to list models for pruning", exc_info=True)
-        return
-
+    listed_models = await asyncio.to_thread(ollama.list)
     available_models = _extract_model_names(listed_models)
     extras = sorted(available_models - configured_models)
 
     if not extras:
-        logger.info("No extra models detected during prune")
-        return
+        return {}
 
-    await asyncio.gather(*(_delete_model(model) for model in extras), return_exceptions=True)
+    results = await asyncio.gather(*(_delete_model(model) for model in extras))
+    return dict(zip(extras, results))
 
 
-async def delete_models() -> None:
-    await prune_unconfigured_models()
+async def delete_models() -> Dict[str, bool]:
+    """Alias for :func:`prune_unconfigured_models` to match legacy callers."""
+
+    return await prune_unconfigured_models()

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List
 
@@ -8,8 +7,6 @@ from ddgs import DDGS
 
 from ml.agent.tools import page_text
 from ml.agent.tools.base import BaseTool, ToolResult
-
-logger = logging.getLogger(__name__)
 
 
 DEFAULT_FETCH_TIMEOUT = 5.0
@@ -85,7 +82,6 @@ class WebSearchTool(BaseTool):
                 }
             )
         except Exception as e:
-            logger.error(f"Web search error: {e}", exc_info=True)
             return ToolResult(
                 success=False,
                 data=None,
@@ -126,12 +122,8 @@ class WebSearchTool(BaseTool):
                 result = futures[future]
                 try:
                     text = future.result()
-                except Exception as exc:  # pragma: no cover - log and continue
-                    logger.warning(
-                        "Failed to enrich search result %s: %s",
-                        result.get("url"),
-                        exc,
-                    )
+                except Exception as exc:  # pragma: no cover - defensive fallback
+                    result.setdefault("errors", []).append(str(exc))
                     continue
 
                 if not text:
