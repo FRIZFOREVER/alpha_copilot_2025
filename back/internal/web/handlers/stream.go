@@ -37,6 +37,7 @@ type streamIn struct {
 	VoiceURL string `json:"voice_url"`
 	FileURL  string `json:"file_url"`
 	Tag      string `json:"tag"`
+	Mode     string `json:"mode"`
 }
 
 func (sh *Stream) Handler(c *fiber.Ctx) error {
@@ -129,7 +130,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 
 	messageToModel.ChatID = chatIDStr
 
-	messageToModel.Mode = "auto" //TODO
+	messageToModel.Mode = streamIn.Mode
 
 	messageChan, err := sh.client.StreamRequestToModel(messageToModel)
 	if err != nil {
