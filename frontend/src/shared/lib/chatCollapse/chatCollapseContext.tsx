@@ -12,14 +12,15 @@ interface ChatCollapseContextType {
   toggleCollapse: () => void;
   setCollapsed: (collapsed: boolean) => void;
   setMinimizedChatVisible: (visible: boolean) => void;
+  resetChatState: () => void;
 }
 
 const ChatCollapseContext = createContext<ChatCollapseContextType | undefined>(
   undefined
 );
 
-const STORAGE_KEY = "chat-collapsed";
-const MINIMIZED_CHAT_VISIBLE_KEY = "minimized-chat-visible";
+export const STORAGE_KEY = "chat-collapsed";
+export const MINIMIZED_CHAT_VISIBLE_KEY = "minimized-chat-visible";
 
 export const ChatCollapseProvider = ({ children }: { children: ReactNode }) => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
@@ -63,6 +64,31 @@ export const ChatCollapseProvider = ({ children }: { children: ReactNode }) => {
     setIsMinimizedChatVisible(visible);
   };
 
+  const resetChatState = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(MINIMIZED_CHAT_VISIBLE_KEY);
+    }
+    setIsCollapsed(true);
+    setIsMinimizedChatVisible(false);
+  };
+
+  // Синхронизация с localStorage при монтировании
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedCollapsed = localStorage.getItem(STORAGE_KEY);
+      const storedMinimized = localStorage.getItem(MINIMIZED_CHAT_VISIBLE_KEY);
+
+      // Если ключей нет в localStorage, сбрасываем состояние к значениям по умолчанию
+      if (storedCollapsed === null) {
+        setIsCollapsed(true);
+      }
+      if (storedMinimized === null) {
+        setIsMinimizedChatVisible(false);
+      }
+    }
+  }, []);
+
   return (
     <ChatCollapseContext.Provider
       value={{
@@ -71,6 +97,7 @@ export const ChatCollapseProvider = ({ children }: { children: ReactNode }) => {
         toggleCollapse,
         setCollapsed,
         setMinimizedChatVisible,
+        resetChatState,
       }}
     >
       {children}

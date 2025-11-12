@@ -21,10 +21,12 @@ import { mockData } from "../lib/constants";
 import { deleteAccessToken } from "@/entities/token";
 import { useQueryClient } from "@tanstack/react-query";
 import { ERouteNames } from "@/shared/lib/routeVariables";
+import { useChatCollapse } from "@/shared/lib/chatCollapse";
 
 const ProfilePage = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { resetChatState } = useChatCollapse();
   const { data: profileData, isLoading: isLoadingProfile } =
     useGetProfileQuery();
 
@@ -48,6 +50,7 @@ const ProfilePage = () => {
 
   const handleLogout = () => {
     deleteAccessToken();
+    resetChatState();
     queryClient.clear();
     navigate(`/${ERouteNames.LANDING_ROUTE}`);
   };
