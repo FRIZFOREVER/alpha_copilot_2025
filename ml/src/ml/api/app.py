@@ -1,18 +1,94 @@
 import asyncio
 import logging
-from typing import Any, Dict
+import logging.config
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
 import ollama
+import yaml
 
 from ml.agent.router import init_models, workflow_collect, workflow_stream
 from ml.configs.message import RequestPayload
-from ml.utils.fetch_model import fetch_models
+from ml.utils.fetch_model import delete_models, fetch_models
 from ml.utils.warmup import warmup_models
 
 
+_LOGGING_CONFIGURED = False
+
+
+def _configure_logging() -> None:
+    global _LOGGING_CONFIGURED
+
+    if _LOGGING_CONFIGURED:
+        return
+
+    config_path = Path(__file__).resolve().parents[1] / "configs" / "logging.yaml"
+
+    if not config_path.is_file():
+        logging.getLogger(__name__).warning(
+            "Logging configuration file '%s' could not be found", config_path
+        )
+        return
+
+    with config_path.open("r", encoding="utf-8") as stream:
+        config = yaml.safe_load(stream)
+
+    pipeline_handler = config.get("handlers", {}).get("pipeline_file")
+    if pipeline_handler:
+        filename = pipeline_handler.get("filename")
+        if filename:
+            log_path = Path(filename)
+            if not log_path.is_absolute():
+                # Place logs alongside the ml package root by default.
+                log_path = (config_path.parents[1] / "logs" / log_path.name).resolve()
+
+            resolved_path: Optional[Path]
+            try:
+                log_path.parent.mkdir(parents=True, exist_ok=True)
+            except OSError as exc:
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    "Unable to create pipeline log directory '%s': %s", log_path.parent, exc
+                )
+                fallback_dir = Path("/tmp/ml-logs")
+                try:
+                    fallback_dir.mkdir(parents=True, exist_ok=True)
+                except OSError as fallback_exc:
+                    logger.warning(
+                        "Disabling pipeline file logging; failed to create fallback directory '%s': %s",
+                        fallback_dir,
+                        fallback_exc,
+                    )
+                    pipeline_logger = config.get("loggers", {}).get("app.pipeline")
+                    if pipeline_logger:
+                        pipeline_logger["handlers"] = []
+                    pipeline_handler.clear()
+                    pipeline_handler["class"] = "logging.NullHandler"
+                    resolved_path = None
+                else:
+                    logger.info(
+                        "Pipeline logs will be written to fallback directory '%s'", fallback_dir
+                    )
+                    resolved_path = fallback_dir / log_path.name
+            else:
+                resolved_path = log_path
+
+            if resolved_path is not None:
+                pipeline_handler["filename"] = str(resolved_path)
+
+    logging.config.dictConfig(config)
+
+    from ml.configs.runtime_flags import PIPELINE_LOGGING_ENABLED
+
+    pipeline_logger = logging.getLogger("app.pipeline")
+    pipeline_logger.disabled = not PIPELINE_LOGGING_ENABLED
+    _LOGGING_CONFIGURED = True
+
+
+_configure_logging()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -37,6 +113,13 @@ async def lifespan(app: FastAPI):
     app.state.models_task = asyncio.create_task(_init())
 
     yield
+
+    try:
+        await delete_models()
+    except Exception as exc:
+        logger.warning(f"Failed to delete models: {exc}")
+
+    
 
 
 def create_app() -> FastAPI:
