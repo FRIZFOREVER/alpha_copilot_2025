@@ -2,7 +2,7 @@ import asyncio
 import logging
 import logging.config
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -17,10 +17,24 @@ from ml.utils.warmup import warmup_models
 
 
 _LOGGING_CONFIGURED = False
+_PIPELINE_LOG_PATH: Optional[Path] = None
+
+
+def get_pipeline_log_path() -> Optional[Path]:
+    """Return the resolved filesystem path for pipeline log output.
+
+    The path is determined during :func:`_configure_logging` and reflects the
+    best writable location discovered at runtime. ``None`` signals that file
+    logging is disabled or that no writable directory was available, in which
+    case pipeline events will only appear in the container stdout stream.
+    """
+
+    return _PIPELINE_LOG_PATH
 
 
 def _configure_logging() -> None:
     global _LOGGING_CONFIGURED
+    global _PIPELINE_LOG_PATH
 
     if _LOGGING_CONFIGURED:
         return
@@ -37,16 +51,59 @@ def _configure_logging() -> None:
         config = yaml.safe_load(stream)
 
     pipeline_handler = config.get("handlers", {}).get("pipeline_file")
+    pipeline_logging_disabled_reason: Optional[str] = None
+    _PIPELINE_LOG_PATH = None
     if pipeline_handler:
         filename = pipeline_handler.get("filename")
         if filename:
             log_path = Path(filename)
             if not log_path.is_absolute():
-                # Place logs alongside the package root by default.
-                log_path = (config_path.parents[3] / "logs" / log_path.name).resolve()
+                # Place logs alongside the ml package root by default.
+                log_path = (config_path.parents[1] / "logs" / log_path.name).resolve()
 
-            log_path.parent.mkdir(parents=True, exist_ok=True)
-            pipeline_handler["filename"] = str(log_path)
+            resolved_path: Optional[Path]
+            try:
+                log_path.parent.mkdir(parents=True, exist_ok=True)
+            except OSError as exc:
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    "Unable to create pipeline log directory '%s': %s", log_path.parent, exc
+                )
+                fallback_dir = Path("/tmp/ml-logs")
+                try:
+                    fallback_dir.mkdir(parents=True, exist_ok=True)
+                except OSError as fallback_exc:
+                    logger.warning(
+                        "Disabling pipeline file logging; failed to create fallback directory '%s': %s",
+                        fallback_dir,
+                        fallback_exc,
+                    )
+                    pipeline_logger = config.get("loggers", {}).get("app.pipeline")
+                    if pipeline_logger:
+                        pipeline_logger["handlers"] = []
+                    pipeline_handler.clear()
+                    pipeline_handler["class"] = "logging.NullHandler"
+                    pipeline_logging_disabled_reason = (
+                        "no writable directory could be created for pipeline logs"
+                    )
+                    resolved_path = None
+                else:
+                    logger.info(
+                        "Pipeline logs will be written to fallback directory '%s'", fallback_dir
+                    )
+                    resolved_path = fallback_dir / log_path.name
+            else:
+                resolved_path = log_path
+
+            if resolved_path is not None:
+                pipeline_handler["filename"] = str(resolved_path)
+                _PIPELINE_LOG_PATH = resolved_path
+        else:
+            pipeline_logging_disabled_reason = (
+                "pipeline handler has no filename configured; disabling file logging"
+            )
+    else:
+        pipeline_logging_disabled_reason = "logging configuration defines no pipeline handler"
 
     logging.config.dictConfig(config)
 
@@ -54,6 +111,27 @@ def _configure_logging() -> None:
 
     pipeline_logger = logging.getLogger("app.pipeline")
     pipeline_logger.disabled = not PIPELINE_LOGGING_ENABLED
+    status_logger = logging.getLogger(__name__)
+    if pipeline_logger.disabled:
+        if PIPELINE_LOGGING_ENABLED:
+            status_logger.info(
+                "Pipeline file logging is disabled; see previous startup warnings for details"
+            )
+        else:
+            status_logger.info(
+                "Pipeline file logging disabled via PIPELINE_LOGGING_ENABLED environment flag"
+            )
+        if _PIPELINE_LOG_PATH is not None:
+            status_logger.info(
+                "Last resolved pipeline log path was '%s'", _PIPELINE_LOG_PATH
+            )
+    elif _PIPELINE_LOG_PATH is not None:
+        status_logger.info("Pipeline logs will be written to '%s'", _PIPELINE_LOG_PATH)
+    elif pipeline_logging_disabled_reason:
+        status_logger.info(
+            "Pipeline file logging is unavailable because %s", pipeline_logging_disabled_reason
+        )
+
     _LOGGING_CONFIGURED = True
 
 
