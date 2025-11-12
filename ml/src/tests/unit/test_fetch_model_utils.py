@@ -20,7 +20,7 @@ async def test_get_configured_model_ids_returns_unique_models(monkeypatch):
     monkeypatch.setattr(
         fetch_model,
         "list_configured_models",
-        lambda: {"chat": " llama ", "embeddings": "", "reranker": "llama"},
+        lambda: {"chat": " llama ", "embeddings": ""},
     )
 
     assert fetch_model.get_configured_model_ids() == {"llama"}

@@ -38,15 +38,12 @@ def test_model_resolution_trims_whitespace(monkeypatch: pytest.MonkeyPatch) -> N
 def test_keep_alive_defaults_per_mode(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("OLLAMA_REASONING_MODEL", "chat-model")
     monkeypatch.setenv("OLLAMA_EMBEDDING_MODEL", "embed-model")
-    monkeypatch.setenv("OLLAMA_RERANK_MODEL", "rerank-model")
 
     chat_settings = ModelSettings.model_validate({"api_mode": "chat"})
     embedding_settings = ModelSettings.model_validate({"api_mode": "embeddings"})
-    rerank_settings = ModelSettings.model_validate({"api_mode": "reranker"})
 
     assert chat_settings.keep_alive == "30m"
     assert embedding_settings.keep_alive == "10m"
-    assert rerank_settings.keep_alive == "10m"
 
 
 def test_keep_alive_override_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -59,15 +56,14 @@ def test_keep_alive_override_from_environment(monkeypatch: pytest.MonkeyPatch) -
 
 
 def test_missing_environment_variable_raises(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("OLLAMA_RERANK_MODEL", raising=False)
+    monkeypatch.delenv("OLLAMA_REASONING_MODEL", raising=False)
 
     with pytest.raises(ValueError):
-        ModelSettings.model_validate({"api_mode": "reranker"})
+        ModelSettings.model_validate({"api_mode": "chat"})
 
 
 def test_list_configured_models_filters_blank_values(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("OLLAMA_REASONING_MODEL", "chat-model")
-    monkeypatch.setenv("OLLAMA_RERANK_MODEL", "")
     monkeypatch.delenv("OLLAMA_EMBEDDING_MODEL", raising=False)
 
     configured = list_configured_models()

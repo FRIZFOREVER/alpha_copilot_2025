@@ -5,29 +5,28 @@ from ml.agent.calls.model_calls import (
     ModelClient,
     _EmbeddingModelClient,
     _ReasoningModelClient,
-    _RerankModelClient,
 )
 
 
 async def warmup_models(clients: List[ModelClient]) -> Dict[str, bool]:
     """Warm up provided model clients and return per-model outcomes."""
 
-    embedding_and_rerank_clients: List[ModelClient] = []
+    embedding_clients: List[ModelClient] = []
     reasoning_clients: List[ModelClient] = []
 
     for client in clients:
         if isinstance(client, _ReasoningModelClient):
             reasoning_clients.append(client)
         else:
-            embedding_and_rerank_clients.append(client)
+            embedding_clients.append(client)
 
     results: Dict[str, bool] = {}
 
-    if embedding_and_rerank_clients:
+    if embedding_clients:
         statuses = await asyncio.gather(
-            *(_warmup_client(client) for client in embedding_and_rerank_clients)
+            *(_warmup_client(client) for client in embedding_clients)
         )
-        for client, status in zip(embedding_and_rerank_clients, statuses):
+        for client, status in zip(embedding_clients, statuses):
             results[client.s.model] = status
 
     for client in reasoning_clients:
@@ -49,15 +48,9 @@ async def _invoke_warmup_call(client: ModelClient) -> None:
         await asyncio.to_thread(client.call, "warm-up text")
         return
 
-    if isinstance(client, _RerankModelClient):
-        messages = [
-            {"role": "system", "content": "You rerank answers by returning yes/no."},
-            {"role": "user", "content": "Is this relevant?"},
-        ]
-    else:
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "ping"},
-        ]
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "ping"},
+    ]
 
     await asyncio.to_thread(client.call, messages)

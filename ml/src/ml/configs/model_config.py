@@ -1,5 +1,5 @@
 from os import getenv
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, model_validator
@@ -11,25 +11,22 @@ _VALID_BASE_URL_SCHEMES = {"http", "https"}
 
 _MODEL_ENV_VARS = {
     "chat": "OLLAMA_REASONING_MODEL",
-    "reranker": "OLLAMA_RERANK_MODEL",
     "embeddings": "OLLAMA_EMBEDDING_MODEL",
 }
 
 _KEEP_ALIVE_ENV_VARS = {
     "chat": "OLLAMA_REASONING_KEEP_ALIVE",
-    "reranker": "OLLAMA_RERANK_KEEP_ALIVE",
     "embeddings": "OLLAMA_EMBEDDING_KEEP_ALIVE",
 }
 
 _DEFAULT_KEEP_ALIVE = {
     "chat": "30m",
-    "reranker": "10m",
     "embeddings": "10m",
 }
 
 
 
-def _read_model_from_env(api_mode: Literal["chat", "embeddings", "reranker"]) -> Optional[str]:
+def _read_model_from_env(api_mode: Literal["chat", "embeddings"]) -> Optional[str]:
     """Return the configured model name for the given mode, if present."""
     env_var = _MODEL_ENV_VARS[api_mode]
     value = getenv(env_var)
@@ -40,7 +37,7 @@ def _read_model_from_env(api_mode: Literal["chat", "embeddings", "reranker"]) ->
     return stripped or None
 
 
-def get_model_from_env(api_mode: Literal["chat", "embeddings", "reranker"]) -> Optional[str]:
+def get_model_from_env(api_mode: Literal["chat", "embeddings"]) -> Optional[str]:
     """Public helper returning the model configured for a given api_mode."""
     return _read_model_from_env(api_mode)
 
@@ -57,7 +54,7 @@ def _coerce_keep_alive(value: str) -> Optional[Union[int, str]]:
 
 
 def _read_keep_alive_from_env(
-    api_mode: Literal["chat", "embeddings", "reranker"]
+    api_mode: Literal["chat", "embeddings"]
 ) -> Optional[Union[int, str]]:
     env_var = _KEEP_ALIVE_ENV_VARS[api_mode]
     value = getenv(env_var)
@@ -68,29 +65,21 @@ def _read_keep_alive_from_env(
 
 
 def get_keep_alive_from_env(
-    api_mode: Literal["chat", "embeddings", "reranker"]
+    api_mode: Literal["chat", "embeddings"]
 ) -> Optional[Union[int, str]]:
     """Public helper returning keep-alive override for a given api_mode."""
 
     return _read_keep_alive_from_env(api_mode)
 
 
-def list_configured_models() -> Dict[Literal["chat", "embeddings", "reranker"], str]:
+def list_configured_models() -> Dict[Literal["chat", "embeddings"], str]:
     """Return a mapping of api_mode to configured model names, excluding blanks."""
-    configured: Dict[Literal["chat", "embeddings", "reranker"], str] = {}
+    configured: Dict[Literal["chat", "embeddings"], str] = {}
     for mode in _MODEL_ENV_VARS:
         model_name = _read_model_from_env(mode)
         if model_name:
             configured[mode] = model_name
     return configured
-
-DEFAULT_RERANK_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {"label": {"type": "string", "enum": ["yes", "no"]}},
-    "required": ["label"],
-    "additionalProperties": False,
-}
-
 
 def _is_valid_base_url(candidate_url: str) -> bool:
     """Return True when candidate_url looks like an HTTP(S) endpoint."""
@@ -119,7 +108,7 @@ class ModelSettings(BaseModel):
         api_key (Optional[str], default=None): Credential forwarded to the backend when required.
         timeout_s (float, default=60.0): Client-side request timeout in seconds.
         max_retries (int, default=3): Maximum retry attempts for transient request failures.
-        api_mode (Literal["chat", "embeddings", "reranker"]): Selects backend route and default behaviours.
+        api_mode (Literal["chat", "embeddings"]): Selects backend route and default behaviours.
         model (Optional[str], default=None): Specific model identifier; falls back to env-derived value.
         temperature (float, default=0.2, bounds=[0.0, 2.0]): Sampling temperature; higher increases randomness.
         top_p (float, default=1.0, bounds=[0.0, 1.0]): Nucleus sampling cutoff expressed as probability mass.
@@ -145,7 +134,7 @@ class ModelSettings(BaseModel):
     )
 
     # ---- Routing / model id
-    api_mode: Literal["chat", "embeddings", "reranker"] = Field(
+    api_mode: Literal["chat", "embeddings"] = Field(
         ...,
         description="Client mode to call; selects request shape and defaults",
     )
@@ -174,11 +163,6 @@ class ModelSettings(BaseModel):
     chat_json_mode: bool = Field(
         default=False,
         description="Request structured JSON responses if the backend allows it",
-    )
-
-    rerank_json_schema: Dict[str, Any] = Field(
-        default_factory=lambda: DEFAULT_RERANK_JSON_SCHEMA.copy(),
-        description="JSON schema expected from rerank calls when none is explicitly provided.",
     )
 
     # ---- EMBEDDINGS ONLY (ignored by ChatClient)
