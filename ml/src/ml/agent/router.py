@@ -90,7 +90,7 @@ def get_last_response() -> Optional[str]:
 
 
 async def init_models() -> Dict[str, Any]:
-    modes = ("chat", "reranker", "embeddings")
+    modes = ("chat", "embeddings")
     global _MODEL_CLIENTS
     _MODEL_CLIENTS = {mode: make_client(ModelSettings(api_mode=mode)) for mode in modes}
     return _MODEL_CLIENTS
