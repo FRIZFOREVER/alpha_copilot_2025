@@ -55,6 +55,13 @@ def test_keep_alive_override_from_environment(monkeypatch: pytest.MonkeyPatch) -
     assert settings.keep_alive == 3600
 
 
+def test_missing_environment_variable_raises(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("OLLAMA_REASONING_MODEL", raising=False)
+
+    with pytest.raises(ValueError):
+        ModelSettings.model_validate({"api_mode": "chat"})
+
+
 def test_list_configured_models_filters_blank_values(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("OLLAMA_REASONING_MODEL", "chat-model")
     monkeypatch.delenv("OLLAMA_EMBEDDING_MODEL", raising=False)
