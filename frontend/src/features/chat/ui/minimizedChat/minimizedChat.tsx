@@ -1,4 +1,4 @@
-import { MessageSquare, Maximize2, X } from "lucide-react";
+import { Maximize2, X } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { useChatCollapse } from "@/shared/lib/chatCollapse";
 import { cn } from "@/shared/lib/mergeClass";
