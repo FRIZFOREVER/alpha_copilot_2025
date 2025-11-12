@@ -18,6 +18,7 @@ type Message struct {
 // PayloadStream структура для входных данных
 type PayloadStream struct {
 	Messages   []Message `json:"messages"`
+	ChatID     string    `json:"chat_id"`
 	Tag        string    `json:"tag"`
 	QuestionID int       `json:"question_id"`
 	Mode       string    `json:"mode"`
