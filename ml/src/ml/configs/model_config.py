@@ -1,6 +1,6 @@
 import logging
 from os import getenv
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Dict, Literal, Optional, Union
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, model_validator
@@ -14,6 +14,18 @@ _MODEL_ENV_VARS = {
     "chat": "OLLAMA_REASONING_MODEL",
     "reranker": "OLLAMA_RERANK_MODEL",
     "embeddings": "OLLAMA_EMBEDDING_MODEL",
+}
+
+_KEEP_ALIVE_ENV_VARS = {
+    "chat": "OLLAMA_REASONING_KEEP_ALIVE",
+    "reranker": "OLLAMA_RERANK_KEEP_ALIVE",
+    "embeddings": "OLLAMA_EMBEDDING_KEEP_ALIVE",
+}
+
+_DEFAULT_KEEP_ALIVE = {
+    "chat": "30m",
+    "reranker": "10m",
+    "embeddings": "10m",
 }
 
 
@@ -32,6 +44,36 @@ def _read_model_from_env(api_mode: Literal["chat", "embeddings", "reranker"]) ->
 def get_model_from_env(api_mode: Literal["chat", "embeddings", "reranker"]) -> Optional[str]:
     """Public helper returning the model configured for a given api_mode."""
     return _read_model_from_env(api_mode)
+
+
+def _coerce_keep_alive(value: str) -> Optional[Union[int, str]]:
+    stripped = value.strip()
+    if not stripped:
+        return None
+
+    try:
+        return int(stripped)
+    except ValueError:
+        return stripped
+
+
+def _read_keep_alive_from_env(
+    api_mode: Literal["chat", "embeddings", "reranker"]
+) -> Optional[Union[int, str]]:
+    env_var = _KEEP_ALIVE_ENV_VARS[api_mode]
+    value = getenv(env_var)
+    if value is None:
+        return None
+
+    return _coerce_keep_alive(value)
+
+
+def get_keep_alive_from_env(
+    api_mode: Literal["chat", "embeddings", "reranker"]
+) -> Optional[Union[int, str]]:
+    """Public helper returning keep-alive override for a given api_mode."""
+
+    return _read_keep_alive_from_env(api_mode)
 
 
 def list_configured_models() -> Dict[Literal["chat", "embeddings", "reranker"], str]:
@@ -84,6 +126,7 @@ class ModelSettings(BaseModel):
         top_p (float, default=1.0, bounds=[0.0, 1.0]): Nucleus sampling cutoff expressed as probability mass.
         chat_json_mode (bool, default=False): Enables structured JSON output when supported by the backend.
         embed_batch_size (int, default=128): Maximum inputs joined into a single embedding request.
+        keep_alive (Optional[Union[int, str]]): Duration Ollama keeps the model loaded between requests.
 
     Returns:
         ModelSettings: Configured model settings instance ready for downstream use.
@@ -145,6 +188,14 @@ class ModelSettings(BaseModel):
         description="Maximum inputs bundled into a single embedding request before chunking",
     )
 
+    keep_alive: Optional[Union[int, str]] = Field(
+        default=None,
+        description=(
+            "How long Ollama should keep this model loaded; defaults vary per api_mode but can be"
+            " overridden via environment variables or explicit configuration."
+        ),
+    )
+
     @model_validator(mode="after")
     def ensure_base_url(self):
         candidate_url = (self.base_url or "").strip()
@@ -189,4 +240,17 @@ class ModelSettings(BaseModel):
                 "Disabling chat_json_mode=%s for api_mode=%s", json_mode, api_mode
             )
             self.chat_json_mode = False
+        return self
+
+    @model_validator(mode="after")
+    def ensure_keep_alive(self):
+        if self.keep_alive is not None:
+            return self
+
+        env_keep_alive = _read_keep_alive_from_env(self.api_mode)
+        if env_keep_alive is not None:
+            self.keep_alive = env_keep_alive
+        else:
+            self.keep_alive = _DEFAULT_KEEP_ALIVE[self.api_mode]
+
         return self

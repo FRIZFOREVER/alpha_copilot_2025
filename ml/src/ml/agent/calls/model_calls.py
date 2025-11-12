@@ -1,14 +1,14 @@
 # from ml.utils.formats import _rstrip_slash
-from abc import ABC, abstractmethod
-import json
-from ml.configs.model_config import ModelSettings
-from ml.configs.message import Message
-from ollama import chat, ChatResponse, embed
-from typing import Any, Union, List, Dict, Iterator
-from typing import Union, List, Dict, Iterator, Type, Any
-from pydantic import BaseModel
 import json
 import logging
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Iterator, List, Type, Union
+
+from ollama import ChatResponse, chat, embed
+from pydantic import BaseModel
+
+from ml.configs.model_config import ModelSettings
+from ml.configs.message import Message
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ class _ReasoningModelClient(ModelClient):
                 "temperature": self.s.temperature,
                 "top_p": self.s.top_p,
             },
+            keep_alive=self.s.keep_alive,
         )
         return Message(role=response.message.role, content=response.message.content)
 
@@ -46,6 +47,7 @@ class _ReasoningModelClient(ModelClient):
                 "top_p": self.s.top_p,
             },
             stream=True,
+            keep_alive=self.s.keep_alive,
         )
     
     def call_structured(
@@ -77,6 +79,7 @@ class _ReasoningModelClient(ModelClient):
                 "temperature": self.s.temperature,
                 "top_p": self.s.top_p,
             },
+            keep_alive=self.s.keep_alive,
         )
         
         # Parse response content
@@ -116,8 +119,9 @@ class _RerankModelClient(ModelClient):
             options={
                 "temperature": self.s.temperature,
                 "top_p": self.s.top_p,
-            }
-        )   
+            },
+            keep_alive=self.s.keep_alive,
+        )
         
         content = response.message.content
         if isinstance(content, str):
@@ -176,7 +180,11 @@ class _EmbeddingModelClient(ModelClient):
     """Batch-friendly helper for producing embeddings via `ollama.embed`."""
 
     def call(self, content: str) -> List[float]:
-        response = embed(model=self.s.model, input=content)
+        response = embed(
+            model=self.s.model,
+            input=content,
+            keep_alive=self.s.keep_alive,
+        )
         return response["embeddings"][0]
 
     def call_batch(self, inputs: List[str]) -> List[List[float]]:
@@ -188,7 +196,11 @@ class _EmbeddingModelClient(ModelClient):
 
         for idx in range(0, len(inputs), batch_size):
             batch_inputs = inputs[idx : idx + batch_size]
-            response = embed(model=self.s.model, input=batch_inputs)
+            response = embed(
+                model=self.s.model,
+                input=batch_inputs,
+                keep_alive=self.s.keep_alive,
+            )
             embeddings.extend(response["embeddings"])
 
         return embeddings
