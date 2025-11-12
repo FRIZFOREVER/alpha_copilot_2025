@@ -24,11 +24,11 @@ class ModelMode(str, Enum):
 class RequestPayload(BaseModel):
     messages: List[Message]
     tag: Optional[str] = None
-    message_id: Optional[int] = None
+    question_id: Optional[int] = None
     mode: Optional[ModelMode] = None
     system: Optional[str] = None
-    is_voice: Optional[bool] = False
     file_url: Optional[str] = None
+    is_voice: Optional[bool] = False
 
 
 class ChatHistory(BaseModel):
