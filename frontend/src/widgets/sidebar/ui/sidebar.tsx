@@ -141,7 +141,7 @@ export const Sidebar = () => {
           "fixed left-0 top-0 h-full z-50 flex flex-col transition-all duration-300 rounded-r-xl",
           "bg-[#f9f9f9]",
           "md:static md:z-auto",
-          isCollapsed ? "w-16 md:w-16" : "w-64 md:w-72",
+          isCollapsed ? "w-16 md:w-16" : "w-64",
           isMobileOpen && !shouldHideSidebar
             ? "translate-x-0"
             : "-translate-x-full md:translate-x-0",
@@ -326,7 +326,7 @@ export const Sidebar = () => {
 
         <div
           className={cn(
-            "py-3 border-t border-gray-200/50 bg-[#0000000f] rounded-2xl m-2",
+            "py-2 border-t border-gray-200/50 bg-[#0000000f] rounded-2xl m-2",
             isCollapsed && "bg-[#f9f9f9]"
           )}
         >
