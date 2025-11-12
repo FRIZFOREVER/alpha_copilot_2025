@@ -124,6 +124,8 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 
 	messageToModel.FileURL = streamIn.FileURL
 
+	messageToModel.ChatID = chatIDStr
+
 	messageChan, err := sh.client.StreamRequestToModel(messageToModel)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
