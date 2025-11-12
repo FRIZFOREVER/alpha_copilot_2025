@@ -93,7 +93,8 @@ func InitPrivateRoutes(
 	server.Get("/support/:chat_id", handlers.SupportHandler(db, logger))
 
 	profile := handlers.NewProfile(db, logger)
-	server.Get("/profile", profile.Handler)
+	server.Get("/profile", profile.GetHandler)
+	server.Put("/profile_other_info", profile.PutOtherInfoHandler)
 
 	stream := handlers.NewStream(streamClient, db, streamClient.HistoryLen, logger)
 	server.Post("/message_stream/:chat_id", stream.Handler)
