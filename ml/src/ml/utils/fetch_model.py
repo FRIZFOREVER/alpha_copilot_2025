@@ -1,16 +1,17 @@
 import asyncio
 import logging
 
-import ollama 
+import ollama
 
-from ml.configs.model_config import _MODEL_NAMES_DICT
+from ml.configs.model_config import list_configured_models
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+
 async def fetch_models() -> None:
-    for model in _MODEL_NAMES_DICT.values():
-        logger.debug(f"Start fetch {model}")
+    for model in list_configured_models().values():
+        logger.debug("Start fetch %s", model)
         if not model:
             continue
         try:
@@ -20,11 +21,11 @@ async def fetch_models() -> None:
 
 
 async def delete_models() -> None:
-    for model in _MODEL_NAMES_DICT.values():
-        logger.debug(f"Start delete {model}")
+    for model in list_configured_models().values():
+        logger.debug("Start delete %s", model)
         if not model:
             continue
         try:
             await asyncio.to_thread(ollama.delete, model)
         except Exception:
-            logger.warning("Model %s pull failed", model, exc_info=True)
+            logger.warning("Model %s delete failed", model, exc_info=True)
