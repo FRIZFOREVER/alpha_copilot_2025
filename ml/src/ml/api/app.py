@@ -12,7 +12,7 @@ import yaml
 
 from ml.agent.router import init_models, workflow_collect, workflow_stream
 from ml.configs.message import RequestPayload
-from ml.utils.fetch_model import fetch_models
+from ml.utils.fetch_model import delete_models, fetch_models
 from ml.utils.warmup import warmup_models
 
 
@@ -83,9 +83,6 @@ def _configure_logging() -> None:
                         pipeline_logger["handlers"] = []
                     pipeline_handler.clear()
                     pipeline_handler["class"] = "logging.NullHandler"
-                    pipeline_logging_disabled_reason = (
-                        "no writable directory could be created for pipeline logs"
-                    )
                     resolved_path = None
                 else:
                     logger.info(
@@ -97,13 +94,6 @@ def _configure_logging() -> None:
 
             if resolved_path is not None:
                 pipeline_handler["filename"] = str(resolved_path)
-                _PIPELINE_LOG_PATH = resolved_path
-        else:
-            pipeline_logging_disabled_reason = (
-                "pipeline handler has no filename configured; disabling file logging"
-            )
-    else:
-        pipeline_logging_disabled_reason = "logging configuration defines no pipeline handler"
 
     logging.config.dictConfig(config)
 
@@ -160,6 +150,13 @@ async def lifespan(app: FastAPI):
     app.state.models_task = asyncio.create_task(_init())
 
     yield
+
+    try:
+        await delete_models()
+    except Exception as exc:
+        logger.warning(f"Failed to delete models: {exc}")
+
+    
 
 
 def create_app() -> FastAPI:
