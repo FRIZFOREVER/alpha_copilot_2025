@@ -98,8 +98,7 @@ services:
     build:
       context: .
       dockerfile: model/Dockerfile
-    env_file:
-      - ./.env
+
     container_name: ollama
     ports:
       - "11434:11434"
