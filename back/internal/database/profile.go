@@ -48,7 +48,7 @@ func UpdateOtherProfileInfo(
 ) (
 	err error,
 ) {
-	_, err = db.Exec(updateAnswerQuery, UserInfo, BusinessInfo, AdditionalInstructions, uuid)
+	_, err = db.Exec(updateOtherProfileInfo, UserInfo, BusinessInfo, AdditionalInstructions, uuid)
 	if err != nil {
 		logger.WithError(err).Error("Failed update other profile info")
 		return err
