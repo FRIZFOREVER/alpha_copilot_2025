@@ -12,6 +12,7 @@ export interface MessageData {
   answerId?: number;
   rating?: number | null;
   isTyping?: boolean;
+  file_url?: string;
 }
 
 export interface MessageListProps {
@@ -46,6 +47,7 @@ export const MessageList = ({
               answerId={message.answerId}
               rating={message.rating}
               isTyping={message.isTyping}
+              file_url={message.file_url}
             />
           ))
         )}

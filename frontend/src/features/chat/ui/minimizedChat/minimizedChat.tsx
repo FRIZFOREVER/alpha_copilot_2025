@@ -1,9 +1,9 @@
-import { MessageSquare, Maximize2 } from "lucide-react";
+import { MessageSquare, Maximize2, X } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { useChatCollapse } from "@/shared/lib/chatCollapse";
 import { cn } from "@/shared/lib/mergeClass";
 import { Chat } from "../chat";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useGetHistoryQuery } from "@/entities/chat/hooks/useGetHistory";
 import { useSendMessageMutation } from "@/entities/chat/hooks/useSendMessage";
 import { useSendVoiceMutation } from "@/entities/chat/hooks/useSendVoice";
@@ -15,11 +15,45 @@ import { capitalizeFirst } from "@/shared/lib/utils/userHelpers";
 import { type Suggestion } from "../suggestions";
 
 export const MinimizedChat = () => {
-  const { isCollapsed, toggleCollapse } = useChatCollapse();
+  const { isCollapsed, toggleCollapse, setMinimizedChatVisible } =
+    useChatCollapse();
   const params = useParams<{ chatId?: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const chatId = params.chatId ? Number(params.chatId) : undefined;
   const chatIdRef = useRef(chatId);
+
+  const isChatRoute =
+    location.pathname.includes(`/${ERouteNames.CHAT_ROUTE}`) ||
+    location.pathname === `/${ERouteNames.DASHBOARD_ROUTE}` ||
+    location.pathname === `/${ERouteNames.DASHBOARD_ROUTE}/`;
+
+  const handleExpandChat = () => {
+    // Навигируем на страницу чата, если еще не там
+    if (!isChatRoute) {
+      navigate(`/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}`);
+    }
+    // Показываем minimizedChat, если он был скрыт
+    setMinimizedChatVisible(true);
+    // Разворачиваем чат на весь экран
+    if (isCollapsed) {
+      toggleCollapse();
+    }
+  };
+
+  const handleCollapseChat = () => {
+    // Убеждаемся, что мы на странице чата, чтобы кнопка с логотипом была видна
+    if (!isChatRoute) {
+      navigate(`/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}`);
+    }
+    // Убеждаемся, что чат свернут (если развернут, сворачиваем)
+    if (!isCollapsed) {
+      toggleCollapse();
+    }
+    // Скрываем minimizedChat, но остаемся на странице чата
+    // Кнопка с логотипом останется видимой для открытия чата
+    setMinimizedChatVisible(false);
+  };
 
   const { data: messages = [], isLoading: isLoadingHistory } =
     useGetHistoryQuery(chatId);
@@ -167,8 +201,7 @@ export const MinimizedChat = () => {
         "bg-white",
         "flex flex-col",
         "transition-all duration-300 ease-in-out",
-        "shrink-0",
-        "hidden lg:flex"
+        "shrink-0"
       )}
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
@@ -178,15 +211,26 @@ export const MinimizedChat = () => {
             Чат-помощник
           </span>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleCollapse}
-          className="h-7 w-7 rounded-lg hover:bg-gray-100"
-          title="Развернуть чат"
-        >
-          <Maximize2 className="h-3.5 w-3.5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleExpandChat}
+            className="h-7 w-7 rounded-lg hover:bg-gray-100"
+            title="Развернуть чат"
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleCollapseChat}
+            className="h-7 w-7 rounded-lg hover:bg-gray-100"
+            title="Свернуть чат"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
       <div className="flex-1 overflow-hidden">
         <Chat
