@@ -12,7 +12,7 @@ import yaml
 
 from ml.agent.router import init_models, workflow_collect, workflow_stream
 from ml.configs.message import RequestPayload
-from ml.utils.fetch_model import delete_models, fetch_models
+from ml.utils.fetch_model import delete_models, fetch_models, prune_unconfigured_models
 from ml.utils.warmup import warmup_models
 
 
@@ -139,6 +139,11 @@ async def lifespan(app: FastAPI):
             await fetch_models()
         except Exception:
             logger.warning("Failed to prefetch models via Ollama", exc_info=True)
+        else:
+            try:
+                await prune_unconfigured_models()
+            except Exception:
+                logger.warning("Failed to prune extraneous Ollama models", exc_info=True)
         models = await init_models()
         try:
             await warmup_models(list(models.values()))
@@ -153,8 +158,8 @@ async def lifespan(app: FastAPI):
 
     try:
         await delete_models()
-    except Exception as exc:
-        logger.warning(f"Failed to delete models: {exc}")
+    except Exception:
+        logger.warning("Failed to prune Ollama models during shutdown", exc_info=True)
 
     
 
