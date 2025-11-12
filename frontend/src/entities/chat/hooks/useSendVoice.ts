@@ -1,16 +1,18 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { sendVoice, sendMessage } from "../api/chatService";
+import { sendVoice, sendMessageStream } from "../api/chatService";
 import {
   SendVoiceResponse,
-  SendMessageResponse,
   GetHistoryResponse,
   HistoryMessage,
+  SendMessageStreamDto,
 } from "../types/types";
 import { GET_HISTORY_QUERY } from "../lib/constants";
+import { createStreamCallbacks } from "../lib/createStreamCallbacks";
 
 interface SendVoiceResult {
   voiceResponse: SendVoiceResponse;
-  messageResponse: SendMessageResponse;
+  question_id: number;
+  answer_id: number;
 }
 
 export const useSendVoiceMutation = () => {
@@ -27,10 +29,14 @@ export const useSendVoiceMutation = () => {
     }): Promise<SendVoiceResult> => {
       const voiceResponse: SendVoiceResponse = await sendVoice(voiceBlob);
 
+      let tempQuestionId: number | undefined;
+      let tempAnswerId: number | undefined;
+
       queryClient.setQueryData<GetHistoryResponse>(
         [GET_HISTORY_QUERY, chatId],
         (old) => {
           if (!old) return old;
+
           const processingMessages = old.filter(
             (item) =>
               item.question === "Обработка аудио..." && item.question_id < 0
@@ -40,8 +46,12 @@ export const useSendVoiceMutation = () => {
 
           const lastProcessingMessage = processingMessages.reduce(
             (latest, current) =>
-              current.question_id > latest.question_id ? current : latest
+              current.question_id > latest.question_id ? current : latest,
+            processingMessages[0]
           );
+
+          tempQuestionId = lastProcessingMessage.question_id;
+          tempAnswerId = lastProcessingMessage.answer_id;
 
           return old.map((item) => {
             if (
@@ -59,11 +69,37 @@ export const useSendVoiceMutation = () => {
         }
       );
 
-      const messageResponse = await sendMessage(chatId, {
+      const sendMessageDto: SendMessageStreamDto = {
         question: voiceResponse.question,
-      });
+        voice_url: voiceResponse.voice_url,
+      };
 
-      return { voiceResponse, messageResponse };
+      return new Promise((resolve, reject) => {
+        const callbacks = createStreamCallbacks({
+          queryClient,
+          chatId,
+          sendMessageDto,
+          tempQuestionId,
+          tempAnswerId,
+          onComplete: (initialData) => {
+            resolve({
+              voiceResponse,
+              question_id: initialData.question_id,
+              answer_id: initialData.answer_id,
+            });
+          },
+          onError: (error) => {
+            reject(error);
+          },
+        });
+
+        sendMessageStream(chatId, sendMessageDto, {
+          onInitial: callbacks.onInitial,
+          onChunk: callbacks.onChunk,
+          onComplete: callbacks.onComplete,
+          onError: callbacks.onStreamError,
+        });
+      });
     },
     onMutate: async ({ chatId }) => {
       await queryClient.cancelQueries({
@@ -97,51 +133,10 @@ export const useSendVoiceMutation = () => {
         }
       );
 
-      return { previousHistory, chatId, tempQuestionId, tempAnswerId };
-    },
-    onSuccess: (data: SendVoiceResult, _, context) => {
-      if (!context) return;
-
-      const { chatId, tempQuestionId, tempAnswerId } = context;
-      const { voiceResponse, messageResponse } = data;
-
-      queryClient.setQueryData<GetHistoryResponse>(
-        [GET_HISTORY_QUERY, chatId],
-        (old) => {
-          if (!old) {
-            const newHistoryItem: HistoryMessage = {
-              question_id: messageResponse.question_id,
-              answer_id: messageResponse.answer_id,
-              question: voiceResponse.question,
-              answer: messageResponse.answer,
-              question_time: messageResponse.question_time,
-              answer_time: messageResponse.answer_time,
-              voice_url: voiceResponse.voice_url,
-              rating: null,
-            };
-            return [newHistoryItem];
-          }
-
-          const filtered = old.filter(
-            (item) =>
-              item.question_id !== tempQuestionId &&
-              item.answer_id !== tempAnswerId
-          );
-
-          const newHistoryItem: HistoryMessage = {
-            question_id: messageResponse.question_id,
-            answer_id: messageResponse.answer_id,
-            question: voiceResponse.question,
-            answer: messageResponse.answer,
-            question_time: messageResponse.question_time,
-            answer_time: messageResponse.answer_time,
-            voice_url: voiceResponse.voice_url,
-            rating: null,
-          };
-
-          return [...filtered, newHistoryItem];
-        }
-      );
+      return {
+        previousHistory,
+        chatId,
+      };
     },
     onError: (_error, _variables, context) => {
       if (context?.previousHistory !== undefined && context?.chatId) {

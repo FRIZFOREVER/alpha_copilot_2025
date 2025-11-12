@@ -20,9 +20,9 @@ export const RatingModal = () => {
   const [selectedRating, setSelectedRating] = useState<number>(0);
 
   const isRatingModal = selectType === EModalVariables.RATING_MODAL;
-  const answerId =
-    data && typeof data === "object" && "answerId" in data
-      ? (data as { answerId: number }).answerId
+  const modalData =
+    data && typeof data === "object" && "answerId" in data && "chatId" in data
+      ? (data as { answerId: number; chatId: number })
       : null;
 
   useEffect(() => {
@@ -36,13 +36,14 @@ export const RatingModal = () => {
   };
 
   const handleSubmit = () => {
-    if (!answerId || selectedRating === 0) return;
+    if (!modalData?.answerId || selectedRating === 0 || !modalData?.chatId)
+      return;
 
     likeMessage(
       {
-        answerId,
+        chatId: modalData.chatId,
         likeDto: {
-          answer_id: answerId,
+          answer_id: modalData.answerId,
           rating: selectedRating,
         },
       },

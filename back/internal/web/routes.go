@@ -16,6 +16,18 @@ func InitServiceRoutes(server *fiber.App, db *sql.DB, secretServie string, logge
 	history := handlers.NewHistory(db, logger)
 	serviceAuthentication := middlewares.NewServiceAuthentication(secretServie, logger)
 	server.Get("/historyForModel/:uuid/:chat_id", serviceAuthentication.Handler, history.Handler)
+	server.Get(
+		"/graph_log_writer/:chat_id",
+		serviceAuthentication.Handler, func(c *fiber.Ctx) error {
+			// Проверяем, является ли запрос WebSocket upgrade
+			if websocket.IsWebSocketUpgrade(c) {
+				c.Locals("allowed", true)
+				return c.Next()
+			}
+			return fiber.ErrUpgradeRequired
+		},
+		handlers.GraphLogHandler(db, logger),
+	)
 }
 
 func InitPublicRoutes(server *fiber.App, db *sql.DB, secretUser, frontOrigin string, logger *logrus.Logger) {
@@ -39,6 +51,7 @@ func InitPrivateRoutes(
 	s3 *minio.Client,
 	model *client.ModelClient,
 	recognizer *client.RecognizerClient,
+	streamClient *client.StreamMessageClient,
 	logger *logrus.Logger,
 ) {
 	message := handlers.NewMessage(model, db, logger)
@@ -53,11 +66,12 @@ func InitPrivateRoutes(
 	like := handlers.NewLike(db, logger)
 	server.Put("/like/:chat_id", like.Handler)
 
-	voice := handlers.NewVoice(model, recognizer, db, s3, logger)
+	voice := handlers.NewVoice(recognizer, s3, logger)
 	server.Post("/voice", voice.Handler)
 
 	proxy := handlers.NewProxy(s3, logger)
-	server.Get("/voices/:file_name.webm", proxy.Handler)
+	server.Get("/voices/:file_name", proxy.HandlerWebm)
+	server.Get("/files/:file_name", proxy.HandlerFile)
 
 	chat := handlers.NewChat(db, logger)
 	server.Post("/chat", chat.CreateHandler)
@@ -80,4 +94,21 @@ func InitPrivateRoutes(
 
 	profile := handlers.NewProfile(db, logger)
 	server.Get("/profile", profile.Handler)
+
+	stream := handlers.NewStream(streamClient, db, streamClient.HistoryLen, logger)
+	server.Post("/message_stream/:chat_id", stream.Handler)
+
+	file := handlers.NewFile(s3, logger)
+	server.Post("/file", file.Handler)
+
+	server.Use("/graph_log", func(c *fiber.Ctx) error {
+		// Проверяем, является ли запрос WebSocket upgrade
+		if websocket.IsWebSocketUpgrade(c) {
+			c.Locals("allowed", true)
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	})
+
+	server.Get("/graph_log/:chat_id", handlers.GraphLogHandler(db, logger))
 }

@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"io"
 	"jabki/internal/s3"
-	"regexp"
+	"path/filepath"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/minio/minio-go"
@@ -13,10 +14,7 @@ import (
 )
 
 var ErrFileIsNotAnAudioMpegFile = errors.New("File is not an audio/mpeg file")
-
-// Регулярное выражение для проверки пути
-// Формат: voices/{uuid}_{timestamp}.webm
-var voicePathRegex = regexp.MustCompile(`^/voices/([a-f0-9-]+)_(\d+)\.webm$`)
+var ErrInvalidFilePath = errors.New("Invalid file path format")
 
 type Proxy struct {
 	s3     *minio.Client
@@ -30,15 +28,15 @@ func NewProxy(s3 *minio.Client, logger *logrus.Logger) *Proxy {
 	}
 }
 
-func (ph *Proxy) Handler(c *fiber.Ctx) error {
-	path := c.Path()
+func (ph *Proxy) HandlerWebm(c *fiber.Ctx) error {
+	fileName := c.Params("file_name")
 
-	bucket, fileName, err := parseVoicePath(path)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	// Проверяем что файл имеет расширение .webm
+	if !strings.HasSuffix(fileName, ".webm") {
+		fileName = fileName + ".webm"
 	}
+
+	bucket := "voices"
 
 	object, err := s3.GetMpegFile(ph.s3, bucket, fileName)
 	if err != nil {
@@ -62,14 +60,107 @@ func (ph *Proxy) Handler(c *fiber.Ctx) error {
 	return nil
 }
 
-func parseVoicePath(path string) (bucket, fileName string, err error) {
-	matches := voicePathRegex.FindStringSubmatch(path)
-	if matches == nil {
-		return "", "", ErrFileIsNotAnAudioMpegFile
+func (ph *Proxy) HandlerFile(c *fiber.Ctx) error {
+	fileName := c.Params("file_name")
+
+	bucket := "files"
+
+	object, err := s3.GetFile(ph.s3, bucket, fileName)
+	if err != nil {
+		ph.logger.WithError(err).Errorf("Failed to get file from S3: bucket=%s, file=%s", bucket, fileName)
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "File not found",
+		})
+	}
+	defer object.Close()
+
+	// Получаем информацию о файле для определения Content-Type
+	objectInfo, err := object.Stat()
+	if err != nil {
+		ph.logger.WithError(err).Errorf("Failed to get file stats: bucket=%s, file=%s", bucket, fileName)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get file information",
+		})
 	}
 
-	bucket = "voices"
-	fileName = matches[1] + "_" + matches[2] + ".webm"
+	// Определяем Content-Type и настройки отдачи
+	contentType, disposition := getContentDisposition(objectInfo.ContentType, fileName)
 
-	return bucket, fileName, nil
+	c.Set("Content-Type", contentType)
+	c.Set("Content-Disposition", disposition)
+	c.Set("Cache-Control", "public, max-age=3600")
+	c.Set("Content-Length", fmt.Sprintf("%d", objectInfo.Size))
+
+	// Потоковая передача файла
+	_, err = io.Copy(c.Response().BodyWriter(), object)
+	if err != nil {
+		ph.logger.WithError(err).Error("Failed to stream file")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to stream file",
+		})
+	}
+
+	return nil
+}
+
+// getContentDisposition определяет Content-Type и Content-Disposition
+func getContentDisposition(contentType, fileName string) (string, string) {
+	// Если Content-Type не определен, пытаемся определить по расширению
+	if contentType == "" || contentType == "application/octet-stream" {
+		contentType = getContentTypeByExtension(filepath.Ext(fileName))
+	}
+
+	// Для безопасных типов контента используем inline, для остальных - attachment
+	switch {
+	case strings.HasPrefix(contentType, "image/"),
+		strings.HasPrefix(contentType, "video/"),
+		strings.HasPrefix(contentType, "audio/"),
+		strings.HasPrefix(contentType, "text/"),
+		contentType == "application/pdf":
+		return contentType, fmt.Sprintf("inline; filename=\"%s\"", fileName)
+	default:
+		return contentType, fmt.Sprintf("attachment; filename=\"%s\"", fileName)
+	}
+}
+
+// getContentTypeByExtension определяет Content-Type по расширению файла
+func getContentTypeByExtension(ext string) string {
+	switch strings.ToLower(ext) {
+	case ".pdf":
+		return "application/pdf"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".png":
+		return "image/png"
+	case ".gif":
+		return "image/gif"
+	case ".txt":
+		return "text/plain"
+	case ".html", ".htm":
+		return "text/html"
+	case ".json":
+		return "application/json"
+	case ".mp3":
+		return "audio/mpeg"
+	case ".webm":
+		return "audio/webm"
+	case ".mp4":
+		return "video/mp4"
+	case ".zip":
+		return "application/zip"
+	case ".doc":
+		return "application/msword"
+	case ".docx":
+		return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+	case ".xls":
+		return "application/vnd.ms-excel"
+	case ".xlsx":
+		return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	case ".ppt":
+		return "application/vnd.ms-powerpoint"
+	case ".pptx":
+		return "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+	default:
+		return "application/octet-stream"
+	}
 }

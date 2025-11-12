@@ -1,0 +1,102 @@
+import {
+  Clock,
+  FileText,
+  TrendingUp,
+  DollarSign,
+  Target,
+  CheckCircle2,
+  Sparkles,
+} from "lucide-react";
+
+export const analyticsData = {
+  overview: {
+    totalTasks: 156,
+    timeSaved: "42 часа",
+    documentsCreated: 23,
+    templatesUsed: 8,
+    efficiency: 87,
+    costSaved: "₽15,400",
+  },
+  usage: {
+    chats: 24,
+    messages: 1247,
+    daysActive: 12,
+    avgSessionTime: "12 мин",
+  },
+  trends: [
+    {
+      period: "Неделя",
+      tasks: 45,
+      change: 12,
+      isPositive: true,
+    },
+    {
+      period: "Месяц",
+      tasks: 156,
+      change: 28,
+      isPositive: true,
+    },
+    {
+      period: "Квартал",
+      tasks: 432,
+      change: -5,
+      isPositive: false,
+    },
+  ],
+  topFeatures: [
+    { name: "Создание документов", count: 45, icon: FileText, trend: 15 },
+    { name: "Финансовые вопросы", count: 32, icon: TrendingUp, trend: 8 },
+    { name: "Маркетинг", count: 28, icon: Sparkles, trend: 12 },
+    { name: "Юридические вопросы", count: 15, icon: CheckCircle2, trend: 5 },
+  ],
+  businessMetrics: [
+    {
+      label: "Экономия времени",
+      value: "42 часа",
+      change: 12,
+      isPositive: true,
+      icon: Clock,
+      color: "text-blue-600",
+    },
+    {
+      label: "Создано документов",
+      value: "23",
+      change: 8,
+      isPositive: true,
+      icon: FileText,
+      color: "text-purple-600",
+    },
+    {
+      label: "Экономия средств",
+      value: "₽15,400",
+      change: 5,
+      isPositive: true,
+      icon: DollarSign,
+      color: "text-green-600",
+    },
+    {
+      label: "Эффективность",
+      value: "87%",
+      change: 3,
+      isPositive: true,
+      icon: Target,
+      color: "text-pink-600",
+    },
+  ],
+  weeklyActivity: [
+    { day: "Пн", tasks: 12, documents: 3 },
+    { day: "Вт", tasks: 18, documents: 5 },
+    { day: "Ср", tasks: 15, documents: 4 },
+    { day: "Чт", tasks: 22, documents: 6 },
+    { day: "Пт", tasks: 20, documents: 5 },
+    { day: "Сб", tasks: 8, documents: 2 },
+    { day: "Вс", tasks: 5, documents: 1 },
+  ],
+  categoryDistribution: [
+    { category: "Документы", percentage: 35, color: "bg-purple-500" },
+    { category: "Финансы", percentage: 25, color: "bg-blue-500" },
+    { category: "Маркетинг", percentage: 20, color: "bg-pink-500" },
+    { category: "Юридические", percentage: 12, color: "bg-green-500" },
+    { category: "Другое", percentage: 8, color: "bg-gray-500" },
+  ],
+};

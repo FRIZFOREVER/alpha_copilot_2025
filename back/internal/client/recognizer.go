@@ -31,7 +31,7 @@ type UploadResponse struct {
 }
 
 type TranscriptRequest struct {
-	AudioURL    string `json:"audio_url"`
+	AudioURL     string `json:"audio_url"`
 	LanguageCode string `json:"language_code"`
 }
 
@@ -74,7 +74,7 @@ func (c *RecognizerClient) uploadAudio(audioData []byte) (string, error) {
 	}
 
 	fullURL := c.baseURL + c.path + "/upload"
-	
+
 	req, err := http.NewRequest("POST", fullURL, bytes.NewBuffer(audioData))
 	if err != nil {
 		return "", fmt.Errorf("ошибка создания запроса: %w", err)
@@ -98,19 +98,23 @@ func (c *RecognizerClient) uploadAudio(audioData []byte) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		errorMsg := fmt.Sprintf("ошибка загрузки: статус %d", resp.StatusCode)
 		// Пытаемся извлечь сообщение об ошибке из ответа
+		var errorDetail string
 		if len(body) > 0 {
 			var errorResp struct {
 				Error string `json:"error"`
 			}
 			if err := json.Unmarshal(body, &errorResp); err == nil && errorResp.Error != "" {
-				errorMsg += ": " + errorResp.Error
+				errorDetail = errorResp.Error
 			} else {
-				errorMsg += ": " + string(body)
+				errorDetail = string(body)
 			}
 		}
-		return "", fmt.Errorf(errorMsg)
+
+		if errorDetail != "" {
+			return "", fmt.Errorf("ошибка загрузки: статус %d: %s", resp.StatusCode, errorDetail)
+		}
+		return "", fmt.Errorf("ошибка загрузки: статус %d", resp.StatusCode)
 	}
 
 	var uploadResp UploadResponse
@@ -128,7 +132,7 @@ func (c *RecognizerClient) requestTranscript(uploadURL string) (string, error) {
 	}
 
 	fullURL := c.baseURL + c.path + "/transcript"
-	
+
 	transcriptReq := TranscriptRequest{
 		AudioURL:     uploadURL,
 		LanguageCode: "ru",
@@ -161,18 +165,23 @@ func (c *RecognizerClient) requestTranscript(uploadURL string) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		errorMsg := fmt.Sprintf("ошибка запроса транскрипции: статус %d", resp.StatusCode)
+		// Пытаемся извлечь сообщение об ошибке из ответа
+		var errorDetail string
 		if len(body) > 0 {
 			var errorResp struct {
 				Error string `json:"error"`
 			}
 			if err := json.Unmarshal(body, &errorResp); err == nil && errorResp.Error != "" {
-				errorMsg += ": " + errorResp.Error
+				errorDetail = errorResp.Error
 			} else {
-				errorMsg += ": " + string(body)
+				errorDetail = string(body)
 			}
 		}
-		return "", fmt.Errorf(errorMsg)
+
+		if errorDetail != "" {
+			return "", fmt.Errorf("ошибка запроса транскрипции: статус %d: %s", resp.StatusCode, errorDetail)
+		}
+		return "", fmt.Errorf("ошибка запроса транскрипции: статус %d", resp.StatusCode)
 	}
 
 	var transcriptResp TranscriptResponse
@@ -190,7 +199,7 @@ func (c *RecognizerClient) waitForTranscript(transcriptID string) (string, error
 	}
 
 	fullURL := c.baseURL + c.path + "/transcript/" + transcriptID
-	
+
 	maxAttempts := 30
 	attempts := 0
 
@@ -217,18 +226,23 @@ func (c *RecognizerClient) waitForTranscript(transcriptID string) (string, error
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			errorMsg := fmt.Sprintf("ошибка проверки статуса транскрипции: статус %d", resp.StatusCode)
+			// Пытаемся извлечь сообщение об ошибке из ответа
+			var errorDetail string
 			if len(body) > 0 {
 				var errorResp struct {
 					Error string `json:"error"`
 				}
 				if err := json.Unmarshal(body, &errorResp); err == nil && errorResp.Error != "" {
-					errorMsg += ": " + errorResp.Error
+					errorDetail = errorResp.Error
 				} else {
-					errorMsg += ": " + string(body)
+					errorDetail = string(body)
 				}
 			}
-			return "", fmt.Errorf(errorMsg)
+
+			if errorDetail != "" {
+				return "", fmt.Errorf("ошибка проверки статуса транскрипции: статус %d: %s", resp.StatusCode, errorDetail)
+			}
+			return "", fmt.Errorf("ошибка проверки статуса транскрипции: статус %d", resp.StatusCode)
 		}
 
 		var statusResp TranscriptStatusResponse

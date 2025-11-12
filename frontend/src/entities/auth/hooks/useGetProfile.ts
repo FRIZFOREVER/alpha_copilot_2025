@@ -4,13 +4,13 @@ import { ProfileResponse } from "../types/types";
 
 export const GET_PROFILE_QUERY = "get-profile-query";
 
-export const useGetProfileQuery = () => {
+export const useGetProfileQuery = (retry?: boolean) => {
   return useQuery({
     queryKey: [GET_PROFILE_QUERY],
     queryFn: async (): Promise<ProfileResponse> => {
       const response = await getProfile();
       return response;
     },
+    retry: retry ?? true,
   });
 };
-

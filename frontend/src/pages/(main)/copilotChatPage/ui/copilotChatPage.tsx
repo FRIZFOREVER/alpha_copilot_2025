@@ -8,6 +8,7 @@ import { useMemo, useRef, useEffect } from "react";
 import type { MessageData } from "@/features/chat/ui/messageList/messageList";
 import { ERouteNames } from "@/shared/lib/routeVariables";
 import { capitalizeFirst } from "@/shared/lib/utils/userHelpers";
+import { type Suggestion } from "@/features/chat/ui/suggestions";
 
 const CopilotChatPage = () => {
   const params = useParams<{ chatId?: string }>();
@@ -27,6 +28,17 @@ const CopilotChatPage = () => {
   const messagesWithTyping = useMemo<MessageData[]>(() => {
     if (!isSendingMessage && !isSendingVoice) return messages;
 
+    const lastMessage = messages[messages.length - 1];
+    const hasLastAnswerWithContent =
+      lastMessage &&
+      !lastMessage.isUser &&
+      lastMessage.content &&
+      lastMessage.content.trim() !== "";
+
+    if (hasLastAnswerWithContent) {
+      return messages;
+    }
+
     const hasTypingIndicator = messages.some((msg) => msg.isTyping);
     if (hasTypingIndicator) return messages;
 
@@ -41,10 +53,10 @@ const CopilotChatPage = () => {
     ];
   }, [messages, isSendingMessage, isSendingVoice, chatId]);
 
-  const handleSendMessage = (message: string) => {
-    if (!message.trim()) return;
+  const handleSendMessage = (data: { message: string; file_url?: string }) => {
+    if (!data.message.trim()) return;
 
-    const trimmedMessage = message.trim();
+    const trimmedMessage = data.message.trim();
 
     if (!chatId) {
       const truncatedMessage =
@@ -56,14 +68,17 @@ const CopilotChatPage = () => {
       createChat(
         { name: chatName },
         {
-          onSuccess: (data) => {
+          onSuccess: (chatData) => {
             navigate(
-              `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}/${data.chat_id}`,
+              `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}/${chatData.chat_id}`,
               { replace: true }
             );
             sendMessage({
-              chatId: data.chat_id,
-              sendMessageDto: { question: trimmedMessage },
+              chatId: chatData.chat_id,
+              sendMessageDto: {
+                question: trimmedMessage,
+                file_url: data.file_url,
+              },
             });
           },
           onError: (error) => {
@@ -74,7 +89,10 @@ const CopilotChatPage = () => {
     } else {
       sendMessage({
         chatId,
-        sendMessageDto: { question: trimmedMessage },
+        sendMessageDto: {
+          question: trimmedMessage,
+          file_url: data.file_url,
+        },
       });
     }
   };
@@ -114,6 +132,37 @@ const CopilotChatPage = () => {
     chatIdRef.current = chatId;
   }, [chatId]);
 
+  const mockSuggestions: Suggestion[] = useMemo(
+    () => [
+      {
+        id: "1",
+        title: "Design a database schema",
+        subtitle: "for an online merch store",
+      },
+      {
+        id: "2",
+        title: "Explain airplane",
+        subtitle: "to someone 5 years old",
+      },
+      {
+        id: "3",
+        title: "Create a marketing plan",
+        subtitle: "for a small business",
+      },
+      // {
+      //   id: "4",
+      //   title: "Write a business proposal",
+      //   subtitle: "for a new product launch",
+      // },
+      // {
+      //   id: "5",
+      //   title: "Analyze financial data",
+      //   subtitle: "and provide insights",
+      // },
+    ],
+    []
+  );
+
   return (
     <Chat
       messages={messagesWithTyping}
@@ -122,6 +171,7 @@ const CopilotChatPage = () => {
       isLoading={
         isLoadingHistory || isSendingMessage || isSendingVoice || isCreatingChat
       }
+      suggestions={mockSuggestions}
     />
   );
 };

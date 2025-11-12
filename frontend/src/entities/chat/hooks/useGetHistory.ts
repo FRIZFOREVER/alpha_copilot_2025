@@ -28,9 +28,14 @@ export const useGetHistoryQuery = (chatId: number | undefined) => {
           timestamp: historyItem.question_time,
           answerId: historyItem.answer_id,
           rating: historyItem.rating,
+          file_url: historyItem.file_url,
         });
 
-        if (historyItem.answer && historyItem.answer.trim() !== "") {
+        if (
+          historyItem.answer_id &&
+          historyItem.answer &&
+          historyItem.answer.trim() !== ""
+        ) {
           result.push({
             id: `answer-${historyItem.answer_id}`,
             content: historyItem.answer,

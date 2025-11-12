@@ -7,6 +7,7 @@ import (
 	"jabki/internal/s3"
 	"jabki/internal/settings"
 	"jabki/internal/web"
+	"net/http"
 
 	"database/sql"
 
@@ -25,7 +26,10 @@ type App struct {
 
 func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 	ctx := context.Background()
-	server := fiber.New()
+	server := fiber.New(fiber.Config{
+		// Устанавливаем лимит тела запроса до 101 МБ (для запаса)
+		BodyLimit: 101 * 1024 * 1024,
+	})
 
 	var err error
 	db, err := database.InitDBWithPing(ctx, config.PostgresURL, logger)
@@ -54,7 +58,7 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 	// logger.Info("Есть подключение к recognizer! 🔊")
 
 	modelClient := client.NewModelClient("POST", config.Model, "/message")
-	
+
 	// Проверка и логирование API ключа AssemblyAI
 	if config.RecognizerAPIKey == "" {
 		logger.Warn("⚠️  ASSEMBLYAI_API_KEY не установлен! Запросы к AssemblyAI будут возвращать ошибку 401")
@@ -68,11 +72,12 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 		logger.Infof("AssemblyAI API ключ установлен: %s", maskedKey)
 	}
 	recognizerClient := client.NewRecognizerClient("https://api.assemblyai.com/v2", "", config.RecognizerAPIKey)
+	streamClient := client.NewStreamMessageClient(http.MethodPost, config.Model, "/message_stream", config.HistoryLen)
 
 	web.InitServiceRoutes(server, db, config.SecretSerice, logger)
 	web.InitPublicRoutes(server, db, config.SecretUser, config.FrontOrigin, logger)
 	web.InitJWTMiddleware(server, config.SecretUser, config.FrontOrigin, logger)
-	web.InitPrivateRoutes(server, db, s3client, modelClient, recognizerClient, logger)
+	web.InitPrivateRoutes(server, db, s3client, modelClient, recognizerClient, streamClient, logger)
 
 	return newApp(config, server, db, s3client, logger), nil
 }

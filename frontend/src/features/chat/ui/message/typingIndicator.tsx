@@ -1,21 +1,25 @@
+import { motion } from "framer-motion";
+
 export const TypingIndicator = () => {
   return (
-    <div className="flex items-center gap-1.5 py-1">
-      <div className="flex gap-1.5">
-        <div 
-          className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" 
-          style={{ animationDelay: "0ms", animationDuration: "1.4s" }}
+    <div className="flex items-center gap-2 py-3 pl-1">
+      {[0, 1, 2].map((i) => (
+        <motion.div
+          key={i}
+          className="w-2.5 h-2.5 rounded-full"
+          animate={{
+            backgroundColor: ["#60A5FA", "#34D399", "#FBBF24", "#60A5FA"],
+            scale: [1, 1.4, 1],
+            opacity: [0.6, 1, 0.6],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            delay: i * 0.3,
+            ease: "easeInOut",
+          }}
         />
-        <div 
-          className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" 
-          style={{ animationDelay: "200ms", animationDuration: "1.4s" }}
-        />
-        <div 
-          className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce" 
-          style={{ animationDelay: "400ms", animationDuration: "1.4s" }}
-        />
-      </div>
+      ))}
     </div>
   );
 };
-
