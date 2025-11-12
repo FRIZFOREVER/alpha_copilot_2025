@@ -21,7 +21,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const token = getAccessToken();
   const { data: profileData, isSuccess: isProfileSuccess } =
-    useGetProfileQuery();
+    useGetProfileQuery(false);
 
   const isAuthenticated = useMemo(() => {
     return !!token && isProfileSuccess && !!profileData;

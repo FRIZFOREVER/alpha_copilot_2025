@@ -1,15 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/shared/ui/button";
-import { Plus, Mic, ChevronUp, X, Check } from "lucide-react";
+import { Mic, ChevronUp, X, Check, Paperclip } from "lucide-react";
 import { cn } from "@/shared/lib/mergeClass";
 import { useComputerVoiceRecorder } from "@/entities/chat/hooks/useComputerVoiceRecorder";
 import { formatTime } from "@/shared/lib/utils/timeHelpers";
+import { Suggestions, type Suggestion } from "../suggestions";
+import { useFileAttachments } from "../../hooks/useFileAttachments";
+import { FileBadge } from "../fileBadge";
+import { uploadFile } from "@/entities/chat/api/chatService";
 
 export interface ChatInputProps {
-  onSend?: (message: string) => void;
+  onSend?: (data: { message: string; file_url?: string }) => void;
   onSendVoice?: (voiceBlob: Blob) => void;
   placeholder?: string;
   disabled?: boolean;
+  suggestions?: Suggestion[];
+  isCompact?: boolean;
 }
 
 const MIN_HEIGHT = 52;
@@ -19,6 +25,8 @@ export const ChatInput = ({
   onSendVoice,
   placeholder = "Спросите что-нибудь...",
   disabled = false,
+  suggestions,
+  isCompact = false,
 }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -26,6 +34,9 @@ export const ChatInput = ({
   const [needsScrollbar, setNeedsScrollbar] = useState(false);
   const recordedBlobRef = useRef<Blob | null>(null);
   const shouldSendBlobRef = useRef(false);
+
+  const { files, addFiles, removeFile, clearFiles, selectFiles, hasFiles } =
+    useFileAttachments();
 
   const { isRecording, elapsedSec, error, startRecording, stopRecording } =
     useComputerVoiceRecorder({
@@ -53,10 +64,23 @@ export const ChatInput = ({
     setNeedsScrollbar(scrollHeight > 200);
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (message.trim() && !disabled) {
-      onSend?.(message.trim());
+      let fileUrl: string | undefined;
+
+      if (files.length > 0) {
+        try {
+          const uploadPromises = files.map((file) => uploadFile(file.file));
+          const uploadResults = await Promise.all(uploadPromises);
+          fileUrl = uploadResults[0]?.file_url;
+        } catch (error) {
+          console.error("Ошибка при загрузке файла:", error);
+        }
+      }
+
+      onSend?.({ message: message.trim(), file_url: fileUrl });
       setMessage("");
+      clearFiles();
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
         setIsMultiLine(false);
@@ -74,6 +98,12 @@ export const ChatInput = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
+  };
+
+  const handleSuggestionSelect = (suggestion: Suggestion) => {
+    const fullText = `${suggestion.title} ${suggestion.subtitle}`;
+    setMessage(fullText);
+    textareaRef.current?.focus();
   };
 
   const handleMicClick = async () => {
@@ -106,24 +136,47 @@ export const ChatInput = ({
     }
   };
 
+  const handleFileSelect = async () => {
+    if (disabled) return;
+
+    const selectedFiles = await selectFiles();
+    if (selectedFiles) {
+      addFiles(selectedFiles);
+    }
+  };
+
   useEffect(() => {
     requestAnimationFrame(() => {
       updateTextareaHeight();
     });
-  }, [message]);
+  }, [message, files]);
 
   return (
     <div className="bg-white">
-      <div className="mx-auto max-w-[832px] px-4 md:px-8 py-4 md:pt-6">
+      <div
+        className={cn(
+          "mx-auto max-w-[832px] px-4 md:px-8 py-4",
+          isCompact && "px-4 md:px-4"
+        )}
+      >
+        {suggestions && suggestions.length > 0 && (
+          <Suggestions
+            suggestions={suggestions}
+            onSelect={handleSuggestionSelect}
+            isCompact={isCompact}
+            className="mb-2"
+          />
+        )}
         <div className="relative">
           {isRecording ? (
-            <div className="w-full min-h-[52px] rounded-[24px] shadow-sm mb-[18px] px-12 py-3 pr-20 bg-white border border-gray-200 flex items-center relative">
+            <div className="w-full min-h-[50px] rounded-[24px] shadow-sm mb-[13px] px-12 py-3 pr-20 bg-white border border-gray-200 flex items-center relative">
               <button
                 type="button"
-                className="absolute left-3 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200"
+                className="absolute left-3 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={disabled}
+                onClick={handleFileSelect}
               >
-                <Plus className="h-5 w-5" />
+                <Paperclip className="h-5 w-5" />
               </button>
 
               <div className="flex-1 flex items-center px-2">
@@ -160,70 +213,94 @@ export const ChatInput = ({
               </button>
             </div>
           ) : (
-            <>
-              <textarea
-                ref={textareaRef}
-                value={message}
-                placeholder={placeholder}
-                disabled={disabled}
-                rows={1}
-                className={cn(
-                  "w-full min-h-[52px] max-h-[200px] resize-none",
-                  "px-12 py-3.5 md:py-3 pr-20 rounded-[24px]",
-                  "bg-white border border-gray-200",
-                  "text-sm md:text-base text-gray-900 placeholder:text-gray-400",
-                  "focus:outline-none focus:border-gray-300",
-                  "transition-all shadow-sm",
-                  "disabled:opacity-50 disabled:cursor-not-allowed",
-                  needsScrollbar && "overflow-y-auto custom-scrollbar",
-                  !needsScrollbar && "overflow-hidden"
-                )}
-                style={{
-                  height: "auto",
-                }}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-              />
-              <button
-                type="button"
-                className={cn(
-                  "absolute left-3 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
-                  isMultiLine ? "bottom-5" : "top-[45%] -translate-y-1/2"
-                )}
-                disabled={disabled}
-              >
-                <Plus className="h-5 w-5" />
-              </button>
+            <div
+              className={cn(
+                "w-full min-h-[50px] rounded-[24px] shadow-sm",
+                "bg-white border border-gray-200",
+                "focus-within:border-gray-300",
+                "transition-all",
+                "relative",
+                "flex flex-col"
+              )}
+            >
+              {hasFiles && (
+                <div className="px-3 pt-3 pb-2 flex flex-col gap-2">
+                  {files.map((file) => (
+                    <FileBadge
+                      key={file.id}
+                      file={file}
+                      onRemove={removeFile}
+                      disabled={disabled}
+                    />
+                  ))}
+                </div>
+              )}
+              <div className="relative flex-1 flex items-stretch">
+                <textarea
+                  ref={textareaRef}
+                  value={message}
+                  placeholder={placeholder}
+                  disabled={disabled}
+                  rows={1}
+                  className={cn(
+                    "w-full min-h-[50px] max-h-[200px] resize-none",
+                    "px-12 py-3.5 md:py-3 pr-20",
+                    "bg-transparent",
+                    "text-sm md:text-base text-gray-900 placeholder:text-gray-400",
+                    "focus:outline-none",
+                    "transition-all",
+                    "disabled:opacity-50 disabled:cursor-not-allowed",
+                    needsScrollbar && "overflow-y-auto custom-scrollbar",
+                    !needsScrollbar && "overflow-hidden"
+                  )}
+                  style={{
+                    height: "auto",
+                  }}
+                  onChange={handleChange}
+                  onKeyDown={handleKeyDown}
+                />
+                <button
+                  type="button"
+                  className={cn(
+                    "absolute left-3 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
+                    isMultiLine ? "bottom-3" : "top-[50%] -translate-y-1/2"
+                  )}
+                  disabled={disabled}
+                  onClick={handleFileSelect}
+                >
+                  <Paperclip className="h-5 w-5" />
+                </button>
 
-              <button
-                type="button"
-                className={cn(
-                  "absolute right-12 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
-                  isMultiLine ? "bottom-5" : "top-[45%] -translate-y-1/2",
-                  isRecording && "text-red-500"
-                )}
-                disabled={disabled}
-                onClick={handleMicClick}
-              >
-                <Mic className="h-5 w-5" />
-              </button>
+                <button
+                  type="button"
+                  className={cn(
+                    "absolute right-12 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
+                    isMultiLine ? "bottom-3" : "top-[50%] -translate-y-1/2",
+                    isRecording && "text-red-500"
+                  )}
+                  disabled={disabled}
+                  onClick={handleMicClick}
+                >
+                  <Mic className="h-5 w-5" />
+                </button>
 
-              <Button
-                onClick={handleSend}
-                disabled={!message.trim() || disabled}
-                className={cn(
-                  "absolute right-2 h-8 w-8 rounded-full cursor-pointer",
-                  "bg-black hover:bg-gray-800",
-                  "text-white transition-all shadow-sm duration-200",
-                  "disabled:opacity-50 disabled:cursor-not-allowed",
-                  "active:scale-95 p-0",
-                  isMultiLine ? "bottom-4" : "top-[45%] -translate-y-1/2"
-                )}
-                size="icon"
-              >
-                <ChevronUp className="h-4 w-4" />
-              </Button>
-            </>
+                <Button
+                  onClick={handleSend}
+                  disabled={!message.trim() || disabled}
+                  className={cn(
+                    "absolute right-2 h-8 w-8 rounded-full cursor-pointer",
+                    "bg-black hover:bg-gray-800",
+                    "text-white transition-all shadow-sm duration-200",
+                    "disabled:opacity-50 disabled:cursor-not-allowed",
+                    "active:scale-95 p-0",
+                    isMultiLine ? "bottom-2" : "top-[50%] -translate-y-1/2"
+                  )}
+                  size="icon"
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
           {error && <p className="text-xs text-red-500 mt-2 px-4">{error}</p>}
         </div>

@@ -1,7 +1,7 @@
 import { useModal } from "./context";
 import { EModalVariables } from "./constants";
-import { RatingModal } from "./ratingModal";
 import { SearchChatsModal } from "./searchChatsModal";
+import { RatingModal } from "./ratingModal";
 
 export const ModalProvider = () => {
   const { selectType } = useModal();

@@ -9,12 +9,12 @@ export const useLikeMessageMutation = () => {
   return useMutation({
     mutationKey: [LIKE_MESSAGE_QUERY],
     mutationFn: ({
-      answerId,
+      chatId,
       likeDto,
     }: {
-      answerId: number;
+      chatId: number;
       likeDto: LikeMessageDto;
-    }) => likeMessage(answerId, likeDto),
+    }) => likeMessage(chatId, likeDto),
     onSuccess: (data: LikeMessageResponse) => {
       queryClient.invalidateQueries({ queryKey: [GET_HISTORY_QUERY] });
       return data;

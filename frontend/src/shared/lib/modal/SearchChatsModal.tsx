@@ -127,15 +127,30 @@ export const SearchChatsModal = () => {
     <Dialog open={isOpen && isSearchModal} onOpenChange={handleClose}>
       <DialogContent
         className={cn(
-          "max-w-[600px] w-[calc(100%-2rem)]",
-          "bg-white rounded-3xl p-0",
+          // Desktop styles
+          "md:max-w-[600px] md:w-[calc(100%-2rem)]",
+          "md:rounded-3xl md:h-[460px] md:max-h-[80vh]",
+          // Mobile styles - full screen
+          "w-full h-full max-w-none max-h-none",
+          "rounded-none md:rounded-3xl",
+          "m-0 md:m-4",
+          // Mobile positioning - override default centering
+          "top-0 left-0 right-0 bottom-0",
+          "translate-x-0 translate-y-0",
+          "md:translate-x-[-50%] md:translate-y-[-50%]",
+          "md:top-[50%] md:left-[50%]",
+          // Common styles
+          "bg-white p-0",
           "border-0 shadow-lg",
           "overflow-hidden"
         )}
         showCloseButton={true}
       >
         <DialogTitle className="hidden">Поиск в чатах</DialogTitle>
-        <div className="flex flex-col h-[460px] max-h-[80vh]">
+        <div className={cn(
+          "flex flex-col",
+          "h-full md:h-[460px] md:max-h-[80vh]"
+        )}>
           <div className="px-6 pt-6 pb-4 border-b border-gray-100">
             <input
               type="text"
