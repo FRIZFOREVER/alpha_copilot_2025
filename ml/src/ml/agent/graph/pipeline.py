@@ -145,8 +145,8 @@ def run_pipeline_stream(
     invoke_config = _ensure_invoke_config(config)
     configurable = invoke_config.get("configurable") or {}
     state.thread_id = configurable.get("thread_id")
-    state.checkpoint_ns = configurable.get("checkpoint_ns")
-    state.checkpoint_id = configurable.get("checkpoint_id")
+    state.checkpoint_namespace = configurable.get("checkpoint_ns")
+    state.checkpoint_identifier = configurable.get("checkpoint_id")
 
     log_pipeline_event(
         "pipeline.start",
@@ -214,9 +214,7 @@ def _ensure_invoke_config(config: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         config = dict(config)
 
     configurable = dict(config.get("configurable") or {})
-    if not any(
-        key in configurable for key in ("thread_id", "checkpoint_ns", "checkpoint_id")
-    ):
+    if not any(key in configurable for key in _IDENTIFIER_ATTRS):
         configurable["thread_id"] = str(uuid4())
 
     config["configurable"] = configurable
@@ -234,8 +232,15 @@ def _coerce_graph_state(payload: Any) -> Optional[GraphState]:
     return None
 
 
+_IDENTIFIER_ATTRS = {
+    "thread_id": "thread_id",
+    "checkpoint_ns": "checkpoint_namespace",
+    "checkpoint_id": "checkpoint_identifier",
+}
+
+
 def _sync_identifiers(target: GraphState, reference: GraphState) -> None:
-    for attr in ("thread_id", "checkpoint_ns", "checkpoint_id"):
+    for _, attr in _IDENTIFIER_ATTRS.items():
         ref_value = getattr(reference, attr, None)
         if ref_value and not getattr(target, attr, None):
             setattr(target, attr, ref_value)
