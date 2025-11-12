@@ -13,6 +13,7 @@ import type { MessageData } from "../messageList/messageList";
 import { ERouteNames } from "@/shared/lib/routeVariables";
 import { capitalizeFirst } from "@/shared/lib/utils/userHelpers";
 import { type Suggestion } from "../suggestions";
+import { Icon, IconTypes } from "@/shared/ui/icon";
 
 export const MinimizedChat = ({
   isCompact = false,
@@ -203,10 +204,15 @@ export const MinimizedChat = ({
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
         <div className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4 text-gray-700" />
-          <span className="font-medium text-sm text-gray-900">
-            Чат-помощник
-          </span>
+          <button className="flex items-center gap-2 h-auto p-0 border-0 bg-transparent hover:bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg md:text-xl font-medium text-gray-900 hover:text-gray-700 transition-colors cursor-pointer data-[state=open]:text-gray-700 [&>svg]:opacity-60 [&>svg]:hover:opacity-100 [&_[data-slot=select-value]]:hidden">
+            <div className="group cursor-pointer rounded-lg transition-all duration-300 hover:bg-red-50/50">
+              <Icon
+                type={IconTypes.LOGO_OUTLINED_V2}
+                className="text-2xl text-red-400 fill-red-100/80 stroke-red-200 transition-all duration-300 group-hover:scale-110 group-hover:text-red-600 group-hover:fill-red-200 group-hover:stroke-red-300 group-hover:drop-shadow-lg"
+              />
+            </div>
+            <span>FinAi</span>
+          </button>
         </div>
         <div className="flex items-center gap-1">
           <Button
