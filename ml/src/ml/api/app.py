@@ -17,10 +17,24 @@ from ml.utils.warmup import warmup_models
 
 
 _LOGGING_CONFIGURED = False
+_PIPELINE_LOG_PATH: Optional[Path] = None
+
+
+def get_pipeline_log_path() -> Optional[Path]:
+    """Return the resolved filesystem path for pipeline log output.
+
+    The path is determined during :func:`_configure_logging` and reflects the
+    best writable location discovered at runtime. ``None`` signals that file
+    logging is disabled or that no writable directory was available, in which
+    case pipeline events will only appear in the container stdout stream.
+    """
+
+    return _PIPELINE_LOG_PATH
 
 
 def _configure_logging() -> None:
     global _LOGGING_CONFIGURED
+    global _PIPELINE_LOG_PATH
 
     if _LOGGING_CONFIGURED:
         return
@@ -37,6 +51,8 @@ def _configure_logging() -> None:
         config = yaml.safe_load(stream)
 
     pipeline_handler = config.get("handlers", {}).get("pipeline_file")
+    pipeline_logging_disabled_reason: Optional[str] = None
+    _PIPELINE_LOG_PATH = None
     if pipeline_handler:
         filename = pipeline_handler.get("filename")
         if filename:
@@ -85,6 +101,27 @@ def _configure_logging() -> None:
 
     pipeline_logger = logging.getLogger("app.pipeline")
     pipeline_logger.disabled = not PIPELINE_LOGGING_ENABLED
+    status_logger = logging.getLogger(__name__)
+    if pipeline_logger.disabled:
+        if PIPELINE_LOGGING_ENABLED:
+            status_logger.info(
+                "Pipeline file logging is disabled; see previous startup warnings for details"
+            )
+        else:
+            status_logger.info(
+                "Pipeline file logging disabled via PIPELINE_LOGGING_ENABLED environment flag"
+            )
+        if _PIPELINE_LOG_PATH is not None:
+            status_logger.info(
+                "Last resolved pipeline log path was '%s'", _PIPELINE_LOG_PATH
+            )
+    elif _PIPELINE_LOG_PATH is not None:
+        status_logger.info("Pipeline logs will be written to '%s'", _PIPELINE_LOG_PATH)
+    elif pipeline_logging_disabled_reason:
+        status_logger.info(
+            "Pipeline file logging is unavailable because %s", pipeline_logging_disabled_reason
+        )
+
     _LOGGING_CONFIGURED = True
 
 
