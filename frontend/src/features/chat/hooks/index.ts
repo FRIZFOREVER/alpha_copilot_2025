@@ -1,3 +1,4 @@
 export { useFileAttachments } from "./useFileAttachments";
 export type { AttachedFile } from "./useFileAttachments";
+export { useChatMessages } from "./useChatMessages";
 
