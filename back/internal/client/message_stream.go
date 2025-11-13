@@ -75,17 +75,18 @@ func NewStreamMessageClient(method, url, path string, historyLen int) *StreamMes
 }
 
 // StreamRequestToModel выполняет запрос и возвращает канал для чтения сообщений StreamMessage
-func (c *StreamMessageClient) StreamRequestToModel(payload PayloadStream) (<-chan *StreamMessage, error) {
+func (c *StreamMessageClient) StreamRequestToModel(payload PayloadStream) (<-chan *StreamMessage, string, error) {
+	var tag string
 	// Маршалим payload в JSON
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal payload: %w", err)
+		return nil, tag, fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
 	// Создаем HTTP запрос
 	req, err := http.NewRequest(c.method, c.url+c.path, strings.NewReader(string(jsonData)))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, tag, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	// Устанавливаем заголовки
@@ -97,13 +98,13 @@ func (c *StreamMessageClient) StreamRequestToModel(payload PayloadStream) (<-cha
 	// Выполняем запрос
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make request: %w", err)
+		return nil, tag, fmt.Errorf("failed to make request: %w", err)
 	}
-
+	tag = resp.Header.Get("Tag")
 	// Проверяем статус ответа
 	if resp.StatusCode != http.StatusOK {
 		resp.Body.Close()
-		return nil, fmt.Errorf("server returned status: %d", resp.StatusCode)
+		return nil, tag, fmt.Errorf("server returned status: %d", resp.StatusCode)
 	}
 
 	// Создаем канал для StreamMessage
@@ -112,7 +113,7 @@ func (c *StreamMessageClient) StreamRequestToModel(payload PayloadStream) (<-cha
 	// Запускаем горутину для обработки SSE потока
 	go c.processSSEStream(resp, messageChan)
 
-	return messageChan, nil
+	return messageChan, tag, nil
 }
 
 // processSSEStream обрабатывает SSE поток и отправляет StreamMessage в канал
@@ -163,12 +164,12 @@ func (c *StreamMessageClient) processSSEStream(resp *http.Response, messageChan 
 }
 
 // StreamRequestToModelWithTimeout версия с таймаутом
-func (c *StreamMessageClient) StreamRequestToModelWithTimeout(payload PayloadStream, timeout time.Duration) (<-chan *StreamMessage, error) {
+func (c *StreamMessageClient) StreamRequestToModelWithTimeout(payload PayloadStream, timeout time.Duration) (<-chan *StreamMessage, string, error) {
 	messageChan := make(chan *StreamMessage)
 
-	streamChan, err := c.StreamRequestToModel(payload)
+	streamChan, tag, err := c.StreamRequestToModel(payload)
 	if err != nil {
-		return nil, err
+		return nil, tag, err
 	}
 
 	go func() {
@@ -194,24 +195,5 @@ func (c *StreamMessageClient) StreamRequestToModelWithTimeout(payload PayloadStr
 		}
 	}()
 
-	return messageChan, nil
-}
-
-// StreamRequestToModelWithCallback версия с callback функцией для обработки сообщений
-func (c *StreamMessageClient) StreamRequestToModelWithCallback(payload PayloadStream, callback func(*StreamMessage) bool) error {
-	streamChan, err := c.StreamRequestToModel(payload)
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		for message := range streamChan {
-			// Если callback возвращает false, прерываем обработку
-			if !callback(message) {
-				return
-			}
-		}
-	}()
-
-	return nil
+	return messageChan, tag, nil
 }
