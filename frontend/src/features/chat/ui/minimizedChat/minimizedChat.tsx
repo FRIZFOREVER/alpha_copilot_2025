@@ -62,7 +62,7 @@ export const MinimizedChat = ({
         "shrink-0"
       )}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#0d0d0d0d] bg-white">
         <div className="flex items-center gap-2">
           <button className="flex items-center gap-2 h-auto p-0 border-0 bg-transparent hover:bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg md:text-xl font-medium text-gray-900 hover:text-gray-700 transition-colors cursor-pointer data-[state=open]:text-gray-700 [&>svg]:opacity-60 [&>svg]:hover:opacity-100 [&_[data-slot=select-value]]:hidden">
             <div className="group cursor-pointer rounded-lg transition-all duration-300 hover:bg-red-50/50">

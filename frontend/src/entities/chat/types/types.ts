@@ -65,6 +65,7 @@ export interface SendMessageStreamDto {
   voice_url?: string;
   file_url?: string;
   tag?: string;
+  mode?: "auto";
 }
 
 export interface StreamInitialResponse {

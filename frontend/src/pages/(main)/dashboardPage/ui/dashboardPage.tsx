@@ -1,4 +1,5 @@
 import { Sidebar } from "@/widgets/sidebar";
+import { Header } from "@/widgets/header";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useChatCollapse } from "@/shared/lib/chatCollapse";
 import { WelcomeContent } from "./welcomeContent";
@@ -80,65 +81,70 @@ const DashboardPage = () => {
       setMinimizedChatVisible(true);
     }
   };
+  const shouldShowHeader = isCollapsed;
+
   return (
-    <div className="flex h-full w-full relative">
-      <Sidebar />
-      <div
-        className={cn(
-          "flex-1 flex overflow-hidden relative transition-all duration-300",
-          !showWelcomeContent && "border-l border-[#0d0d0d0d]",
-          showWelcomeContent && showMinimizedChat && "flex-row"
-        )}
-      >
-        {showWelcomeContent ? (
-          <>
-            <div className="flex-1 overflow-hidden min-w-0">
-              <WelcomeContent />
+    <div className="flex h-full w-full relative flex-col">
+      {shouldShowHeader && <Header />}
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
+        <div
+          className={cn(
+            "flex-1 flex overflow-hidden relative transition-all duration-300",
+            !showWelcomeContent && "border-l border-[#0d0d0d0d]",
+            showWelcomeContent && showMinimizedChat && "flex-row"
+          )}
+        >
+          {showWelcomeContent ? (
+            <>
+              <div className="flex-1 overflow-hidden min-w-0">
+                <WelcomeContent />
+              </div>
+              {showMinimizedChat && (
+                <>
+                  <div className="w-px bg-gray-200 shrink-0" />
+                  <MinimizedChat isCompact={true} />
+                </>
+              )}
+              {showMobileChatButton && (
+                <button
+                  ref={chatButtonRef}
+                  onClick={() => {
+                    if (!isOnboardingCompleted) {
+                      skipOnboarding();
+                    }
+                    handleMobileChatClick();
+                  }}
+                  className={cn(
+                    "fixed bottom-6 right-6 z-[105] cursor-pointer",
+                    "w-14 h-14 rounded-full",
+                    "bg-red-500 hover:bg-red-600",
+                    "flex items-center justify-center",
+                    "shadow-lg hover:shadow-xl",
+                    "transition-all duration-200",
+                    "active:scale-95"
+                  )}
+                  aria-label="Открыть чат"
+                  style={{ pointerEvents: "auto" }}
+                >
+                  <Icon
+                    type={IconTypes.LOGO_OUTLINED_V2}
+                    className="text-white w-7 h-7"
+                  />
+                </button>
+              )}
+            </>
+          ) : (
+            <div
+              className={cn(
+                "h-full w-full",
+                isCollapsed && isChatRoute && "hidden"
+              )}
+            >
+              <Outlet />
             </div>
-            {showMinimizedChat && (
-              <>
-                <div className="w-px bg-gray-200 shrink-0" />
-                <MinimizedChat isCompact={true} />
-              </>
-            )}
-            {showMobileChatButton && (
-              <button
-                ref={chatButtonRef}
-                onClick={() => {
-                  if (!isOnboardingCompleted) {
-                    skipOnboarding();
-                  }
-                  handleMobileChatClick();
-                }}
-                className={cn(
-                  "fixed bottom-6 right-6 z-[105] cursor-pointer",
-                  "w-14 h-14 rounded-full",
-                  "bg-red-500 hover:bg-red-600",
-                  "flex items-center justify-center",
-                  "shadow-lg hover:shadow-xl",
-                  "transition-all duration-200",
-                  "active:scale-95"
-                )}
-                aria-label="Открыть чат"
-                style={{ pointerEvents: "auto" }}
-              >
-                <Icon
-                  type={IconTypes.LOGO_OUTLINED_V2}
-                  className="text-white w-7 h-7"
-                />
-              </button>
-            )}
-          </>
-        ) : (
-          <div
-            className={cn(
-              "h-full w-full",
-              isCollapsed && isChatRoute && "hidden"
-            )}
-          >
-            <Outlet />
-          </div>
-        )}
+          )}
+        </div>
       </div>
       <Onboarding />
     </div>

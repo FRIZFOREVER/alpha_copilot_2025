@@ -63,7 +63,7 @@ export const ChatEmptyState = ({
             )}
           >
             <Image
-              src="/images/meditation-yaga.png"
+              src="/images/2026.png"
               alt="AI Consultant"
               className={cn(
                 "w-32 sm:w-40 md:w-48 lg:w-64 h-auto drop-shadow-2xl select-none",

@@ -32,10 +32,42 @@ export const mockData = {
     templatesUsed: 8,
   },
   integrations: [
-    { name: "Альфа-Бизнес", connected: true, icon: "🏦" },
-    { name: "Telegram", connected: true, icon: "💬" },
-    { name: "Email", connected: true, icon: "📧" },
-    { name: "CRM", connected: false, icon: "📊" },
+    {
+      name: "Альфа-Бизнес",
+      connected: true,
+      icon: "🏦",
+      imageSrc: "/images/D03_CardPromo1_210325.webp",
+      description:
+        "Документооборот, счета, зарплатный проект, кредиты, депозиты — более 70 решений",
+      category: "ДЛЯ ЛЮБЫХ СОТРУДНИКОВ",
+    },
+    {
+      name: "Telegram",
+      connected: true,
+      icon: "💬",
+      imageSrc: "/images/D03_CardPromo2_210325.webp",
+      description:
+        "Обмен сообщениями, уведомления, быстрая связь с командой и клиентами",
+      category: "КОММУНИКАЦИИ",
+    },
+    {
+      name: "Email",
+      connected: true,
+      icon: "📧",
+      imageSrc: "/images/D04_CardPromo3_210325.webp",
+      description:
+        "Отправка и получение писем, автоматизация рассылок, управление корреспонденцией",
+      category: "КОРРЕСПОНДЕНЦИЯ",
+    },
+    {
+      name: "CRM",
+      connected: false,
+      icon: "📊",
+      imageSrc: "/images/D04_CardPromo2_210325.webp",
+      description:
+        "Управление клиентами, аналитика продаж, автоматизация бизнес-процессов",
+      category: "УПРАВЛЕНИЕ",
+    },
   ],
   topFeatures: [
     { name: "Создание документов", count: 45, icon: FileText },

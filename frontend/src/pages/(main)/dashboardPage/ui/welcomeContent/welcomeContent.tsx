@@ -1,166 +1,184 @@
-import { Sparkles, FileText, TrendingUp, Clock, MessageSquare } from "lucide-react";
-import { cn } from "@/shared/lib/mergeClass";
+import { useState, useEffect } from "react";
+import { Stepper } from "./components/stepper";
+import { StepForm } from "./components/stepForm";
+import { CapabilityCard } from "./components/capabilityCard";
+import { OnboardingCompleted } from "./components/onboardingCompleted";
+import { ONBOARDING_STEPS } from "./lib/onboardingSteps";
+import { onboardingService } from "./lib/onboardingService";
+import { useUpdateProfile } from "@/entities/auth/hooks/useUpdateProfile";
+import { UpdateProfileDto } from "@/entities/auth/types/types";
 
-interface FeatureCardProps {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-  className?: string;
-}
+const TOTAL_STEPS = 3;
 
-const FeatureCard = ({ icon: Icon, title, description, className }: FeatureCardProps) => {
-  return (
-    <div
-      className={cn(
-        "p-6 rounded-xl border border-gray-200 bg-white",
-        "hover:shadow-md transition-shadow duration-200",
-        className
-      )}
-    >
-      <div className="flex items-start gap-4">
-        <div className="p-3 rounded-lg bg-purple-50 text-purple-600 flex-shrink-0">
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-          <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
-        </div>
-      </div>
-    </div>
-  );
-};
+const CAPABILITIES = [
+  {
+    title: "Документы и письма",
+    description:
+      "Пишет и редактирует письма и документы, резюмирует переписку и встречи, собирает черновые презентации и таблицы.",
+    imageSrc: "/images/1.png",
+    imageAlt: "Документы и письма",
+  },
+  {
+    title: "Экономия времени",
+    description:
+      "У владельцев бизнеса уходит меньше времени на операционные задачи и больше - на стратегию и работу с людьми.",
+    imageSrc: "/images/4.png",
+    imageAlt: "Экономия времени",
+  },
+  {
+    title: "Маркетинг и аналитика",
+    description:
+      "Помогает с маркетингом (посты, промомеханики). Анализирует операционные данные (продажи, остатки, платежи) и рекомендует следующие шаги.",
+    imageSrc: "/images/5.png",
+    imageAlt: "Маркетинг и аналитика",
+  },
+  {
+    title: "Юридические вопросы",
+    description:
+      "Отвечает на типовые юридические и финансовые вопросы, предлагает шаблоны и чек-листы.",
+    imageSrc: "/images/6.png",
+    imageAlt: "Юридические вопросы",
+  },
+] as const;
 
 export const WelcomeContent = () => {
-  return (
-    <div className="h-full overflow-y-auto bg-gray-50">
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <div className="mb-12">
-          <div className="mb-4">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Приложение-помощник для малого бизнеса
-            </h1>
-            <p className="text-lg text-gray-600 leading-relaxed max-w-2xl">
-              Используйте возможности ИИ для автоматизации ключевых задач вашего бизнеса.
-              Экономьте время и повышайте качество управленческих решений.
-            </p>
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [profileInfo, setProfileInfo] = useState<Partial<UpdateProfileDto>>({});
+  const [isOnboardingCompleted, setIsOnboardingCompleted] = useState(false);
+
+  const { mutate: updateProfileMutate } = useUpdateProfile();
+
+  useEffect(() => {
+    const completed = onboardingService.isOnboardingCompleted();
+    setIsOnboardingCompleted(completed);
+  }, []);
+
+  const handleStepSubmit = async (value: string) => {
+    try {
+      switch (currentStep) {
+        case 1: {
+          setProfileInfo((prev) => ({ ...prev, user_info: value }));
+          break;
+        }
+        case 2: {
+          setProfileInfo((prev) => ({ ...prev, business_info: value }));
+          break;
+        }
+        case 3: {
+          updateProfileMutate({
+            ...profileInfo,
+            additional_instructions: value,
+          });
+          onboardingService.markOnboardingCompleted();
+          setIsOnboardingCompleted(true);
+          return;
+        }
+      }
+
+      setCompletedSteps((prev) => {
+        if (!prev.includes(currentStep)) {
+          return [...prev, currentStep];
+        }
+        return prev;
+      });
+
+      if (currentStep < TOTAL_STEPS) {
+        setCurrentStep(currentStep + 1);
+      }
+    } catch (error) {
+      console.error("Ошибка при сохранении данных шага:", error);
+    }
+  };
+
+  const handleStepBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleStepClick = (step: number) => {
+    if (completedSteps.includes(step) || step <= currentStep) {
+      setCurrentStep(step);
+    }
+  };
+
+  const currentStepConfig = ONBOARDING_STEPS[currentStep - 1];
+  const canGoBack = currentStep > 1;
+
+  if (isOnboardingCompleted) {
+    return (
+      <div className="h-full overflow-y-auto">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 md:py-6">
+          <div className="mb-8 md:mb-16">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
+              Бизнес-контекст
+            </h2>
+            <div className="p-4 md:p-6 lg:p-10 rounded-2xl md:rounded-3xl bg-white">
+              <OnboardingCompleted />
+            </div>
+          </div>
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
+              Возможности
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {CAPABILITIES.map((capability) => (
+                <CapabilityCard
+                  key={capability.title}
+                  title={capability.title}
+                  description={capability.description}
+                  imageSrc={capability.imageSrc}
+                  imageAlt={capability.imageAlt}
+                />
+              ))}
+            </div>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        <div className="mb-12">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 md:py-6">
+        <div className="mb-8 md:mb-16">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
             Бизнес-контекст
           </h2>
-          <div className="prose prose-gray max-w-none">
-            <p className="text-gray-700 leading-relaxed mb-4">
-              Микробизнес живет в режиме необходимости постоянно принимать решения:
-              оплатить счет, оформить платеж, запустить акцию, поправить договор, ответить
-              клиенту, выдать сотруднику поручение. У владельца кофейни или руководителя
-              салона красоты нет привычки сидеть за компьютером весь день. Его рабочие
-              инструменты должны быть в кармане — в телефоне и мессенджере, — работать
-              быстро и просто.
-            </p>
-            <p className="text-gray-700 leading-relaxed">
-              Приложение-помощник для микробизнеса — это разговорный ИИ-помощник,
-              встроенный в привычные рабочие инструменты. Он решает проблемы дефицита
-              времени и экспертизы здесь и сейчас.
-            </p>
+          <div className="p-4 md:p-6 lg:p-10 rounded-2xl md:rounded-4xl bg-white">
+            <Stepper
+              currentStep={currentStep}
+              totalSteps={TOTAL_STEPS}
+              onStepClick={handleStepClick}
+              completedSteps={completedSteps}
+            />
+            <StepForm
+              stepConfig={currentStepConfig}
+              initialValue=""
+              onSubmit={handleStepSubmit}
+              onBack={handleStepBack}
+              canGoBack={canGoBack}
+            />
           </div>
         </div>
-
-        <div className="mb-12">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+        <div>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
             Возможности
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FeatureCard
-              icon={FileText}
-              title="Документы и письма"
-              description="Пишет и редактирует письма и документы, резюмирует переписку и встречи, собирает черновые презентации и таблицы"
-            />
-            <FeatureCard
-              icon={MessageSquare}
-              title="Юридические вопросы"
-              description="Отвечает на типовые юридические и финансовые вопросы, предлагает шаблоны и чек-листы"
-            />
-            <FeatureCard
-              icon={TrendingUp}
-              title="Маркетинг и аналитика"
-              description="Помогает с маркетингом (посты, промомеханики), анализирует операционные данные (продажи, остатки, платежи) и рекомендует следующие шаги"
-            />
-            <FeatureCard
-              icon={Clock}
-              title="Экономия времени"
-              description="У владельца бизнеса уходит меньше времени на операционные задачи и больше — на стратегию и работу с людьми"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {CAPABILITIES.map((capability) => (
+              <CapabilityCard
+                key={capability.title}
+                title={capability.title}
+                description={capability.description}
+                imageSrc={capability.imageSrc}
+                imageAlt={capability.imageAlt}
+              />
+            ))}
           </div>
-        </div>
-
-        <div className="mb-12">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-            Примеры на рынке
-          </h2>
-          <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-white border border-gray-200">
-              <div className="flex items-start gap-3">
-                <Sparkles className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">
-                    Microsoft 365 Copilot
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Работает внутри Word/Excel/Outlook/Teams и ускоряет ежедневные
-                    офисные процессы для малого бизнеса
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="p-4 rounded-lg bg-white border border-gray-200">
-              <div className="flex items-start gap-3">
-                <TrendingUp className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">
-                    Intuit Assist (QuickBooks)
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Выступает ИИ-бухгалтером для предпринимателей, автоматизируя учет
-                    и рекомендации
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="p-4 rounded-lg bg-white border border-gray-200">
-              <div className="flex items-start gap-3">
-                <MessageSquare className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">
-                    Shopify Sidekick
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Помогает генерировать контент, сегментировать клиентов и выполнять
-                    задачи прямо в админпанели магазина
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-6 rounded-xl bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200">
-          <h3 className="font-semibold text-gray-900 mb-2">
-            Альфа-Банк и развитие сервисов для предпринимателей
-          </h3>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            Альфа-Банк, крупнейший частный банк в России, последовательно развивает сервисы
-            для предпринимателей. Интернет-банк «Альфа-Бизнес Онлайн» и мобильное приложение
-            «Альфа-Бизнес» позволяют ИП и компаниям дистанционно управлять счетами, платежами
-            и документами с телефона и любых других устройств с акцентом на мобильные сценарии
-            и оперативный контроль финансов. В 2024 году банк запустил «Нейроофис» — набор
-            нейроассистентов для обработки документов, ответов на заявки и типовых операционных
-            задач прямо внутри бизнес-банка.
-          </p>
         </div>
       </div>
     </div>
   );
 };
-

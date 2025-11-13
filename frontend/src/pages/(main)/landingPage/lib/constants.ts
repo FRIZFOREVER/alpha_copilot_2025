@@ -1,5 +1,12 @@
 import { Variants } from "framer-motion";
-import { Zap, Shield, MessageSquare, Bot } from "lucide-react";
+import {
+  Zap,
+  MessageSquare,
+  Clock,
+  FileText,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export const containerVariants: Variants = {
@@ -78,24 +85,28 @@ export interface Feature {
 
 export const features: Feature[] = [
   {
-    icon: Zap,
-    title: "Мгновенные ответы",
-    description: "Получайте качественные ответы от AI за секунды",
+    icon: FileText,
+    title: "Работа с документами",
+    description:
+      "Создавайте и редактируйте письма, договоры и презентации с помощью AI",
   },
   {
-    icon: Shield,
-    title: "Безопасность данных",
-    description: "Ваши данные защищены и конфиденциальны",
+    icon: Clock,
+    title: "Экономия времени",
+    description:
+      "Автоматизируйте рутинные задачи и фокусируйтесь на стратегии",
   },
   {
     icon: MessageSquare,
-    title: "Умный диалог",
-    description: "Естественное общение с искусственным интеллектом",
+    title: "24/7 Поддержка",
+    description:
+      "Получайте ответы на вопросы в любое время, прямо в мессенджере",
   },
   {
-    icon: Bot,
-    title: "Разнопрофильные вопросы",
-    description: "Задавайте вопросы из любой области знаний",
+    icon: TrendingUp,
+    title: "Аналитика и рекомендации",
+    description:
+      "Анализируйте данные и получайте рекомендации для развития бизнеса",
   },
 ];
 
@@ -106,5 +117,57 @@ export const benefits: string[] = [
   "Автоматизация рутинных задач",
   "Персонализированные рекомендации",
   "Масштабируемость для бизнеса",
+];
+
+export interface Statistic {
+  icon: LucideIcon;
+  value: string;
+  label: string;
+}
+
+export const statistics: Statistic[] = [
+  {
+    icon: Users,
+    value: "1000+",
+    label: "Активных пользователей",
+  },
+  {
+    icon: Clock,
+    value: "24/7",
+    label: "Доступность сервиса",
+  },
+  {
+    icon: Zap,
+    value: "99.9%",
+    label: "Надежность системы",
+  },
+];
+
+export interface Testimonial {
+  quote: string;
+  author: string;
+  role: string;
+  avatar?: string;
+}
+
+export const testimonials: Testimonial[] = [
+  {
+    quote:
+      "AI Copilot помог мне сократить время на обработку документов на 70%. Теперь я могу больше времени уделять клиентам и развитию бизнеса.",
+    author: "Мария Иванова",
+    role: "Владелец кофейни",
+  },
+  {
+    quote:
+      "Отличный помощник для малого бизнеса! Быстро получаю ответы на юридические и финансовые вопросы, не тратя время на поиск информации.",
+    author: "Алексей Петров",
+    role: "Директор салона красоты",
+  },
+  {
+    quote:
+      "Использую для создания контента и анализа данных. Сервис стал незаменимым инструментом в моей ежедневной работе.",
+    author: "Елена Смирнова",
+    role: "Предприниматель",
+  },
 ];
 

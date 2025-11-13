@@ -4,6 +4,7 @@ import {
   LoginDto,
   RegisterDto,
   ProfileResponse,
+  UpdateProfileDto,
 } from "../types/types";
 
 class AuthService {
@@ -31,7 +32,17 @@ class AuthService {
     const { data } = await axiosAuth.get<ProfileResponse>("/profile");
     return data;
   }
+
+  public async updateProfile(
+    requestDto: Partial<UpdateProfileDto>
+  ): Promise<UpdateProfileDto> {
+    const { data } = await axiosAuth.put<UpdateProfileDto>(
+      "/profile_other_info",
+      requestDto
+    );
+    return data;
+  }
 }
 
-export const { userLogin, userRegister, logout, getProfile } =
+export const { userLogin, userRegister, logout, getProfile, updateProfile } =
   new AuthService();
