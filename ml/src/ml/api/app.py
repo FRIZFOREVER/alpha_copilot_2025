@@ -27,6 +27,7 @@ async def lifespan(app: FastAPI):
         models = await ollama_setup.init_models()
         await ollama_setup.warmup_models(models)
         app.state.models_ready.set()
+        logger.info("All models successfully initialized, ready to accept connections")
 
     app.state.models_task = asyncio.create_task(_init())
 
