@@ -1,4 +1,4 @@
-# from ml.utils.formats import _rstrip_slash
+import logging
 from typing import Iterator, List, TypeVar
 
 from ollama import ChatResponse, chat, embed
@@ -9,11 +9,14 @@ from ml.configs.message import ChatHistory
 
 T = TypeVar("T", bound=BaseModel)
 
+logger = logging.getLogger(__name__)
+
 class ReasoningModelClient:
-    def __init__(self, settings: ReasoningClientSettings):
+    def __init__(self, settings: ReasoningClientSettings = ReasoningClientSettings()):
         self.settings: ReasoningClientSettings = settings
 
     def call(self, messages: ChatHistory, **kwargs) -> str:
+        logger.info("Calling Reasoner with messages as payload: %s", messages.messages_list())
         return chat(
             model=self.settings.model,
             messages=messages.messages_list(),
@@ -52,9 +55,9 @@ class ReasoningModelClient:
         except Exception as exc:
             raise ValueError("Structured response did not match the expected schema") from exc
 
-class EmbeddingModelClient(EmbeddingClientSettings):
+class EmbeddingModelClient:
 
-    def __init__(self, settings: EmbeddingClientSettings):
+    def __init__(self, settings: EmbeddingClientSettings = EmbeddingClientSettings()):
         self.settings: EmbeddingClientSettings = settings
 
     def call(self, content: str, **kwargs) -> List[float]:

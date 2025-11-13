@@ -6,7 +6,17 @@ from ml.agent.graph.state import GraphState
 from ml.utils.voice_validation import validate_voice, form_final_report
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory, RequestPayload
+from ml.agent.graph.nodes import (
+    graph_mode_node,
+    flash_memories_node,
+    thinking_planner_node,
+    research_react_node,
+    fast_answer_node
+)
 from ollama import ChatResponse
+
+def _extract_pipeline_mode(state: GraphState) -> str:
+    return state.payload.mode.value
 
 def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     """Create the LangGraph pipeline."""
@@ -15,7 +25,31 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow: StateGraph = StateGraph(GraphState)
     
     # Nodes
-    
+    workflow.add_node("Mode Decider", graph_mode_node)
+    workflow.add_node("Flash Memories", flash_memories_node) # Not implemented yet
+    workflow.add_node("Thinking react", thinking_planner_node, client=client)
+    workflow.add_node("Research react", research_react_node, client=client)
+    workflow.add_node("Fast answer", fast_answer_node) # not passing model cuz forming a final prompt
+
+    # entrypoint
+    workflow.set_entry_point("Mode Decider")
+
+    # Conditional graph movements
+    ## General
+    workflow.add_conditional_edges(
+        "Mode Decider", 
+        _extract_pipeline_mode,
+        {
+            "fast": "Flash Memories",
+            "thinking": "Thinking react",
+            "research": "Research react"
+        })
+
+    # edges
+
+    ## Fast
+    workflow.add_edge("Flash Memories", "Fast answer")
+    workflow.add_edge("Fast answer", END)
 
     app: StateGraph = workflow.compile()
     
@@ -40,7 +74,11 @@ def run_pipeline(payload: RequestPayload) -> Iterator[ChatResponse]:
     # Create Graph
     app: StateGraph = create_pipeline(client)
 
-    messages: ChatHistory = payload.messages
-    state: GraphState = GraphState(messages=messages)
+    # Create initial state
+    state: GraphState = GraphState(
+        payload=payload
+    )
 
-    final: Dict[str, Any] = app.invoke(state)
+    raw_result: Dict[str, Any] = app.invoke(state)
+    result: GraphState = GraphState.model_validate(raw_result)
+    return client.stream(result.final_prompt)
