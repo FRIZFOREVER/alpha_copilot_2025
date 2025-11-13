@@ -1,3 +1,5 @@
+import logging
+
 from typing import Any, Dict, Iterator
 
 from langgraph.graph import StateGraph, END
@@ -5,7 +7,7 @@ from ml.agent.graph.state import GraphState
 
 from ml.utils.voice_validation import validate_voice, form_final_report
 from ml.api.ollama_calls import ReasoningModelClient
-from ml.configs.message import ChatHistory, RequestPayload
+from ml.configs.message import RequestPayload
 from ml.agent.graph.nodes import (
     graph_mode_node,
     flash_memories_node,
@@ -14,6 +16,8 @@ from ml.agent.graph.nodes import (
     fast_answer_node
 )
 from ollama import ChatResponse
+
+logger = logging.getLogger(__name__)
 
 def _extract_pipeline_mode(state: GraphState) -> str:
     return state.payload.mode.value
@@ -81,4 +85,6 @@ def run_pipeline(payload: RequestPayload) -> Iterator[ChatResponse]:
 
     raw_result: Dict[str, Any] = app.invoke(state)
     result: GraphState = GraphState.model_validate(raw_result)
+    logging.info("Started final prompt generation with payload: \n%s", 
+                 result.final_prompt.model_dump_json(ensure_ascii=False, indent=2))
     return client.stream(result.final_prompt)
