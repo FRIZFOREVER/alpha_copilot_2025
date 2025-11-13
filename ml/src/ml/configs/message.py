@@ -22,16 +22,6 @@ class ModelMode(str, Enum):
     Auto = "auto"
 
 
-class RequestPayload(BaseModel):
-    messages: List[Message]
-    chat_id: str
-    tag: str
-    mode: ModelMode
-    system: str
-    file_url: str
-    is_voice: bool
-
-
 class ChatHistory(BaseModel):
     messages: List[Message] = Field(default_factory=list)
 
@@ -51,5 +41,18 @@ class ChatHistory(BaseModel):
         self.messages.append(msg)
         return
 
+    def last_message_as_history(self) -> Message:
+        return ChatHistory().add_user(self.messages[-1])
+
     def messages_list(self) -> List[Dict[str, str]]:
         return [{"role": msg.role.value, "content": msg.content} for msg in self.messages]
+
+
+class RequestPayload(BaseModel):
+    messages: ChatHistory
+    chat_id: str
+    tag: str
+    mode: ModelMode
+    system: str
+    file_url: str
+    is_voice: bool
