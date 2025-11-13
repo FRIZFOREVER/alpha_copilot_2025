@@ -29,7 +29,7 @@ export const AuthWrapper = ({ children }: PropsWithChildren) => {
       >
         <div className="w-full md:py-0 p-8 flex items-center justify-center bg-gradient-to-br from-red-500 to-pink-600 rounded-3xl">
           <Image
-            src={"/images/meditation-yaga.png"}
+            src={"/images/4.png"}
             alt="logo"
             className="w-[200px] md:w-[250px] select-none"
           />

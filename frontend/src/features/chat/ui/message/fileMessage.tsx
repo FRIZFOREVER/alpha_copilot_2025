@@ -9,9 +9,7 @@ export interface FileMessageProps {
 }
 
 const getFileTypeFromUrl = (url: string): FileType => {
-  const extension = url
-    .substring(url.lastIndexOf("."))
-    .toLowerCase();
+  const extension = url.substring(url.lastIndexOf(".")).toLowerCase();
 
   if (extension === ".pdf") return "pdf";
   if (extension === ".txt") return "txt";
@@ -58,14 +56,41 @@ export const FileMessage = ({ fileUrl, className }: FileMessageProps) => {
   const Icon = getFileIcon(fileType);
   const fileName = getFileNameFromUrl(fileUrl);
 
-  const handleClick = () => {
-    const baseUrl = "http://localhost:8080";
-    const fullUrl = fileUrl.startsWith("http") 
-      ? fileUrl 
-      : fileUrl.startsWith("/") 
+  const handleClick = async () => {
+    try {
+      const baseUrl = "http://localhost:8080";
+      const fullUrl = fileUrl.startsWith("http")
+        ? fileUrl
+        : fileUrl.startsWith("/")
         ? `${baseUrl}${fileUrl}`
         : `${baseUrl}/${fileUrl}`;
-    window.open(fullUrl, "_blank");
+
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error("Не удалось загрузить файл");
+      }
+
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Ошибка при скачивании файла:", error);
+      const baseUrl = "http://localhost:8080";
+      const fullUrl = fileUrl.startsWith("http")
+        ? fileUrl
+        : fileUrl.startsWith("/")
+        ? `${baseUrl}${fileUrl}`
+        : `${baseUrl}/${fileUrl}`;
+      window.open(fullUrl, "_blank");
+    }
   };
 
   return (
@@ -84,12 +109,9 @@ export const FileMessage = ({ fileUrl, className }: FileMessageProps) => {
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 truncate">
-          {fileName}
-        </p>
+        <p className="text-sm font-medium text-gray-900 truncate">{fileName}</p>
         <p className="text-xs text-gray-500">{fileTypeLabel}</p>
       </div>
     </button>
   );
 };
-
