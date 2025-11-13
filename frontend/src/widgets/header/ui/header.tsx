@@ -1,9 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { ChartArea } from "lucide-react";
 import { cn } from "@/shared/lib/mergeClass";
 import { Icon, IconTypes } from "@/shared/ui/icon";
 import { ERouteNames } from "@/shared/lib/routeVariables";
-import { Button } from "@/shared/ui";
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
 import {
