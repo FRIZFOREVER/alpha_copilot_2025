@@ -35,7 +35,7 @@ export const MessageList = ({
     <ScrollArea className="flex-1 max-w-[832px]" ref={contentRef}>
       <div
         className={cn(
-          messages.length === 0 && "h-full flex items-center justify-center"
+          messages.length === 0 && "h-full flex items-center justify-center",
         )}
       >
         {messages.length === 0 ? (

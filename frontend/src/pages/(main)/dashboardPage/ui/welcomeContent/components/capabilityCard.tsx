@@ -20,7 +20,7 @@ export const CapabilityCard = ({
       className={cn(
         "flex flex-col space-y-4 rounded-4xl overflow-hidden bg-gradient-to-b from-gray-200 to-white",
         "transition-shadow duration-200",
-        className
+        className,
       )}
     >
       <div className="relative w-full h-56 flex items-center justify-center overflow-hidden">

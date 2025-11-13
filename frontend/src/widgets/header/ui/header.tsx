@@ -19,7 +19,7 @@ export const Header = ({ className }: HeaderProps) => {
   const { data: profileData } = useGetProfileQuery();
 
   const isProfileActive = location.pathname.includes(
-    `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.PROFILE_ROUTE}`
+    `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.PROFILE_ROUTE}`,
   );
 
   const displayName = profileData?.username
@@ -45,7 +45,7 @@ export const Header = ({ className }: HeaderProps) => {
         "bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80",
         "backdrop-blur-md",
         "shadow-lg shadow-red-500/20",
-        className
+        className,
       )}
     >
       <div className="mx-auto px-4 md:px-8 md:pr-6">
@@ -69,11 +69,11 @@ export const Header = ({ className }: HeaderProps) => {
             <button
               onClick={handleProfileClick}
               className={cn(
-                "flex items-center gap-2 px-3 py-1 m rounded-xl cursor-pointer transition-all duration-200",
+                "flex items-center gap-2 px-3 py-1.5 m rounded-xl cursor-pointer transition-all duration-200",
                 "md:bg-white/95 md:backdrop-blur-sm md:shadow-sm md:hover:shadow",
                 "md:border border-white/50",
                 "md:hover:bg-white",
-                isProfileActive && "md:ring-1 ring-white/50"
+                isProfileActive && "md:ring-1 ring-white/50",
               )}
               title="Профиль"
             >

@@ -93,8 +93,7 @@ export const features: Feature[] = [
   {
     icon: Clock,
     title: "Экономия времени",
-    description:
-      "Автоматизируйте рутинные задачи и фокусируйтесь на стратегии",
+    description: "Автоматизируйте рутинные задачи и фокусируйтесь на стратегии",
   },
   {
     icon: MessageSquare,
@@ -170,4 +169,3 @@ export const testimonials: Testimonial[] = [
     role: "Предприниматель",
   },
 ];
-

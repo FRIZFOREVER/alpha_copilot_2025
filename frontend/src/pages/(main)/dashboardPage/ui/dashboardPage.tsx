@@ -11,6 +11,8 @@ import { useResize } from "@/shared/hooks/useResize";
 import { useEffect, useRef } from "react";
 import { Onboarding } from "@/widgets/onboarding";
 import { useOnboarding } from "@/shared/lib/onboarding";
+import { useGraphLogSocket } from "@/shared/hooks/useGraphLogSocket";
+import { useGraphLogEvents } from "@/shared/hooks/useGraphLogEvents";
 
 const DashboardPage = () => {
   const location = useLocation();
@@ -23,6 +25,19 @@ const DashboardPage = () => {
   } = useChatCollapse();
   const { isOnboardingCompleted, startOnboarding, skipOnboarding } =
     useOnboarding();
+
+  const { isGraphLogConnected } = useGraphLogSocket();
+
+  console.log(isGraphLogConnected);
+
+  useGraphLogEvents(
+    (data) => {
+      console.log("Получено сообщение от graph_log:", data);
+    },
+    (uuid) => {
+      console.log("Подключение к graph_log установлено, UUID:", uuid);
+    }
+  );
 
   const isChatRoute =
     location.pathname.includes(`/${ERouteNames.CHAT_ROUTE}`) ||

@@ -3,7 +3,7 @@ import { RouteObject } from "react-router-dom";
 
 export const routesWithHoc = (
   hoc: (children: ReactNode) => ReactNode,
-  routes: Array<RouteObject>
+  routes: Array<RouteObject>,
 ): Array<RouteObject> => {
   return routes.map((route) => {
     const advancedRoute = {

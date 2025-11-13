@@ -34,11 +34,11 @@ class AuthService {
   }
 
   public async updateProfile(
-    requestDto: Partial<UpdateProfileDto>
+    requestDto: Partial<UpdateProfileDto>,
   ): Promise<UpdateProfileDto> {
     const { data } = await axiosAuth.put<UpdateProfileDto>(
       "/profile_other_info",
-      requestDto
+      requestDto,
     );
     return data;
   }

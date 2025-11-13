@@ -55,7 +55,7 @@ const AnalyticsPage = () => {
                       "h-10 w-10 rounded-lg flex items-center justify-center",
                       metric.color
                         .replace("text-", "bg-")
-                        .replace("-600", "-100")
+                        .replace("-600", "-100"),
                     )}
                   >
                     <metric.icon className={cn("h-5 w-5", metric.color)} />
@@ -63,7 +63,7 @@ const AnalyticsPage = () => {
                   <div
                     className={cn(
                       "flex items-center gap-1 text-xs font-medium",
-                      metric.isPositive ? "text-green-600" : "text-red-600"
+                      metric.isPositive ? "text-green-600" : "text-red-600",
                     )}
                   >
                     {metric.isPositive ? (
@@ -182,7 +182,7 @@ const AnalyticsPage = () => {
                     <div
                       className={cn(
                         "flex items-center gap-1 text-xs font-medium",
-                        trend.isPositive ? "text-green-600" : "text-red-600"
+                        trend.isPositive ? "text-green-600" : "text-red-600",
                       )}
                     >
                       {trend.isPositive ? (
@@ -227,7 +227,7 @@ const AnalyticsPage = () => {
                         <div
                           className={cn(
                             "flex items-center gap-0.5 text-xs font-medium",
-                            "text-green-600"
+                            "text-green-600",
                           )}
                         >
                           <ArrowUp className="h-3 w-3" />+{feature.trend}
@@ -248,7 +248,7 @@ const AnalyticsPage = () => {
             <div className="space-y-3">
               {analyticsData.weeklyActivity.map((day, i) => {
                 const maxTasks = Math.max(
-                  ...analyticsData.weeklyActivity.map((d) => d.tasks)
+                  ...analyticsData.weeklyActivity.map((d) => d.tasks),
                 );
                 const taskPercentage = (day.tasks / maxTasks) * 100;
 
@@ -294,7 +294,7 @@ const AnalyticsPage = () => {
                     <div
                       className={cn(
                         "h-full rounded-full transition-all",
-                        category.color
+                        category.color,
                       )}
                       style={{ width: `${category.percentage}%` }}
                     />

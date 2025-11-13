@@ -54,7 +54,7 @@ export class AxiosClient {
 
   public async get<T>(
     url: string,
-    params: Omit<RequestOptions, "body"> = {}
+    params: Omit<RequestOptions, "body"> = {},
   ): Promise<AxiosResponse<T>> {
     try {
       const response = await this.baseQueryV1Instance.get<T>(url, { params });
@@ -67,13 +67,13 @@ export class AxiosClient {
   public async post<T>(
     url: string,
     data?: Record<string, unknown>,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     try {
       const response = await this.baseQueryV1Instance.post<T>(
         url,
         data,
-        config
+        config,
       );
       return this.handleResponse(response);
     } catch (error) {
@@ -84,7 +84,7 @@ export class AxiosClient {
   public async put<T>(
     url: string,
     data?: Record<string, unknown>,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     try {
       const response = await this.baseQueryV1Instance.put<T>(url, data, config);
@@ -97,13 +97,13 @@ export class AxiosClient {
   public async patch<T>(
     url: string,
     data?: Record<string, unknown>,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     try {
       const response = await this.baseQueryV1Instance.patch<T>(
         url,
         data,
-        config
+        config,
       );
       return this.handleResponse(response);
     } catch (error) {
@@ -113,7 +113,7 @@ export class AxiosClient {
 
   public async delete<T>(
     url: string,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     try {
       const response = await this.baseQueryV1Instance.delete<T>(url, config);

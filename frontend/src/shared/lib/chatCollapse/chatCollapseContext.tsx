@@ -16,7 +16,7 @@ interface ChatCollapseContextType {
 }
 
 const ChatCollapseContext = createContext<ChatCollapseContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const STORAGE_KEY = "chat-collapsed";
@@ -38,7 +38,7 @@ export const ChatCollapseProvider = ({ children }: { children: ReactNode }) => {
         return stored !== null ? stored === "true" : false;
       }
       return false;
-    }
+    },
   );
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export const ChatCollapseProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     localStorage.setItem(
       MINIMIZED_CHAT_VISIBLE_KEY,
-      String(isMinimizedChatVisible)
+      String(isMinimizedChatVisible),
     );
   }, [isMinimizedChatVisible]);
 

@@ -30,7 +30,7 @@ export const useComputerVoiceRecorder = (opts?: {
   const intervalRef = useRef<number | null>(null);
 
   const sendCallbackRef = useRef(opts?.sendCallback);
-  
+
   // Обновляем ref при изменении sendCallback
   useEffect(() => {
     sendCallbackRef.current = opts?.sendCallback;
@@ -91,7 +91,7 @@ export const useComputerVoiceRecorder = (opts?: {
           device.kind === "audioinput" &&
           (device.label.toLowerCase().includes("stereo mix") ||
             device.label.toLowerCase().includes("cable input") ||
-            device.label.toLowerCase().includes("blackhole"))
+            device.label.toLowerCase().includes("blackhole")),
       );
 
       const constraints: MediaStreamConstraints = {
@@ -168,7 +168,7 @@ export const useComputerVoiceRecorder = (opts?: {
         setIsPaused(true);
       } else {
         console.warn(
-          "MediaRecorder.pause not available or invalid state; using soft pause"
+          "MediaRecorder.pause not available or invalid state; using soft pause",
         );
         setIsPaused(true);
       }
@@ -189,7 +189,7 @@ export const useComputerVoiceRecorder = (opts?: {
         setIsPaused(false);
       } else {
         console.warn(
-          "MediaRecorder.resume not available or invalid state; using soft resume"
+          "MediaRecorder.resume not available or invalid state; using soft resume",
         );
         setIsPaused(false);
       }
