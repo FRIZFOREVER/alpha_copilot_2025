@@ -22,9 +22,9 @@ func NewUserAuthentication(secret string, logger *logrus.Logger) *userAuthentica
 }
 
 func (ua *userAuthentication) Handler(c *fiber.Ctx) error {
-	userUUID, errAuth := requestUserUUID(ua.secret, c.Get("Authorization", ""), ua.logger)
+	userUUID, errAuth := RequestUserUUID(ua.secret, c.Get("Authorization", ""), ua.logger)
 	if errAuth != nil {
-		ua.logger.Debugf("Error Ошибка при обработки JWT error error: %s", errAuth)
+		ua.logger.Debugf("Error Ошибка при обработки JWT error: %s", errAuth)
 		return errAuth
 	} else {
 		c.Locals("uuid", userUUID)
@@ -35,7 +35,7 @@ func (ua *userAuthentication) Handler(c *fiber.Ctx) error {
 	return err
 }
 
-func requestUserUUID(secret string, authHeader string, logger *logrus.Logger) (uuid.UUID, error) {
+func RequestUserUUID(secret string, authHeader string, logger *logrus.Logger) (uuid.UUID, error) {
 	if len(authHeader) > 0 {
 		authToken := strings.Replace(authHeader, "Bearer ", "", 1)
 		secretKey := []byte(secret)
