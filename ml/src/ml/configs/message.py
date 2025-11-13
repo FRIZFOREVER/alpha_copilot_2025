@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 from typing import List, Dict, Optional
+from __future__ import annotations
 
 
 class Role(str, Enum):
@@ -42,8 +43,8 @@ class ChatHistory(BaseModel):
         self.messages.append(msg)
         return
 
-    def last_message_as_history(self) -> Message:
-        return ChatHistory().add_user(self.messages[-1])
+    # def last_message_as_history(self) -> ChatHistory:
+    #     return ChatHistory().add_user(self.messages[-1])
       
     def messages_list(self) -> List[Dict[str, str]]:
         return [{"role": msg.role.value, "content": msg.content} for msg in self.messages]
@@ -57,3 +58,8 @@ class RequestPayload(BaseModel):
     system: str
     file_url: str
     is_voice: bool
+
+    @field_validator("messages", mode="before")
+    @classmethod
+    def normalize_messages(cls, message_list):
+        return {"messages": message_list}
