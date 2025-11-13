@@ -8,9 +8,11 @@ import { Suggestions, type Suggestion } from "../suggestions";
 import { useFileAttachments } from "../../hooks/useFileAttachments";
 import { FileBadge } from "../fileBadge";
 import { uploadFile } from "@/entities/chat/api/chatService";
+import { TagSelector, type TagId } from "../tagSelector/tagSelector";
+import { TagBadge } from "../tagBadge/tagBadge";
 
 export interface ChatInputProps {
-  onSend?: (data: { message: string; file_url?: string }) => void;
+  onSend?: (data: { message: string; file_url?: string; tag?: TagId }) => void;
   onSendVoice?: (voiceBlob: Blob) => void;
   placeholder?: string;
   disabled?: boolean;
@@ -34,6 +36,15 @@ export const ChatInput = ({
   const [needsScrollbar, setNeedsScrollbar] = useState(false);
   const recordedBlobRef = useRef<Blob | null>(null);
   const shouldSendBlobRef = useRef(false);
+  const [selectedTag, setSelectedTag] = useState<TagId | undefined>(undefined);
+  const [showTagSelector, setShowTagSelector] = useState(false);
+  const [tagSelectorPosition, setTagSelectorPosition] = useState<{
+    top?: number;
+    bottom?: number;
+    left: number;
+  }>({ bottom: 0, left: 0 });
+  const [shouldShowTagSelector, setShouldShowTagSelector] = useState(false);
+  const tagSelectorRef = useRef<HTMLDivElement>(null);
 
   const { files, addFiles, removeFile, clearFiles, selectFiles, hasFiles } =
     useFileAttachments();
@@ -78,8 +89,23 @@ export const ChatInput = ({
         }
       }
 
-      onSend?.({ message: message.trim(), file_url: fileUrl });
+      let finalTag: TagId | undefined = selectedTag;
+      if (!finalTag) {
+        const tagMatch = message.match(
+          /#(general|finance|law|marketing|managment)\b/,
+        );
+        if (tagMatch) {
+          finalTag = tagMatch[1] as TagId;
+        }
+      }
+
+      onSend?.({
+        message: message.trim(),
+        file_url: fileUrl,
+        tag: selectedTag || finalTag,
+      });
       setMessage("");
+      setSelectedTag(undefined);
       clearFiles();
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
@@ -92,18 +118,74 @@ export const ChatInput = ({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+      setShowTagSelector(false);
       handleSend();
+    } else if (e.key === "Escape") {
+      setShowTagSelector(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
+    const value = e.target.value;
+    setMessage(value);
+
+    const cursorPosition = e.target.selectionStart;
+    const textBeforeCursor = value.substring(0, cursorPosition);
+    const lastAtIndex = textBeforeCursor.lastIndexOf("@");
+
+    if (lastAtIndex !== -1) {
+      const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+      if (textAfterAt.length === 0 || /^[a-zA-Z]*$/.test(textAfterAt)) {
+        setShouldShowTagSelector(true);
+      } else {
+        setShouldShowTagSelector(false);
+        setShowTagSelector(false);
+      }
+    } else {
+      setShouldShowTagSelector(false);
+      setShowTagSelector(false);
+    }
   };
 
   const handleSuggestionSelect = (suggestion: Suggestion) => {
     const fullText = `${suggestion.title} ${suggestion.subtitle}`;
     setMessage(fullText);
     textareaRef.current?.focus();
+  };
+
+  const handleTagSelect = (tag: TagId) => {
+    const cursorPosition = textareaRef.current?.selectionStart || 0;
+    const textBeforeCursor = message.substring(0, cursorPosition);
+    const lastAtIndex = textBeforeCursor.lastIndexOf("@");
+
+    if (lastAtIndex !== -1) {
+      const textAfterCursor = message.substring(cursorPosition);
+      const newMessage = message.substring(0, lastAtIndex) + textAfterCursor;
+
+      setMessage(newMessage);
+      setSelectedTag(tag);
+      setShowTagSelector(false);
+      setShouldShowTagSelector(false);
+
+      setTimeout(() => {
+        if (textareaRef.current) {
+          const newCursorPosition = lastAtIndex;
+          textareaRef.current.setSelectionRange(
+            newCursorPosition,
+            newCursorPosition,
+          );
+          textareaRef.current.focus();
+        }
+      }, 0);
+    }
+  };
+
+  const handleTagRemove = () => {
+    setSelectedTag(undefined);
+  };
+
+  const handleTagSelectorClose = () => {
+    setShowTagSelector(false);
   };
 
   const handleMicClick = async () => {
@@ -151,12 +233,57 @@ export const ChatInput = ({
     });
   }, [message, files]);
 
+  useEffect(() => {
+    if (
+      shouldShowTagSelector &&
+      textareaRef.current &&
+      tagSelectorRef.current
+    ) {
+      requestAnimationFrame(() => {
+        if (textareaRef.current && tagSelectorRef.current) {
+          const textareaRect = textareaRef.current.getBoundingClientRect();
+          const containerRect = tagSelectorRef.current.getBoundingClientRect();
+
+          if (containerRect && textareaRect) {
+            const left = textareaRect.left - containerRect.left + 12;
+            const bottom = containerRect.bottom - textareaRect.top + 8;
+
+            setTagSelectorPosition({ bottom, left });
+            setShowTagSelector(true);
+          }
+        }
+      });
+    } else if (!shouldShowTagSelector) {
+      setShowTagSelector(false);
+    }
+  }, [shouldShowTagSelector]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        tagSelectorRef.current &&
+        !tagSelectorRef.current.contains(event.target as Node) &&
+        !textareaRef.current?.contains(event.target as Node)
+      ) {
+        setShowTagSelector(false);
+        setShouldShowTagSelector(false);
+      }
+    };
+
+    if (showTagSelector) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showTagSelector]);
+
   return (
     <div className="bg-white">
       <div
         className={cn(
           "mx-auto max-w-[832px] px-4 md:px-8 py-4",
-          isCompact && "px-4 md:px-4"
+          isCompact && "px-4 md:px-4",
         )}
       >
         {suggestions && suggestions.length > 0 && (
@@ -167,7 +294,14 @@ export const ChatInput = ({
             className="mb-2"
           />
         )}
-        <div className="relative">
+        <div className="relative overflow-visible" ref={tagSelectorRef}>
+          {showTagSelector && (
+            <TagSelector
+              onSelect={handleTagSelect}
+              onClose={handleTagSelectorClose}
+              position={tagSelectorPosition}
+            />
+          )}
           {isRecording ? (
             <div className="w-full min-h-[50px] rounded-[24px] shadow-sm mb-[13px] px-12 py-3 pr-20 bg-white border border-gray-200 flex items-center relative">
               <button
@@ -189,7 +323,7 @@ export const ChatInput = ({
               <button
                 type="button"
                 className={cn(
-                  "absolute right-12 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200"
+                  "absolute right-12 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200",
                 )}
                 disabled={disabled}
                 onClick={handleCancelRecording}
@@ -205,7 +339,7 @@ export const ChatInput = ({
                   "bg-black hover:bg-gray-800",
                   "text-white transition-all shadow-sm duration-200",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
-                  "active:scale-95 flex items-center justify-center"
+                  "active:scale-95 flex items-center justify-center",
                 )}
                 onClick={handleSendVoice}
               >
@@ -220,19 +354,32 @@ export const ChatInput = ({
                 "focus-within:border-gray-300",
                 "transition-all",
                 "relative",
-                "flex flex-col"
+                "flex flex-col",
               )}
             >
-              {hasFiles && (
+              {(hasFiles || selectedTag) && (
                 <div className="px-3 pt-3 pb-2 flex flex-col gap-2">
-                  {files.map((file) => (
-                    <FileBadge
-                      key={file.id}
-                      file={file}
-                      onRemove={removeFile}
-                      disabled={disabled}
-                    />
-                  ))}
+                  {selectedTag && (
+                    <div className="flex items-center">
+                      <TagBadge
+                        tagId={selectedTag}
+                        onRemove={handleTagRemove}
+                        disabled={disabled}
+                      />
+                    </div>
+                  )}
+                  {hasFiles && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {files.map((file) => (
+                        <FileBadge
+                          key={file.id}
+                          file={file}
+                          onRemove={removeFile}
+                          disabled={disabled}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               <div className="relative flex-1 flex items-stretch">
@@ -251,7 +398,7 @@ export const ChatInput = ({
                     "transition-all",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
                     needsScrollbar && "overflow-y-auto custom-scrollbar",
-                    !needsScrollbar && "overflow-hidden"
+                    !needsScrollbar && "overflow-hidden",
                   )}
                   style={{
                     height: "auto",
@@ -263,7 +410,7 @@ export const ChatInput = ({
                   type="button"
                   className={cn(
                     "absolute left-3 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
-                    isMultiLine ? "bottom-3" : "top-[50%] -translate-y-1/2"
+                    isMultiLine ? "bottom-3" : "top-[50%] -translate-y-1/2",
                   )}
                   disabled={disabled}
                   onClick={handleFileSelect}
@@ -276,7 +423,7 @@ export const ChatInput = ({
                   className={cn(
                     "absolute right-12 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
                     isMultiLine ? "bottom-3" : "top-[50%] -translate-y-1/2",
-                    isRecording && "text-red-500"
+                    isRecording && "text-red-500",
                   )}
                   disabled={disabled}
                   onClick={handleMicClick}
@@ -293,7 +440,7 @@ export const ChatInput = ({
                     "text-white transition-all shadow-sm duration-200",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
                     "active:scale-95 p-0",
-                    isMultiLine ? "bottom-2" : "top-[50%] -translate-y-1/2"
+                    isMultiLine ? "bottom-2" : "top-[50%] -translate-y-1/2",
                   )}
                   size="icon"
                 >

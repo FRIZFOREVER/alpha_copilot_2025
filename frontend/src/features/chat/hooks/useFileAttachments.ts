@@ -17,14 +17,7 @@ const ALLOWED_FILE_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
 ];
 
-const ALLOWED_EXTENSIONS = [
-  ".pdf",
-  ".txt",
-  ".xlsx",
-  ".xls",
-  ".doc",
-  ".docx",
-];
+const ALLOWED_EXTENSIONS = [".pdf", ".txt", ".xlsx", ".xls", ".doc", ".docx"];
 
 export const useFileAttachments = () => {
   const [files, setFiles] = useState<AttachedFile[]>([]);
@@ -60,7 +53,7 @@ export const useFileAttachments = () => {
 
       setFiles((prev) => [...prev, ...validFiles]);
     },
-    [validateFile]
+    [validateFile],
   );
 
   const removeFile = useCallback((fileId: string) => {
@@ -100,4 +93,3 @@ export const useFileAttachments = () => {
     hasFiles: files.length > 0,
   };
 };
-

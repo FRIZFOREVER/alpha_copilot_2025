@@ -24,7 +24,10 @@ export interface OnboardingStepConfig {
   step: number;
   title: string;
   placeholder: string;
-  fieldName: keyof OnboardingStep1Data | keyof OnboardingStep2Data | keyof OnboardingStep3Data | keyof OnboardingStep4Data;
+  fieldName:
+    | keyof OnboardingStep1Data
+    | keyof OnboardingStep2Data
+    | keyof OnboardingStep3Data
+    | keyof OnboardingStep4Data;
   description?: string;
 }
-

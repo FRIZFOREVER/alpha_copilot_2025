@@ -6,4 +6,3 @@ export { ScrollArea } from "./scroll-area";
 export { Avatar, AvatarImage, AvatarFallback } from "./avatar";
 export { Textarea } from "./textarea";
 export type { TextareaProps } from "./textarea";
-

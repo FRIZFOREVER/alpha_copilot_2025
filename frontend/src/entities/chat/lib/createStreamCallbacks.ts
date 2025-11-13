@@ -61,11 +61,11 @@ export const createStreamCallbacks = ({
                 item.answer_id === tempAnswerId
               ) &&
               item.question_id !== data.question_id &&
-              item.answer_id !== data.answer_id
+              item.answer_id !== data.answer_id,
           );
 
           return [...filtered, newMessage];
-        }
+        },
       );
     },
     onChunk: (chunk: StreamChunk) => {
@@ -94,7 +94,7 @@ export const createStreamCallbacks = ({
           });
 
           return hasChanges ? updated : old;
-        }
+        },
       );
     },
     onComplete: () => {
@@ -110,13 +110,12 @@ export const createStreamCallbacks = ({
           return old.filter(
             (item) =>
               item.question_id !== initialData?.question_id &&
-              item.answer_id !== initialData?.answer_id
+              item.answer_id !== initialData?.answer_id,
           );
-        }
+        },
       );
       onError?.(error);
     },
     getInitialData: () => initialData,
   };
 };
-

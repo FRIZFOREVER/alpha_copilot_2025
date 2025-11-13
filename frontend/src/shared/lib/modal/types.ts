@@ -28,4 +28,3 @@ export interface IModalContext {
   openModal: (type: EModalVariables, data?: ModalData) => void;
   closeModal: () => void;
 }
-

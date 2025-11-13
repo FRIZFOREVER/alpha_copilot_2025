@@ -52,7 +52,7 @@ export const RatingModal = () => {
           closeModal();
           setSelectedRating(0);
         },
-      }
+      },
     );
   };
 
@@ -70,7 +70,7 @@ export const RatingModal = () => {
           "max-w-[500px] w-[calc(100%-2rem)]",
           "bg-white rounded-3xl p-8",
           "border-0 shadow-none",
-          "gap-6"
+          "gap-6",
         )}
         showCloseButton={true}
       >
@@ -90,7 +90,7 @@ export const RatingModal = () => {
               className={cn(
                 "transition-all duration-200 hover:scale-110",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
-                "focus:outline-none"
+                "focus:outline-none",
               )}
             >
               <Star
@@ -98,7 +98,7 @@ export const RatingModal = () => {
                   "h-10 w-10 transition-colors",
                   selectedRating >= rating
                     ? "fill-yellow-400 text-yellow-400"
-                    : "fill-gray-200 text-gray-300"
+                    : "fill-gray-200 text-gray-300",
                 )}
               />
             </button>
@@ -114,7 +114,7 @@ export const RatingModal = () => {
               "rounded-xl px-6 py-3",
               "hover:bg-gray-50",
               "disabled:opacity-50 disabled:cursor-not-allowed",
-              "font-normal text-base"
+              "font-normal text-base",
             )}
           >
             {isPending ? "Отправка..." : "Хорошо"}

@@ -37,7 +37,7 @@ export const Sidebar = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(["chats"])
+    new Set(["chats"]),
   );
   const navigate = useNavigate();
   const location = useLocation();
@@ -66,7 +66,7 @@ export const Sidebar = () => {
   }, [chatsData]);
 
   const filteredChats = chats.filter((chat) =>
-    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+    chat.title.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleProfileClick = () => {
@@ -104,7 +104,7 @@ export const Sidebar = () => {
 
   const handleSelectChat = (chatId: string) => {
     navigate(
-      `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}/${chatId}`
+      `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}/${chatId}`,
     );
     setIsMobileOpen(false);
   };
@@ -145,14 +145,14 @@ export const Sidebar = () => {
           isMobileOpen && !shouldHideSidebar
             ? "translate-x-0"
             : "-translate-x-full md:translate-x-0",
-          shouldHideSidebar && "hidden md:hidden"
+          shouldHideSidebar && "hidden md:hidden",
         )}
       >
         <div className="flex items-center justify-between px-3.5 py-3 pb-0">
           <div
             className={cn(
               "flex items-center justify-start w-full",
-              isCollapsed ? "justify-center" : "justify-start"
+              isCollapsed ? "justify-center" : "justify-start",
             )}
           >
             <div className="group cursor-pointer rounded-lg transition-all duration-300 hover:bg-red-50/50">
@@ -191,7 +191,7 @@ export const Sidebar = () => {
               <button
                 className={cn(
                   "w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer",
-                  "text-gray-600 hover:bg-gray-100"
+                  "text-gray-600 hover:bg-gray-100",
                 )}
                 onClick={() => {
                   openModal(EModalVariables.SEARCH_CHATS_MODAL);
@@ -202,13 +202,13 @@ export const Sidebar = () => {
               <button
                 onClick={() => {
                   navigate(
-                    `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.ANALYTICS_ROUTE}`
+                    `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.ANALYTICS_ROUTE}`,
                   );
                   setIsMobileOpen(false);
                 }}
                 className={cn(
                   "w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer",
-                  "text-gray-600 hover:bg-gray-100"
+                  "text-gray-600 hover:bg-gray-100",
                 )}
                 title="Аналитика"
               >
@@ -219,7 +219,7 @@ export const Sidebar = () => {
             <div className="px-2 space-y-0">
               <button
                 className={cn(
-                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3"
+                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
                 )}
               >
                 <span className="text-zinc-500 font-medium">Обзор</span>
@@ -230,7 +230,7 @@ export const Sidebar = () => {
                 }}
                 className={cn(
                   "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
-                  "text-gray-700 hover:bg-[#0000000f]/60"
+                  "text-gray-700 hover:bg-[#0000000f]/60",
                 )}
               >
                 <Search className="h-5 w-5 text-gray-500" />
@@ -240,13 +240,13 @@ export const Sidebar = () => {
               <button
                 onClick={() => {
                   navigate(
-                    `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.ANALYTICS_ROUTE}`
+                    `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.ANALYTICS_ROUTE}`,
                   );
                   setIsMobileOpen(false);
                 }}
                 className={cn(
                   "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
-                  "text-gray-700 hover:bg-[#0000000f]/60"
+                  "text-gray-700 hover:bg-[#0000000f]/60",
                 )}
               >
                 <ChartArea className="h-5 w-5 text-gray-500" />
@@ -261,7 +261,7 @@ export const Sidebar = () => {
                     <button
                       onClick={() => toggleSection(group.id)}
                       className={cn(
-                        "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3"
+                        "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3",
                       )}
                       disabled={!filteredChats.length}
                     >
@@ -288,13 +288,13 @@ export const Sidebar = () => {
                               onClick={() => handleSelectChat(chat.id)}
                               className={cn(
                                 "w-full text-left px-3 py-2 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer hover:bg-[#0000000f]/60",
-                                isActive && "bg-[#0000000f] text-gray-900"
+                                isActive && "bg-[#0000000f] text-gray-900",
                               )}
                             >
                               <div
                                 className={cn(
                                   "h-6 w-6 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0",
-                                  chatColor
+                                  chatColor,
                                 )}
                               >
                                 {chatInitial}
@@ -327,7 +327,7 @@ export const Sidebar = () => {
         <div
           className={cn(
             "py-2 border-t border-gray-200/50 bg-[#0000000f] rounded-2xl m-2",
-            isCollapsed && "bg-[#f9f9f9]"
+            isCollapsed && "bg-[#f9f9f9]",
           )}
         >
           {isCollapsed ? (

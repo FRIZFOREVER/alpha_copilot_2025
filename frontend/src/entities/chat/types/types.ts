@@ -65,7 +65,7 @@ export interface SendMessageStreamDto {
   voice_url?: string;
   file_url?: string;
   tag?: string;
-  mode?: "auto";
+  mode?: "fast";
 }
 
 export interface StreamInitialResponse {
@@ -88,3 +88,17 @@ export interface SendMessageStreamCallbacks {
   onComplete?: () => void;
   onError?: (error: Error) => void;
 }
+
+export interface SearchMessageResult {
+  question_id: number;
+  answer_id: number;
+  question: string;
+  answer: string;
+  question_time: string;
+  answer_time: string;
+  voice_url: string;
+  file_url: string;
+  rating: number | null;
+}
+
+export type SearchMessagesResponse = SearchMessageResult[] | null;
