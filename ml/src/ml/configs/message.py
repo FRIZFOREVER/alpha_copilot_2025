@@ -1,7 +1,7 @@
+from __future__ import annotations
 from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 from typing import List, Dict, Optional
-from __future__ import annotations
 
 
 class Role(str, Enum):

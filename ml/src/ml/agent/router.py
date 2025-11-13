@@ -14,6 +14,6 @@ def workflow_collected(payload: RequestPayload) -> str:
     buffer_string: str = ''
 
     for chunk in stream:
-        buffer_string.join(chunk.message.content)
+        buffer_string += chunk.message.content
 
     return buffer_string
