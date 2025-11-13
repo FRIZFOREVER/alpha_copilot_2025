@@ -31,7 +31,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     # Nodes
     workflow.add_node("Mode Decider", graph_mode_node)
     workflow.add_node("Flash Memories", flash_memories_node) # Not implemented yet
-    workflow.add_node("Thinking react", thinking_planner_node, client=client)
+    workflow.add_node("Thinking planner", thinking_planner_node, client=client)
     workflow.add_node("Research react", research_react_node, client=client)
     workflow.add_node("Fast answer", fast_answer_node) # not passing model cuz forming a final prompt
 
@@ -45,7 +45,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
         _extract_pipeline_mode,
         {
             "fast": "Flash Memories",
-            "thinking": "Thinking react",
+            "thinking": "Thinking planner",
             "research": "Research react"
         })
 
