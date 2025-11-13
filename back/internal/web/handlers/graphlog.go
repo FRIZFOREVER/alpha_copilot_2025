@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"jabki/internal/web/middlewares"
 	"jabki/internal/web/ws"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,11 +11,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func GraphLogHandler(db *sql.DB, logger *logrus.Logger) fiber.Handler {
+func GraphLogHandler(db *sql.DB, secret string, logger *logrus.Logger) fiber.Handler {
 	return websocket.New(func(c *websocket.Conn) {
+		var uuid uuid.UUID
+		var err error
+		if secret != "service" {
+			uuid, err = middlewares.RequestUserUUID(secret, c.Query("jwt"), logger)
+			if err != nil {
+				logger.Error("Error Ошибка при обработки JWT error!!!: %s", err)
+				return
+			}
+		}
+
+		userUUID := uuid.String()
 		// Получаем chat_id из параметров пути
 		chatID := c.Params("chat_id")
-		userUUID := c.Locals("uuid").(uuid.UUID).String()
 
 		// Добавляем соединение в хранилище
 		ws.AddConnection(chatID, userUUID, c)
