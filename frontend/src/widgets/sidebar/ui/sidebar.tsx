@@ -9,7 +9,7 @@ import {
   ChartArea,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
 import { cn } from "@/shared/lib/mergeClass";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ERouteNames } from "@/shared/lib/routeVariables";
@@ -337,6 +337,11 @@ export const Sidebar = () => {
                 className="h-10 w-10 rounded-lg transition-all flex items-center justify-center cursor-pointer"
               >
                 <Avatar className="h-10 w-10 border-2 border-gray-200 bg-gradient-to-br from-red-500 to-pink-500 rounded-full shrink-0">
+                  <AvatarImage
+                    src="/images/user.webp"
+                    alt={displayName}
+                    className="object-cover rounded-full"
+                  />
                   <AvatarFallback className="bg-gradient-to-br from-red-500 to-pink-500 text-white rounded-full text-xs font-semibold">
                     {userInitials}
                   </AvatarFallback>
@@ -349,6 +354,11 @@ export const Sidebar = () => {
               className="w-full flex items-center gap-2 px-2 py-0 rounded-2xl group cursor-pointer"
             >
               <Avatar className="h-10 w-10 border-2 border-gray-200 bg-gradient-to-br from-red-500 to-pink-500 rounded-full shrink-0">
+                <AvatarImage
+                  src="/images/user.webp"
+                  alt={displayName}
+                  className="object-cover rounded-full"
+                />
                 <AvatarFallback className="bg-gradient-to-br from-red-500 to-pink-500 text-white rounded-full text-xs font-semibold">
                   {userInitials}
                 </AvatarFallback>

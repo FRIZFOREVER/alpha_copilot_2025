@@ -90,21 +90,26 @@ const DashboardPage = () => {
         <Sidebar />
         <div
           className={cn(
-            "flex-1 flex overflow-hidden relative transition-all duration-300",
-            !showWelcomeContent && "border-l border-[#0d0d0d0d]",
+            "flex-1 flex overflow-hidden relative transition-all duration-300 bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80",
+            !showWelcomeContent && "border-l border-zinc-100",
             showWelcomeContent && showMinimizedChat && "flex-row"
           )}
         >
           {showWelcomeContent ? (
             <>
-              <div className="flex-1 overflow-hidden min-w-0">
+              <div
+                className={cn(
+                  "flex-1 overflow-hidden min-w-0 border bg-zinc-50 rounded-2xl",
+                  showMinimizedChat && "md:mr-2 "
+                )}
+              >
                 <WelcomeContent />
               </div>
               {showMinimizedChat && (
-                <>
+                <div>
                   <div className="w-px bg-gray-200 shrink-0" />
                   <MinimizedChat isCompact={true} />
-                </>
+                </div>
               )}
               {showMobileChatButton && (
                 <button
