@@ -5,6 +5,7 @@ from ml.configs.message import RequestPayload
 from ollama import ChatResponse
 
 def workflow(payload: RequestPayload) -> Iterator[ChatResponse]:
+    payload.messages.add_or_change_system(payload.system)
     return run_pipeline(payload)
 
 def workflow_collected(payload: RequestPayload) -> str:

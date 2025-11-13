@@ -4,6 +4,7 @@ import os
 from typing import Any, Dict, List, Literal, Union
 
 from ml.api.ollama_calls import EmbeddingModelClient, ReasoningModelClient
+from ml.configs.message import ChatHistory, Message, Role
 import ollama
 from fastapi.encoders import jsonable_encoder
 
@@ -100,15 +101,15 @@ async def _warmup_embedding(client: EmbeddingModelClient) -> None:
 
 
 async def _warmup_reasoner(client: ReasoningModelClient) -> None:
-    messages: List[Dict[str, str]] = [
-                {
-                    "role": "system",
-                    "content": "This is just model warmup call, don't think and reply as fast as possible",
-                },
-                {"role": "user", "content": "Hello, say 'hello' to me as well and nothing else"},
-            ]
+    prompt: ChatHistory = ChatHistory()
+    prompt.add_or_change_system(
+            content="This is just model warmup call, don't think and reply as fast as possible"
+            )
+    prompt.add_user(
+            content="Hello, say 'hello' to me as well and nothing else"
+            )
     try:
-        await asyncio.to_thread(client.call, messages)
+        await asyncio.to_thread(client.call, prompt)
         logger.info("Reasoner warmup successful")
     except Exception as exc:
         logger.exception("Reasoner warmup failed")

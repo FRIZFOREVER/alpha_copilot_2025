@@ -4,7 +4,7 @@ from pydantic import BaseModel
 class VoiceValidationResponse(BaseModel):
     voice_is_valid: bool
 
-def voice_validation_prompt(message: Message) -> tuple[ChatHistory, type[VoiceValidationResponse]]:
+def get_voice_validation_prompt(message: Message) -> tuple[ChatHistory, type[VoiceValidationResponse]]:
     prompt: ChatHistory = ChatHistory()
     prompt.add_or_change_system(
         ("Ты ассистент, который должен определить, имеет ли смысл расшифровка голосового запроса пользователя\n",

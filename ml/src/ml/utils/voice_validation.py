@@ -2,7 +2,7 @@ from typing import Iterator, Optional
 from ml.api.ollama_calls import ReasoningModelClient
 from ollama import ChatResponse
 from pydantic import BaseModel
-from ml.agent.prompts import voice_validation_prompt, VoiceValidationResponse
+from ml.agent.prompts import get_voice_validation_prompt, VoiceValidationResponse
 from ml.configs.message import ChatHistory, Message
 
 class StreamChunk(BaseModel):
@@ -22,7 +22,7 @@ def validate_voice(voice_decoding: Message, reasoning_client: ReasoningModelClie
     prompt: ChatHistory
     schema: type[VoiceValidationResponse]
 
-    prompt, schema = voice_validation_prompt(voice_decoding)
+    prompt, schema = get_voice_validation_prompt(voice_decoding)
     
     return reasoning_client.call_structured(
         prompt,

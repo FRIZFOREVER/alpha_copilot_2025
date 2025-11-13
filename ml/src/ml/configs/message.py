@@ -25,6 +25,7 @@ class ModelMode(str, Enum):
 class ChatHistory(BaseModel):
     messages: List[Message] = Field(default_factory=list)
 
+    # TODO: Implement overrides for add functions when input is Message class instead of content. Validate it on role as well
     def add_or_change_system(self, content: str) -> None:
         self.messages = [msg for msg in self.messages if msg.role != Role.system]
         system_message = Message(role=Role.system, content=content)
@@ -43,7 +44,7 @@ class ChatHistory(BaseModel):
 
     def last_message_as_history(self) -> Message:
         return ChatHistory().add_user(self.messages[-1])
-
+      
     def messages_list(self) -> List[Dict[str, str]]:
         return [{"role": msg.role.value, "content": msg.content} for msg in self.messages]
 
