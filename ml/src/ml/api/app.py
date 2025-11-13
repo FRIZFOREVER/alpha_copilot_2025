@@ -1,14 +1,16 @@
 import asyncio
-from typing import Dict, List
+from typing import Dict, Iterator, List
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 
-from ml.agent.router import workflow_collect, workflow_stream
+from ml.agent.router import workflow, workflow_collected
 from ml.configs.message import RequestPayload
 import ml.api.ollama_setup as ollama_setup
 
 import logging
+
+from ollama import ChatResponse
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=503, detail="Models are still initialising")
 
         try:
-            message_text = workflow_collect(payload.model_dump())
+            message_text: str = workflow_collected(payload)
         except HTTPException:
             raise
         except Exception as exc:
@@ -61,7 +63,7 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=503, detail="Models are still initialising")
 
         def event_generator():
-            stream = workflow_stream(payload.model_dump())
+            stream: Iterator[ChatResponse] = workflow(payload)
             for chunk in stream:
                 yield f"data: {chunk.model_dump_json()}\n\n"
 

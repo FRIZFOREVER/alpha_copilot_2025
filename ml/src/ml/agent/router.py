@@ -1,88 +1,18 @@
-from typing import Any, Dict, Iterator, Optional
+from typing import Iterator
 
 from ml.agent.graph.pipeline import run_pipeline_stream
-from ml.api.ollama_setup import MODEL_CLIENTS
+from ml.configs.message import RequestPayload
 from ollama import ChatResponse
 
-_LAST_RESPONSE: Optional[str] = None
+def workflow(payload: RequestPayload) -> Iterator[ChatResponse]:
+    return run_pipeline_stream(payload)
 
+def workflow_collected(payload: RequestPayload) -> str:
+    stream: Iterator[ChatResponse] = workflow(payload=payload)
 
-def workflow_stream(payload: Dict[str, Any]) -> Iterator[ChatResponse]:
-    """Stream workflow responses chunk by chunk."""
-
-    stream = _prepare_workflow_stream(payload)
-    buffer: list[str] = []
-
-    for chunk in stream:
-        content = _extract_assistant_content(chunk)
-        if content is not None:
-            buffer.append(content)
-        yield chunk
-
-    _record_final_response(buffer)
-
-
-def workflow_collect(payload: Dict[str, Any]) -> str:
-    """Collect workflow response into a single string."""
-
-    stream = _prepare_workflow_stream(payload)
-    buffer: list[str] = []
+    buffer_string: str = ''
 
     for chunk in stream:
-        content = _extract_assistant_content(chunk)
-        if content is not None:
-            buffer.append(content)
+        buffer_string.join(chunk.message.content)
 
-    final_response = _record_final_response(buffer)
-
-    if final_response:
-        return final_response
-
-    return "Извините, не удалось сгенерировать ответ."
-
-
-def _prepare_workflow_stream(payload: Dict[str, Any]) -> Iterator[ChatResponse]:
-    """Prepare the LangGraph workflow stream for the given payload."""
-
-    client: Any = MODEL_CLIENTS["chat"]
-    messages = payload.get("messages", [])
-    return run_pipeline_stream(client=client, messages=messages)
-
-
-def _extract_assistant_content(chunk: ChatResponse) -> Optional[str]:
-    """Extract assistant message content from a chat chunk when present."""
-
-    message = getattr(chunk, "message", None)
-    if message is None:
-        return None
-
-    role = getattr(message, "role", None)
-    if role != "assistant":
-        return None
-
-    content = getattr(message, "content", None)
-    if not isinstance(content, str):
-        return None
-
-    return content
-
-
-def _record_final_response(chunks: list[str]) -> Optional[str]:
-    """Store the final assistant response assembled from streamed chunks."""
-
-    global _LAST_RESPONSE
-
-    if not chunks:
-        _LAST_RESPONSE = None
-        return None
-
-    final_answer = "".join(chunks)
-    _LAST_RESPONSE = final_answer
-    return final_answer
-
-
-def get_last_response() -> Optional[str]:
-    """Return the most recent assembled assistant response, if available."""
-
-    return _LAST_RESPONSE
-
+    return buffer_string
