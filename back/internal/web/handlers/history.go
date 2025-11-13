@@ -42,7 +42,7 @@ func (hh *History) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	messages, err := database.GetHistory(hh.db, chatID, uuid.String(), hh.logger, -1)
+	messages, err := database.GetHistory(hh.db, chatID, uuid.String(), hh.logger, -1, "")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error in database",
