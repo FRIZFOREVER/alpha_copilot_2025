@@ -20,7 +20,7 @@ func TestMessageStream(t *testing.T) {
 	}
 
 	// Получаем канал для чтения StreamMessage
-	messageChan, err := client.StreamRequestToModel(payload)
+	messageChan, _, err := client.StreamRequestToModel(payload)
 	if err != nil {
 		log.Fatal("Failed to start stream:", err)
 	}
