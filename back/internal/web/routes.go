@@ -112,4 +112,7 @@ func InitPrivateRoutes(
 	})
 
 	server.Get("/graph_log/:chat_id", handlers.GraphLogHandler(db, logger))
+
+	search := handlers.NewSearch(db, logger)
+	server.Get("/search", search.Handler)
 }
