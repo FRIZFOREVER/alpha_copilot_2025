@@ -113,6 +113,7 @@ func (mh *Message) Handler(c *fiber.Ctx) error {
 		answer.Message,
 		questionTime,
 		answerTime,
+		"",
 		messageIn.VoiceURL,
 		"",
 		mh.logger,
