@@ -20,6 +20,7 @@ func GetHistory(
 	uuid string,
 	logger *logrus.Logger,
 	historyLen int,
+	tag string,
 ) (
 	messages []Message,
 	err error,
@@ -34,7 +35,7 @@ func GetHistory(
 		}
 		defer rows.Close()
 	} else {
-		rows, err = db.Query(historyWithLimitQuery, uuid, historyLen)
+		rows, err = db.Query(historyWithLimitQuery, uuid, historyLen, tag)
 		if err != nil {
 			logger.WithError(err).Error("Failed to query history")
 			return nil, err
@@ -54,6 +55,7 @@ func GetHistory(
 			&msg.VoiceURL,
 			&msg.FileURL,
 			&msg.Rating,
+			&msg.QuestionTag,
 		)
 		if err != nil {
 			logger.WithError(err).Error("Failed to scan row")
@@ -74,6 +76,7 @@ type Message struct {
 	QuestionID   int       `json:"question_id"`
 	AnswerID     int       `json:"answer_id"`
 	Question     string    `json:"question"`
+	QuestionTag  *string   `json:"tag"`
 	Answer       string    `json:"answer"`
 	QuestionTime time.Time `json:"question_time"`
 	AnswerTime   time.Time `json:"answer_time"`
