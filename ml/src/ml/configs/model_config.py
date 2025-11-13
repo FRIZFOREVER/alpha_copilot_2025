@@ -1,5 +1,6 @@
-from typing import Union
-from pydantic import BaseModel, Field
+import os
+from typing import Literal, Union
+from pydantic import BaseModel, Field, model_validator
 
 
 _DEFAULT_BASE_URL = "http://ollama:11434/v1"
@@ -8,6 +9,9 @@ _MODEL_ENV_VARS = {
     "chat": "OLLAMA_REASONING_MODEL",
     "embeddings": "OLLAMA_EMBEDDING_MODEL",
 }
+
+def _get_model_name_from_env(kind: Literal["chat", "embeddings"]) -> str:
+    return os.getenv(_MODEL_ENV_VARS[kind])
 
 class ClientSettings(BaseModel):
 
@@ -57,6 +61,11 @@ class ReasoningClientSettings(ClientSettings):
         description="Contains fallback params for options"
     )
 
+    @model_validator(mode="after")
+    def define_chat_model_name(self):
+        if not self.model:
+            self.model = _get_model_name_from_env("chat")
+
 class EmbeddingModelOptions(BaseModel):
 
     num_ctx: int = Field(
@@ -70,3 +79,8 @@ class EmbeddingClientSettings(ClientSettings):
         default=EmbeddingModelOptions(),
         description="Contains fallback params for options"
     )
+
+    @model_validator(mode="after")
+    def define_chat_model_name(self):
+        if not self.model:
+            self.model = _get_model_name_from_env("embeddings")

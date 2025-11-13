@@ -1,18 +1,11 @@
 import asyncio
 import logging
 import os
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Literal, Union
 
+from ml.api.ollama_calls import EmbeddingModelClient, ReasoningModelClient
 import ollama
 from fastapi.encoders import jsonable_encoder
-
-from ml.api.ollama_calls import (
-    ModelClient,
-    _EmbeddingModelClient,
-    _ReasoningModelClient,
-    make_client,
-)
-from ml.configs.model_config import ModelSettings
 
 
 logger = logging.getLogger(__name__)
@@ -21,8 +14,6 @@ _MODEL_ENV_VARS = [
     "OLLAMA_REASONING_MODEL",
     "OLLAMA_EMBEDDING_MODEL",
 ]
-
-MODEL_CLIENTS: Dict[str, Any] = {}
 
 async def get_models_from_env() -> List[str]:
     """Read .env to get the configured model identifiers."""
@@ -37,8 +28,6 @@ async def get_models_from_env() -> List[str]:
 async def download_missing_models(
     available_models: List[str], requested_models: List[str]
 ) -> None:
-    """Download any models that are requested but not yet available."""
-
     to_download = [model for model in requested_models if model not in available_models]
     if to_download:
         logger.info("Downloading missing models: %s", ", ".join(to_download))
@@ -47,27 +36,14 @@ async def download_missing_models(
     logger.info("All required models are downloaded")
 
 
-async def init_models() -> Dict[str, Any]:
-    """Prepare LangGraph clients for every supported mode."""
-
-    global MODEL_CLIENTS
-    MODEL_CLIENTS = {
-        "chat": _create_reasoning_client(),
-        "embeddings": _create_embeddings_client(),
+async def init_models() -> Dict[str, Union[ReasoningModelClient, EmbeddingModelClient]]:
+    logger.info("Initializing model clients for warmup")
+    return {
+        "chat": ReasoningModelClient(),
+        "embeddings": EmbeddingModelClient()
     }
-    return MODEL_CLIENTS
-
-
-def _create_reasoning_client() -> Any:
-    return make_client(ModelSettings(api_mode="chat", keep_alive=-1))
-
-
-def _create_embeddings_client() -> Any:
-    return make_client(ModelSettings(api_mode="embeddings", keep_alive=-1))
 
 async def fetch_available_models() -> List[str]:
-    """Return Ollama's reported model names and log what is available."""
-
     response = ollama.list()
     json_models = jsonable_encoder(response)
     entries = json_models.get("models", []) or []
@@ -82,8 +58,6 @@ async def fetch_available_models() -> List[str]:
     return model_names
 
 async def fetch_running_models() -> List[str]:
-    """Return the names of currently running Ollama models."""
-
     response = ollama.ps()
     json_models = jsonable_encoder(response)
     entries = (
@@ -106,14 +80,17 @@ async def fetch_running_models() -> List[str]:
     return running
 
 
-async def warmup_models(clients: Dict[Literal["embeddings", "chat"], ModelClient]) -> None:
+async def warmup_models(
+        clients: Dict[Literal["embeddings", "chat"], 
+                      Union[ReasoningModelClient, EmbeddingModelClient]]
+                      ) -> None:
     logger.info("Started embedding client warmup")
     await _warmup_embedding(clients["embeddings"])
     logger.info("Started reasoner client warmup")
     await _warmup_reasoner(clients["chat"])
 
 
-async def _warmup_embedding(client: _EmbeddingModelClient) -> None:
+async def _warmup_embedding(client: EmbeddingModelClient) -> None:
     try:
         await asyncio.to_thread(client.call, "Test")
         logger.info("Embedding warmup successful")
@@ -122,7 +99,7 @@ async def _warmup_embedding(client: _EmbeddingModelClient) -> None:
         raise RuntimeError("Embedding client warmup failed") from exc
 
 
-async def _warmup_reasoner(client: _ReasoningModelClient) -> None:
+async def _warmup_reasoner(client: ReasoningModelClient) -> None:
     messages: List[Dict[str, str]] = [
                 {
                     "role": "system",

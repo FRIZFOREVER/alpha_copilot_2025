@@ -1,12 +1,13 @@
 # from ml.utils.formats import _rstrip_slash
-import json
-from typing import Any, Dict, Iterator, List, Type, Union
+from typing import Iterator, List, TypeVar
 
 from ollama import ChatResponse, chat, embed
 from pydantic import BaseModel
 
 from ml.configs.model_config import EmbeddingClientSettings, ReasoningClientSettings
 from ml.configs.message import ChatHistory
+
+T = TypeVar("T", bound=BaseModel)
 
 class ReasoningModelClient:
     def __init__(self, settings: ReasoningClientSettings):
@@ -32,74 +33,35 @@ class ReasoningModelClient:
     
     def call_structured(self, 
                         messages: ChatHistory, 
-                        output_schema: Dict[str, Any],
+                        output_schema: type[T],
                         **kwargs
-                        ) -> Union[Dict[str, Any], BaseModel]:
+                        ) -> T:
         
         response: ChatResponse = chat(
             model=self.settings.model,
             messages=messages,
-            format=output_schema, # pass via BaseModel.model_json_schema()
+            format=output_schema.model_json_schema(),
             options=self.settings.options | kwargs,
             keep_alive=self.settings.keep_alive,
         )
         
-        content = response.message.content
-        if isinstance(content, str):
-            try:
-                parsed = json.loads(content)
-            except json.JSONDecodeError:
-                # If JSON parsing fails, try to extract JSON from the string
-                # Some models might return text with JSON embedded
-                parsed = {"error": "Invalid JSON response", "raw": content}
-        else:
-            parsed = content
+        raw = response.message.content
 
-        # If output_schema is a Pydantic model class, return parsed model instance
-        if isinstance(output_schema, type) and issubclass(output_schema, BaseModel):
-            try:
-                return output_schema.model_validate(parsed)
-            except Exception as e:
-                raise ValueError(f"Failed to validate structured output: {e}") from e
+        try:
+            return output_schema.model_validate_json(raw)
+        except Exception as exc:
+            raise ValueError("Structured response did not match the expected schema") from exc
 
-        return parsed
+class EmbeddingModelClient(EmbeddingClientSettings):
 
-class _EmbeddingModelClient(ModelClient):
-    """Batch-friendly helper for producing embeddings via `ollama.embed`."""
+    def __init__(self, settings: EmbeddingClientSettings):
+        self.settings: EmbeddingClientSettings = settings
 
-    def call(self, content: str) -> List[float]:
+    def call(self, content: str, **kwargs) -> List[float]:
         response = embed(
             model=self.settings.model,
             input=content,
+            options=self.settings.options.model_dump() | kwargs,
             keep_alive=self.settings.keep_alive,
         )
         return response["embeddings"][0]
-
-    def call_batch(self, inputs: List[str]) -> List[List[float]]:
-        if not isinstance(inputs, list):
-            raise TypeError("Embedding client expects input text as a list of strings.")
-
-        batch_size = max(1, self.settings.embed_batch_size)
-        embeddings: List[List[float]] = []
-
-        for idx in range(0, len(inputs), batch_size):
-            batch_inputs = inputs[idx : idx + batch_size]
-            response = embed(
-                model=self.settings.model,
-                input=batch_inputs,
-                keep_alive=self.settings.keep_alive,
-            )
-            embeddings.extend(response["embeddings"])
-
-        return embeddings
-
-
-_CLIENTS = {
-    "chat": _ReasoningModelClient,
-    "embeddings": _EmbeddingModelClient,
-}
-
-
-# Function for export. Takes ModelSettings.api_mode to determinate model
-def make_client(settings: ModelSettings) -> Union[_ReasoningModelClient, _EmbeddingModelClient]:
-    return _CLIENTS[settings.api_mode](settings)
