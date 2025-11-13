@@ -1,4 +1,5 @@
-from pydantic import BaseModel, ConfigDict, Field
+from __future__ import annotations
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 from typing import List, Dict, Optional
 
@@ -10,7 +11,7 @@ class Role(str, Enum):
 
 
 class Message(BaseModel):
-    id: int
+    id: Optional[int] = None
     role: Role
     content: str
 
@@ -22,46 +23,43 @@ class ModelMode(str, Enum):
     Auto = "auto"
 
 
-class RequestPayload(BaseModel):
-    messages: List[Message]
-    chat_id: Optional[str] = None
-    tag: Optional[str] = None
-    mode: Optional[ModelMode] = None
-    system: Optional[str] = None
-    file_url: Optional[str] = None
-    is_voice: Optional[bool] = None
-
-
 class ChatHistory(BaseModel):
     messages: List[Message] = Field(default_factory=list)
 
-    def add_system(self, content: str) -> Message:
-        msg = Message(role=Role.system, content=content)
-        self.messages.append(msg)
-        return msg
+    # TODO: Implement overrides for add functions when input is Message class instead of content. Validate it on role as well
+    def add_or_change_system(self, content: str) -> None:
+        self.messages = [msg for msg in self.messages if msg.role != Role.system]
+        system_message = Message(role=Role.system, content=content)
+        self.messages.insert(0, system_message)
+        return
 
-    def add_user(self, content: str) -> Message:
+    def add_user(self, content: str) -> None:
         msg = Message(role=Role.user, content=content)
         self.messages.append(msg)
-        return msg
+        return
 
-    def add_assistant(self, content: str) -> Message:
+    def add_assistant(self, content: str) -> None:
         msg = Message(role=Role.assistant, content=content)
         self.messages.append(msg)
-        return msg
+        return
 
-    # Utilities
-    def last(self, n: int = 1) -> List[Message]:
-        return self.messages[-n:] if n > 0 else []
+    # def last_message_as_history(self) -> ChatHistory:
+    #     return ChatHistory().add_user(self.messages[-1])
+      
+    def messages_list(self) -> List[Dict[str, str]]:
+        return [{"role": msg.role.value, "content": msg.content} for msg in self.messages]
 
-    def messages_list(self, include_empty: bool = False) -> List[Dict[str, str]]:
-        """
-        Convert to Ollama's chat format:
-        [{"role": "system"|"user"|"assistant", "content": "..."}]
-        """
-        out: List[Dict[str, str]] = []
-        for m in self.messages:
-            if not include_empty and not (m.content and m.content.strip()):
-                continue
-            out.append({"role": m.role.value, "content": m.content or ""})
-        return out
+
+class RequestPayload(BaseModel):
+    messages: ChatHistory
+    chat_id: str
+    tag: str
+    mode: ModelMode
+    system: str
+    file_url: str
+    is_voice: bool
+
+    @field_validator("messages", mode="before")
+    @classmethod
+    def normalize_messages(cls, message_list):
+        return {"messages": message_list}

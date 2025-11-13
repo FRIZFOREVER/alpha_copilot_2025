@@ -44,6 +44,7 @@ class WebSearchTool(BaseTool):
     
     @property
     def schema(self) -> Dict[str, Any]:
+        # TODO: Поменять на Pydantic (наврное)
         return {
             "type": "object",
             "properties": {

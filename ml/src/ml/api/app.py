@@ -1,39 +1,37 @@
 import asyncio
-from typing import Any, Dict
+from typing import Dict, Iterator, List
 
 from fastapi import FastAPI, HTTPException
-from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
-import ollama
 
-from ml.agent.router import init_models, workflow_collect, workflow_stream
+from ml.agent.router import workflow, workflow_collected
 from ml.configs.message import RequestPayload
-from ml.utils.fetch_model import delete_models, fetch_models, prune_unconfigured_models
-from ml.utils.warmup import warmup_models
+import ml.api.ollama_setup as ollama_setup
 
+import logging
+
+from ollama import ChatResponse
+
+logger = logging.getLogger(__name__)
 
 async def lifespan(app: FastAPI):
-    app.state.models = None
     app.state.models_ready = asyncio.Event()
-    app.state.model_fetch_result = {}
-    app.state.model_prune_result = {}
-    app.state.model_warmup_result = {}
-    app.state.model_cleanup_result = {}
 
     async def _init():
-        app.state.model_fetch_result = await fetch_models()
-        app.state.model_prune_result = await prune_unconfigured_models()
-        models = await init_models()
-        app.state.model_warmup_result = await warmup_models(list(models.values()))
-        app.state.models = models
+        # checking and download missing models
+        available_models: List[str] = await ollama_setup.fetch_available_models()
+        requested_models: List[str] = await ollama_setup.get_models_from_env()
+        await ollama_setup.download_missing_models(available_models, requested_models)
+
+        # Init and warmup
+        models = await ollama_setup.init_models()
+        await ollama_setup.warmup_models(models)
         app.state.models_ready.set()
+        logger.info("All models successfully initialized, ready to accept connections")
 
     app.state.models_task = asyncio.create_task(_init())
 
     yield
-
-    app.state.model_cleanup_result = await delete_models()
-
 
 
 def create_app() -> FastAPI:
@@ -42,13 +40,13 @@ def create_app() -> FastAPI:
 
     @app.post("/message")
     async def message(payload: RequestPayload) -> Dict[str, str]:
-        models_ready = app.state.models_ready
 
-        if not models_ready.is_set():
+        # Check if models are initialized
+        if not app.state.models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
 
         try:
-            message_text = workflow_collect(payload.model_dump())
+            message_text: str = workflow_collected(payload)
         except HTTPException:
             raise
         except Exception as exc:
@@ -60,37 +58,30 @@ def create_app() -> FastAPI:
 
     @app.post("/message_stream")
     async def message_stream(payload: RequestPayload) -> StreamingResponse:
-        models_ready = app.state.models_ready
 
-        if not models_ready.is_set():
+        # Check if models are initialized
+        if not app.state.models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
 
         def event_generator():
-            stream = workflow_stream(payload.model_dump())
+            stream: Iterator[ChatResponse] = workflow(payload)
             for chunk in stream:
                 yield f"data: {chunk.model_dump_json()}\n\n"
 
         return StreamingResponse(event_generator(), media_type="text/event-stream")
-
-    @app.post("/mock")
-    def mock():
-        return {"message": "No, you"}
 
     @app.get("/ping")
     def ping() -> dict[str, str]:
         return {"message": "pong"}
 
     @app.get("/ollama")
-    async def ollama_models() -> Dict[str, Any]:
-        try:
-            models = await asyncio.to_thread(ollama.list)
-        except Exception as exc:
-            raise HTTPException(
-                status_code=503,
-                detail="Failed to fetch ollama models",
-            ) from exc
-
-        return jsonable_encoder(models)
+    async def ollama_models() -> Dict[str, List[str]]:
+        available_models = await ollama_setup.fetch_available_models()
+        running_models = await ollama_setup.fetch_running_models()
+        return {
+            "available_models": available_models or [],
+            "running_models": running_models or [],
+        }
 
     @app.get("/health")
     def healthcheck() -> dict[str, str]:
