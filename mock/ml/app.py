@@ -72,7 +72,7 @@ def mock_workflow(payload: Dict[str, Any], streaming: bool = True):
             eval_duration=int((i + 1) * 80)
         )
         yield chunk
-        time.sleep(0.1)  # Задержка 0.1 секунды между символами
+        time.sleep(0.02)  # Задержка 0.02 секунды между символами
     
     # Финальный чанк с полным текстом (или можно оставить пустым)
     final_chunk = StreamChunk(
@@ -141,7 +141,7 @@ async def generate_message(request: Request):
     logger.info(f"Handling /generate request with payload: {payload}")
     
     # Имитация обработки
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(0.1)
     
     return {
         "model": payload.get("model", "qwen3:0.6b"),
