@@ -1,4 +1,4 @@
-"""Prompt builder for the reasoning phase of the research agent."""
+"""Построитель подсказки для этапа рассуждений исследовательского агента."""
 
 from typing import Optional, Sequence
 
@@ -9,9 +9,9 @@ from ml.configs.message import ChatHistory, Role
 def _format_conversation(conversation: ChatHistory) -> str:
     lines: list[str] = []
     role_labels = {
-        Role.system: "System",
-        Role.user: "User",
-        Role.assistant: "Assistant",
+        Role.system: "Система",
+        Role.user: "Пользователь",
+        Role.assistant: "Ассистент",
     }
     for message in conversation.messages:
         role_label = role_labels.get(message.role, message.role.value)
@@ -24,17 +24,17 @@ def _format_turn_history(turn_history: Sequence[ResearchTurn]) -> str:
     for index, turn in enumerate(turn_history, start=1):
         if turn.reasoning_summary:
             lines.append(
-                f"Turn {index} reasoning: {turn.reasoning_summary}"
+                f"Ход {index} — рассуждение: {turn.reasoning_summary}"
             )
         if turn.request:
             request = turn.request
             lines.append(
-                f"Turn {index} tool request: {request.tool_name} -> {request.input_text}"
+                f"Ход {index} — запрос к инструменту: {request.tool_name} -> {request.input_text}"
             )
         if turn.observation:
             observation = turn.observation
             lines.append(
-                f"Turn {index} observation: {observation.content}"
+                f"Ход {index} — наблюдение: {observation.content}"
             )
     return "\n".join(lines)
 
@@ -44,14 +44,14 @@ def get_research_reason_prompt(
     turn_history: Sequence[ResearchTurn],
     latest_reasoning: Optional[str] = None,
 ) -> ChatHistory:
-    """Build a reasoning prompt with prior turns and optional scratchpad."""
+    """Создать подсказку для рассуждений с учётом предыдущих ходов и черновика."""
 
     prompt = ChatHistory()
     prompt.add_or_change_system(
         (
-            "You are an expert research strategist coordinating a multi-step investigation.\n"
-            "Review the conversation, reference the completed research turns, and decide on the next reasoning step.\n"
-            "Explain your thought process and cite which prior turn informed each decision."
+            "Вы — эксперт по исследовательским стратегиям, координирующий многошаговое расследование.\n"
+            "Изучите диалог, обратитесь к завершённым исследовательским шагам и определите следующий этап рассуждений.\n"
+            "Поясните ход мыслей и укажите, какой предыдущий ход повлиял на каждое решение."
         )
     )
 
@@ -60,22 +60,22 @@ def get_research_reason_prompt(
 
     user_sections: list[str] = []
     if conversation_block:
-        user_sections.append("Conversation context:\n" + conversation_block)
+        user_sections.append("Контекст беседы:\n" + conversation_block)
     else:
-        user_sections.append("Conversation context:\nNo prior dialogue available.")
+        user_sections.append("Контекст беседы:\nПредыдущий диалог отсутствует.")
 
     if history_block:
-        user_sections.append("Completed research turns:\n" + history_block)
+        user_sections.append("Завершённые исследовательские ходы:\n" + history_block)
     else:
-        user_sections.append("Completed research turns:\nNone. This will be the first reasoning step.")
+        user_sections.append("Завершённые исследовательские ходы:\nНет. Это будет первый этап рассуждений.")
 
     if latest_reasoning:
-        user_sections.append("Most recent scratchpad thoughts:\n" + latest_reasoning)
+        user_sections.append("Последние заметки из черновика:\n" + latest_reasoning)
 
     user_sections.append(
         (
-            "Provide the next reasoning summary.\n"
-            "Focus on the key question, reference useful prior evidence, and recommend whether to call a tool or synthesize findings."
+            "Сформулируйте следующую сводку рассуждений.\n"
+            "Сосредоточьтесь на ключевом вопросе, сослитесь на полезные прошлые данные и предложите, стоит ли вызвать инструмент или перейти к синтезу выводов."
         )
     )
 
