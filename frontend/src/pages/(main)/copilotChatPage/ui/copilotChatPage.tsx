@@ -10,9 +10,6 @@ const CopilotChatPage = () => {
     suggestions,
   } = useChatMessages();
 
-  // Подключение к graph_log WebSocket происходит на уровне DashboardPage
-  // Это обеспечивает единое подключение для всех компонентов чата
-
   return (
     <Chat
       messages={messages}

@@ -29,6 +29,7 @@ export const useGetHistoryQuery = (chatId: number | undefined) => {
           answerId: historyItem.answer_id,
           rating: historyItem.rating,
           file_url: historyItem.file_url,
+          tag: historyItem.tag,
         });
 
         if (
@@ -43,6 +44,7 @@ export const useGetHistoryQuery = (chatId: number | undefined) => {
             timestamp: historyItem.answer_time,
             answerId: historyItem.answer_id,
             rating: historyItem.rating,
+            tag: !historyItem.tag ? "general" : historyItem.tag,
           });
         }
       });

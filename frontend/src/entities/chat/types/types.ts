@@ -24,6 +24,7 @@ export interface HistoryMessage {
   voice_url: string;
   file_url?: string;
   rating: number | null;
+  tag: string;
 }
 
 export type GetHistoryResponse = HistoryMessage[];
@@ -80,6 +81,7 @@ export interface StreamChunk {
   thinking: string;
   time: string;
   done: boolean;
+  tag?: string;
 }
 
 export interface SendMessageStreamCallbacks {
