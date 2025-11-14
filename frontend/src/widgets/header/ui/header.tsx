@@ -69,7 +69,7 @@ export const Header = ({ className }: HeaderProps) => {
             <button
               onClick={handleProfileClick}
               className={cn(
-                "flex items-center gap-2 px-3 py-1.5 m rounded-xl cursor-pointer transition-all duration-200",
+                "flex items-center gap-2 px-3 py-1.5 m rounded-3xl cursor-pointer transition-all duration-200",
                 "md:bg-white/95 md:backdrop-blur-sm md:shadow-sm md:hover:shadow",
                 "md:border border-white/50",
                 "md:hover:bg-white",

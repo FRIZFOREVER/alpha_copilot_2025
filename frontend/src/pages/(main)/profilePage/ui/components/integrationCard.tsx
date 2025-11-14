@@ -72,7 +72,7 @@ export const IntegrationCard = ({
 
           <button
             className={cn(
-              "self-start px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+              "self-start px-5 py-2.5 rounded-3xl text-sm font-medium transition-all duration-200",
               connected
                 ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 : "bg-red-600 text-white hover:bg-red-700",

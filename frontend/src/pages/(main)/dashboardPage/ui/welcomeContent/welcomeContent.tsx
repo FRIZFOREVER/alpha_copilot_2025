@@ -108,13 +108,13 @@ export const WelcomeContent = () => {
 
   if (isOnboardingCompleted) {
     return (
-      <div className="h-full overflow-y-auto">
+      <div className="h-full overflow-y-auto scrollbar-hide">
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 md:py-6">
           <div className="mb-8 md:mb-16">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
               Бизнес-контекст
             </h2>
-            <div className="p-4 md:p-6 lg:p-10 rounded-2xl md:rounded-3xl bg-white">
+            <div className="p-4 md:p-6 lg:p-10 rounded-2xl md:rounded-3xl bg-gradient-to-b from-gray-200 to-white">
               <OnboardingCompleted />
             </div>
           </div>
@@ -146,7 +146,7 @@ export const WelcomeContent = () => {
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
             Бизнес-контекст
           </h2>
-          <div className="p-4 md:p-6 lg:p-10 rounded-2xl md:rounded-4xl bg-white">
+          <div className="p-4 md:p-6 lg:p-10 rounded-2xl md:rounded-4xl bg-gradient-to-b from-gray-200 to-white">
             <Stepper
               currentStep={currentStep}
               totalSteps={TOTAL_STEPS}

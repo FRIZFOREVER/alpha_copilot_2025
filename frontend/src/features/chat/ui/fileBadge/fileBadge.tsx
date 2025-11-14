@@ -9,7 +9,7 @@ import {
 
 export interface FileBadgeProps {
   file: AttachedFile;
-  onRemove: (fileId: string) => void;
+  onRemove: () => void;
   disabled?: boolean;
   className?: string;
 }
@@ -27,7 +27,7 @@ export const FileBadge = ({
   const handleRemove = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     if (!disabled) {
-      onRemove(file.id);
+      onRemove();
     }
   };
 

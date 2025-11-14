@@ -52,8 +52,8 @@ const ProfilePage = () => {
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80">
       <Header />
-      <div className="overflow-hidden">
-        <div className="flex-1 overflow-y-auto bg-zinc-100 rounded-t-2xl h-full">
+      <div className="overflow-hidden md:px-6 md:pb-6">
+        <div className="flex-1 overflow-y-auto scrollbar-hide bg-zinc-100 rounded-t-3xl md:rounded-4xl h-full">
           <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
             <div className="relative rounded-4xl overflow-hidden border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-white transition-all duration-300">
               <div className="relative z-10 p-6 md:p-8 lg:p-10">
@@ -112,13 +112,13 @@ const ProfilePage = () => {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                      <Button className="flex-1 cursor-pointer h-11 rounded-xl bg-gradient-to-r from-red-500 to-pink-600 text-white text-sm font-medium shadow-md hover:shadow-lg hover:from-red-600 hover:to-pink-700 transition-all">
+                      <Button className="flex-1 cursor-pointer h-11 rounded-3xl bg-gradient-to-r from-red-500 to-pink-600 text-white text-sm font-medium shadow-md hover:shadow-lg hover:from-red-600 hover:to-pink-700 transition-all">
                         <Settings className="h-4 w-4 mr-2" />
                         Настройки
                       </Button>
                       <Button
                         variant="outline"
-                        className="flex-1 cursor-pointer h-11 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 text-gray-700 text-sm font-medium transition-all"
+                        className="flex-1 cursor-pointer h-11 rounded-3xl bg-white hover:bg-gray-50 hover:border-gray-300 text-gray-700 text-sm font-medium transition-all"
                         onClick={handleLogout}
                       >
                         <LogOut className="h-4 w-4 mr-2" />
@@ -166,7 +166,7 @@ const ProfilePage = () => {
                     {mockData.recommendations.map((rec, i) => (
                       <div
                         key={i}
-                        className="group relative overflow-hidden rounded-2xl md:rounded-3xl border-2 border-gray-200/50 bg-white/80 backdrop-blur-sm shadow-md hover:shadow-xl hover:border-red-200 transition-all duration-300"
+                        className="group relative overflow-hidden rounded-2xl md:rounded-3xl border-2 border-gray-200/50 bg-gradient-to-br from-gray-50 to-white backdrop-blur-sm shadow-md hover:shadow-xl hover:border-red-200 transition-all duration-300"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 via-pink-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -186,7 +186,7 @@ const ProfilePage = () => {
                             <div className="flex-shrink-0">
                               <Button
                                 size="sm"
-                                className="h-10 md:h-11 cursor-pointer px-5 md:px-6 text-sm font-medium bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
+                                className="h-10 md:h-11 cursor-pointer px-5 md:px-6 text-sm font-medium bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-3xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
                               >
                                 {rec.action}
                               </Button>
