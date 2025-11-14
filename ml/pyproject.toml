@@ -17,6 +17,8 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "pyyaml>=6.0.3",
     "uvicorn>=0.38.0",
+    "rope>=1.14.0",
+    "pylsp-rope>=0.1.17",
 ]
 
 [tool.uv.build-backend]
