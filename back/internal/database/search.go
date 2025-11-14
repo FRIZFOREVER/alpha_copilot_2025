@@ -24,7 +24,11 @@ func GetSerchedMessages(
 		logger.WithError(err).Error("Failed to query search")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error("Ошибка закрытия строк: ", err)
+		}
+	}()
 
 	for rows.Next() {
 		var msg Message

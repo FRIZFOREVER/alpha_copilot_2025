@@ -162,7 +162,9 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 			sh.logger.Errorf("Error writing metadata: %v", err)
 			return
 		}
-		w.Flush()
+		if err := w.Flush(); err != nil {
+			sh.logger.Errorf("Error flush data: %v", err)
+		}
 
 		var builder strings.Builder
 		builder.Grow(1024)
@@ -189,7 +191,9 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 					sh.logger.Errorf("Error writing chunk: %v", err)
 					break
 				}
-				w.Flush()
+				if err := w.Flush(); err != nil {
+					sh.logger.Errorf("Error flush data: %v", err)
+				}
 
 				if message.Done {
 					// Отправляем финальный чанк с флагом Done
@@ -203,8 +207,13 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 					if err != nil {
 						sh.logger.Errorf("Error encoding final chunk: %v", err)
 					} else {
-						fmt.Fprintf(w, "data: %s\n\n", finalJSON)
-						w.Flush()
+						_, err = fmt.Fprintf(w, "data: %s\n\n", finalJSON)
+						if err != nil {
+							sh.logger.Error("Ошибка записи по формату: ", err)
+						}
+						if err := w.Flush(); err != nil {
+							sh.logger.Errorf("Error flush data: %v", err)
+						}
 					}
 					break
 				}

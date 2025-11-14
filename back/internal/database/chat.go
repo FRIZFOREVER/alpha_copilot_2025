@@ -76,7 +76,11 @@ func GetChats(
 		}).Error("database error during fetching chats")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error("Ошибка закрытия строк: ", err)
+		}
+	}()
 
 	for rows.Next() {
 		var chat Chat

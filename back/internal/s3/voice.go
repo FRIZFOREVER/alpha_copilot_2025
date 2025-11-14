@@ -10,12 +10,12 @@ import (
 )
 
 var (
-	ErrFilenameIsRequired           = errors.New("Filename is required")
-	ErrFailedToCheckBucketExistence = errors.New("Failed to check bucket existence")
-	ErrBucketNotFound               = errors.New("Bucket not found")
-	ErrFileNotFound                 = errors.New("File not found")
-	ErrFailedToGetFileInfo          = errors.New("Failed to get file info")
-	ErrFileIsNotAnAudioMpegFile     = errors.New("File is not an audio/mpeg file")
+	ErrFilenameIsRequired           = errors.New("filename is required")
+	ErrFailedToCheckBucketExistence = errors.New("failed to check bucket existence")
+	ErrBucketNotFound               = errors.New("bucket not found")
+	ErrFileNotFound                 = errors.New("file not found")
+	ErrFailedToGetFileInfo          = errors.New("failed to get file info")
+	ErrFileIsNotAnAudioMpegFile     = errors.New("file is not an audio/mpeg file")
 )
 
 func UploadMP3ToMinIO(s3 *minio.Client, bucketName, uuid string, mp3Data []byte) (string, error) {

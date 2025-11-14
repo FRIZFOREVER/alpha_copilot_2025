@@ -13,9 +13,15 @@ func main() {
 	settings := settings.InitSettings(logger)
 	app, err := internal.InitApp(&settings, logger)
 	if err != nil {
-		app.Stop()
+		if err := app.Stop(); err != nil {
+			logger.Error("Ошибка при остановке приложения")
+		}
 		logger.Fatal("Ошибка инициализации проекта: ", err)
 	}
-	defer app.Stop()
+	defer func() {
+		if err := app.Stop(); err != nil {
+			logger.Error("Ошибка при остановке приложения")
+		}
+	}()
 	logger.Fatal(app.Start())
 }
