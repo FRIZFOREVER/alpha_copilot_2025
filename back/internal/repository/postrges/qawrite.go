@@ -1,0 +1,189 @@
+package postgres
+
+import (
+	"database/sql"
+	_ "embed"
+	"time"
+
+	"github.com/sirupsen/logrus"
+)
+
+//go:embed queries/question.sql
+var questionQuery string
+
+//go:embed queries/answer.sql
+var answerQuery string
+
+//go:embed queries/update_answer.sql
+var updateAnswerQuery string
+
+//go:embed queries/update_question_tag.sql
+var updateQuestionTag string
+
+func WriteMessage(
+	db *sql.DB,
+	chatID int,
+	question, answer string,
+	questionTime, answerTime time.Time,
+	tag string,
+	voiceURL string,
+	fileURL string,
+	logger *logrus.Logger,
+) (
+	questionID int,
+	answerID int,
+	err error,
+) {
+	tx, err := db.Begin()
+	if err != nil {
+		logger.WithError(err).Error("Failed to begin transaction")
+		return 0, 0, err
+	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			if err := tx.Rollback(); err != nil {
+				logger.Error("Ошибка отката транзакции: ", err)
+			}
+			panic(p)
+		} else if err != nil {
+			if err := tx.Rollback(); err != nil {
+				logger.Error("Ошибка отката транзакции: ", err)
+			}
+		} else {
+			err = tx.Commit()
+			if err != nil {
+				logger.WithError(err).Error("Failed to commit transaction")
+			}
+		}
+	}()
+
+	err = tx.QueryRow(answerQuery, answerTime, answer, chatID).Scan(&answerID)
+	if err != nil {
+		logger.WithError(err).Error("Failed to insert answer")
+		return 0, 0, err
+	}
+	logger.WithFields(logrus.Fields{
+		"answer_id": answerID,
+		"chat_id":   chatID,
+	}).Info("Answer inserted successfully")
+
+	err = tx.QueryRow(questionQuery, questionTime, question, chatID, answerID, voiceURL, fileURL, tag).Scan(&questionID)
+	if err != nil {
+		logger.WithError(err).Error("Failed to insert question")
+		return 0, 0, err
+	}
+	logger.WithFields(logrus.Fields{
+		"question_id": questionID,
+		"chat_id":     chatID,
+	}).Info("Question inserted successfully")
+
+	return questionID, answerID, nil
+}
+
+func UpdateAnswer(
+	db *sql.DB,
+	answerID int,
+	answer string,
+	logger *logrus.Logger,
+) (rowsAffected int64, err error) {
+	result, err := db.Exec(updateAnswerQuery, answer, time.Now().UTC(), answerID)
+	if err != nil {
+		logger.WithError(err).WithFields(logrus.Fields{
+			"answer_id": answerID,
+		}).Error("Failed to update answer")
+		return 0, err
+	}
+
+	rowsAffected, err = result.RowsAffected()
+	if err != nil {
+		logger.WithError(err).Error("Failed to get rows affected")
+		return 0, err
+	}
+
+	logger.WithFields(logrus.Fields{
+		"answer_id":     answerID,
+		"rows_affected": rowsAffected,
+	}).Info("Answer updated successfully")
+
+	return rowsAffected, nil
+}
+
+func UpdateAnswerAndQuestionTag(
+	db *sql.DB,
+	answerID, questionID int,
+	answer string,
+	tag string,
+	logger *logrus.Logger,
+) (rowsAffected int64, err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		logger.WithError(err).Error("Failed to begin transaction")
+		return 0, err
+	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			if err := tx.Rollback(); err != nil {
+				logger.Error("Ошибка отката транзакции: ", err)
+			}
+			panic(p)
+		} else if err != nil {
+			if err := tx.Rollback(); err != nil {
+				logger.Error("Ошибка отката транзакции: ", err)
+			}
+		} else {
+			err = tx.Commit()
+			if err != nil {
+				logger.WithError(err).Error("Failed to commit transaction")
+			}
+		}
+	}()
+
+	// Обновляем ответ
+	result, err := tx.Exec(updateAnswerQuery, answer, time.Now().UTC(), answerID)
+	if err != nil {
+		logger.WithError(err).WithFields(logrus.Fields{
+			"answer_id": answerID,
+		}).Error("Failed to update answer")
+		return 0, err
+	}
+
+	answerRowsAffected, err := result.RowsAffected()
+	if err != nil {
+		logger.WithError(err).Error("Failed to get rows affected for answer")
+		return 0, err
+	}
+
+	logger.WithFields(logrus.Fields{
+		"answer_id":     answerID,
+		"rows_affected": answerRowsAffected,
+	}).Info("Answer updated successfully")
+
+	// Обновляем тег вопроса
+	result, err = tx.Exec(updateQuestionTag, tag, questionID)
+	if err != nil {
+		logger.WithError(err).WithFields(logrus.Fields{
+			"question_id": questionID,
+			"tag":         tag,
+		}).Error("Failed to update question tag")
+		return 0, err
+	}
+
+	tagRowsAffected, err := result.RowsAffected()
+	if err != nil {
+		logger.WithError(err).Error("Failed to get rows affected for tag")
+		return 0, err
+	}
+
+	logger.WithFields(logrus.Fields{
+		"question_id":   questionID,
+		"tag":           tag,
+		"rows_affected": tagRowsAffected,
+	}).Info("Question tag updated successfully")
+
+	// Суммируем общее количество затронутых строк
+	rowsAffected = answerRowsAffected + tagRowsAffected
+
+	return rowsAffected, nil
+}
