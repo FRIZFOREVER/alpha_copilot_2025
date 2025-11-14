@@ -15,7 +15,7 @@ var getSupportsQuery string
 //go:embed queries/set_support.sql
 var setSupportQuery string
 
-// GetSupports получает все сообщения поддержки по ID чата
+// GetSupports получает все сообщения поддержки по ID чата.
 func GetSupports(
 	db *sql.DB,
 	chatID int,
@@ -55,7 +55,7 @@ func GetSupports(
 	return supports, nil
 }
 
-// CreateSupport создает новое сообщение поддержки
+// CreateSupport создает новое сообщение поддержки.
 func CreateSupport(
 	db *sql.DB,
 	userUUID string,

@@ -75,7 +75,7 @@ func (c *RecognizerClient) uploadAudio(audioData []byte) (string, error) {
 
 	fullURL := c.baseURL + c.path + "/upload"
 
-	req, err := http.NewRequest("POST", fullURL, bytes.NewBuffer(audioData))
+	req, err := http.NewRequest(http.MethodPost, fullURL, bytes.NewBuffer(audioData))
 	if err != nil {
 		return "", fmt.Errorf("ошибка создания запроса: %w", err)
 	}
@@ -143,7 +143,7 @@ func (c *RecognizerClient) requestTranscript(uploadURL string) (string, error) {
 		return "", fmt.Errorf("ошибка маршалинга запроса: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", fullURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest(http.MethodPost, fullURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", fmt.Errorf("ошибка создания запроса: %w", err)
 	}
@@ -206,7 +206,7 @@ func (c *RecognizerClient) waitForTranscript(transcriptID string) (string, error
 	for attempts < maxAttempts {
 		time.Sleep(1 * time.Second)
 
-		req, err := http.NewRequest("GET", fullURL, nil)
+		req, err := http.NewRequest(http.MethodGet, fullURL, nil)
 		if err != nil {
 			return "", fmt.Errorf("ошибка создания запроса: %w", err)
 		}

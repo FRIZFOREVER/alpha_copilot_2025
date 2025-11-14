@@ -66,7 +66,7 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	//jsonBytes := fmt.Sprintf("{\"voice_url\":\"%s\"}", url)
+	// jsonBytes := fmt.Sprintf("{\"voice_url\":\"%s\"}", url)
 
 	question, err := vh.recognizer.MessageToRecognizer(fileBytes)
 	if err != nil {

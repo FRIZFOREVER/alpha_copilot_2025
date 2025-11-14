@@ -229,7 +229,6 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 				sh.logger.Errorf("Error updating answer and question tag in database: %v", err)
 			}
 		}
-
 	})
 
 	return nil

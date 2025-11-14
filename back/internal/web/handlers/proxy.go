@@ -13,8 +13,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var ErrFileIsNotAnAudioMpegFile = errors.New("File is not an audio/mpeg file")
-var ErrInvalidFilePath = errors.New("Invalid file path format")
+var (
+	ErrFileIsNotAnAudioMpegFile = errors.New("File is not an audio/mpeg file")
+	ErrInvalidFilePath          = errors.New("Invalid file path format")
+)
 
 type Proxy struct {
 	s3     *minio.Client
@@ -103,7 +105,7 @@ func (ph *Proxy) HandlerFile(c *fiber.Ctx) error {
 	return nil
 }
 
-// getContentDisposition определяет Content-Type и Content-Disposition
+// getContentDisposition определяет Content-Type и Content-Disposition.
 func getContentDisposition(contentType, fileName string) (string, string) {
 	// Если Content-Type не определен, пытаемся определить по расширению
 	if contentType == "" || contentType == "application/octet-stream" {
@@ -123,7 +125,7 @@ func getContentDisposition(contentType, fileName string) (string, string) {
 	}
 }
 
-// getContentTypeByExtension определяет Content-Type по расширению файла
+// getContentTypeByExtension определяет Content-Type по расширению файла.
 func getContentTypeByExtension(ext string) string {
 	switch strings.ToLower(ext) {
 	case ".pdf":
