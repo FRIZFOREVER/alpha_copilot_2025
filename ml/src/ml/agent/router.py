@@ -5,6 +5,7 @@ from ml.configs.message import RequestPayload, Tag
 from ollama import ChatResponse
 
 def workflow(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
+    # TODO: Change when payload becomes valid with personalisation
     payload.messages.add_or_change_system(payload.system)
     return run_pipeline(payload)
 
