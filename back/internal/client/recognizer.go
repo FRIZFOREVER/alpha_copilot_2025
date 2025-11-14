@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type RecognizerClient struct {
@@ -15,14 +17,16 @@ type RecognizerClient struct {
 	path    string
 	apiKey  string
 	client  *http.Client
+	logger  *logrus.Logger
 }
 
-func NewRecognizerClient(baseURL, path, apiKey string) *RecognizerClient {
+func NewRecognizerClient(baseURL, path, apiKey string, logger *logrus.Logger) *RecognizerClient {
 	return &RecognizerClient{
 		baseURL: baseURL,
 		path:    path,
 		apiKey:  apiKey,
 		client:  &http.Client{},
+		logger:  logger,
 	}
 }
 
@@ -89,7 +93,11 @@ func (c *RecognizerClient) uploadAudio(audioData []byte) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("ошибка выполнения запроса: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			c.logger.Error("Ошибка при закрытии тела запроса: ", err)
+		}
+	}()
 
 	// Читаем тело ответа для диагностики ошибок
 	body, err := io.ReadAll(resp.Body)
@@ -156,7 +164,11 @@ func (c *RecognizerClient) requestTranscript(uploadURL string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("ошибка выполнения запроса: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			c.logger.Error("Ошибка при закрытии тела запроса: ", err)
+		}
+	}()
 
 	// Читаем тело ответа для диагностики ошибок
 	body, err := io.ReadAll(resp.Body)
@@ -220,7 +232,11 @@ func (c *RecognizerClient) waitForTranscript(transcriptID string) (string, error
 		}
 
 		body, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		func() {
+			if err := resp.Body.Close(); err != nil {
+				c.logger.Error("Ошибка при закрытии тела запроса: ", err.Error())
+			}
+		}()
 		if err != nil {
 			return "", fmt.Errorf("ошибка чтения ответа: %w", err)
 		}

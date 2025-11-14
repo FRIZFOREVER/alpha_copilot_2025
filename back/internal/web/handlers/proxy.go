@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	ErrFileIsNotAnAudioMpegFile = errors.New("File is not an audio/mpeg file")
-	ErrInvalidFilePath          = errors.New("Invalid file path format")
+	ErrFileIsNotAnAudioMpegFile = errors.New("file is not an audio/mpeg file")
+	ErrInvalidFilePath          = errors.New("invalid file path format")
 )
 
 type Proxy struct {
@@ -35,7 +35,7 @@ func (ph *Proxy) HandlerWebm(c *fiber.Ctx) error {
 
 	// Проверяем что файл имеет расширение .webm
 	if !strings.HasSuffix(fileName, ".webm") {
-		fileName = fileName + ".webm"
+		fileName += ".webm"
 	}
 
 	bucket := "voices"
@@ -46,7 +46,11 @@ func (ph *Proxy) HandlerWebm(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
-	defer object.Close()
+	defer func() {
+		if err := object.Close(); err != nil {
+			ph.logger.Error("Error close s3 object", err)
+		}
+	}()
 
 	c.Set("Content-Type", "audio/mpeg")
 	c.Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", fileName))
@@ -74,7 +78,11 @@ func (ph *Proxy) HandlerFile(c *fiber.Ctx) error {
 			"error": "File not found",
 		})
 	}
-	defer object.Close()
+	defer func() {
+		if err := object.Close(); err != nil {
+			ph.logger.Error("Error close s3 object", err)
+		}
+	}()
 
 	// Получаем информацию о файле для определения Content-Type
 	objectInfo, err := object.Stat()

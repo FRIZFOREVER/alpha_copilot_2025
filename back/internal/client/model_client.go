@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/sirupsen/logrus"
 )
 
 type ModelClient struct {
@@ -13,14 +15,16 @@ type ModelClient struct {
 	url    string
 	path   string
 	client *http.Client
+	logger *logrus.Logger
 }
 
-func NewModelClient(method, url, path string) *ModelClient {
+func NewModelClient(method, url, path string, logger *logrus.Logger) *ModelClient {
 	return &ModelClient{
 		method: method,
 		url:    url,
 		path:   path,
 		client: &http.Client{},
+		logger: logger,
 	}
 }
 
@@ -39,7 +43,11 @@ func (c *ModelClient) MessageToModel(data []byte) (*AnswerModel, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			c.logger.Error("Ошибка при закрытии тела запроса: ", err)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

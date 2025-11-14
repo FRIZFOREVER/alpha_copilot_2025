@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Message struct {
@@ -59,10 +61,11 @@ type StreamMessageClient struct {
 	path       string
 	client     *http.Client
 	HistoryLen int
+	logger     *logrus.Logger
 }
 
 // NewStreamMessageClient создает новый клиент.
-func NewStreamMessageClient(method, url, path string, historyLen int) *StreamMessageClient {
+func NewStreamMessageClient(method, url, path string, historyLen int, logger *logrus.Logger) *StreamMessageClient {
 	return &StreamMessageClient{
 		method: method,
 		url:    url,
@@ -71,6 +74,7 @@ func NewStreamMessageClient(method, url, path string, historyLen int) *StreamMes
 			Timeout: 0, // Без таймаута для long-polling соединений
 		},
 		HistoryLen: historyLen,
+		logger:     logger,
 	}
 }
 
@@ -103,7 +107,9 @@ func (c *StreamMessageClient) StreamRequestToModel(payload PayloadStream) (<-cha
 	tag = resp.Header.Get("Tag")
 	// Проверяем статус ответа
 	if resp.StatusCode != http.StatusOK {
-		resp.Body.Close()
+		if err := resp.Body.Close(); err != nil {
+			c.logger.Error("Ошибка при закрытии тела запроса: ", err)
+		}
 		return nil, tag, fmt.Errorf("server returned status: %d", resp.StatusCode)
 	}
 
@@ -118,7 +124,11 @@ func (c *StreamMessageClient) StreamRequestToModel(payload PayloadStream) (<-cha
 
 // processSSEStream обрабатывает SSE поток и отправляет StreamMessage в канал.
 func (c *StreamMessageClient) processSSEStream(resp *http.Response, messageChan chan<- *StreamMessage) {
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			c.logger.Error("Ошибка при закрытии тела запроса: ", err)
+		}
+	}()
 	defer close(messageChan)
 
 	reader := bufio.NewReader(resp.Body)

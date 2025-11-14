@@ -29,7 +29,11 @@ func GetSupports(
 		logger.WithError(err).Error("Failed to query supports")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error("Ошибка закрытия строк: ", err)
+		}
+	}()
 
 	for rows.Next() {
 		var support Support
