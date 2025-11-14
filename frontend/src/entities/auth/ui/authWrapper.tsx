@@ -24,7 +24,7 @@ export const AuthWrapper = ({ children }: PropsWithChildren) => {
     >
       <div
         className={cn(
-          "w-full h-full md:w-[1070px] md:h-[608px] flex-col flex bg-lilac-100 rounded-3xl md:flex-row bg-white"
+          "w-full h-full md:w-[1070px] md:h-[608px] flex-col flex bg-lilac-100 rounded-3xl md:flex-row bg-white",
         )}
       >
         <div className="w-full md:py-0 p-8 flex items-center justify-center bg-gradient-to-br from-red-500 to-pink-600 rounded-3xl">

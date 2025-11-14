@@ -61,7 +61,7 @@ func (mh *Message) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	messages, err := database.GetHistory(mh.db, chatID, uuid.String(), mh.logger, -1)
+	messages, err := database.GetHistory(mh.db, chatID, uuid.String(), mh.logger, -1, "")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error in database",
@@ -113,6 +113,7 @@ func (mh *Message) Handler(c *fiber.Ctx) error {
 		answer.Message,
 		questionTime,
 		answerTime,
+		"",
 		messageIn.VoiceURL,
 		"",
 		mh.logger,

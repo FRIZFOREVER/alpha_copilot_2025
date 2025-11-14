@@ -58,7 +58,7 @@ export const Suggestions = ({
 
   const handleSuggestionClick = (
     e: React.MouseEvent,
-    suggestion: Suggestion
+    suggestion: Suggestion,
   ) => {
     if (hasDragged) {
       e.preventDefault();
@@ -73,7 +73,7 @@ export const Suggestions = ({
         className={cn(
           "overflow-x-auto scrollbar-hide",
           "cursor-grab active:cursor-grabbing",
-          "select-none"
+          "select-none",
         )}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -92,7 +92,7 @@ export const Suggestions = ({
                 "text-left transition-all duration-200",
                 "active:scale-[0.98]",
                 "min-w-[200px] max-w-[280px]",
-                "flex-shrink-0"
+                "flex-shrink-0",
               )}
             >
               <div className="font-semibold text-gray-900 text-sm">

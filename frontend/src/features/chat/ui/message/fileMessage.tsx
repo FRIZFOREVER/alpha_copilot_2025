@@ -62,8 +62,8 @@ export const FileMessage = ({ fileUrl, className }: FileMessageProps) => {
       const fullUrl = fileUrl.startsWith("http")
         ? fileUrl
         : fileUrl.startsWith("/")
-        ? `${baseUrl}${fileUrl}`
-        : `${baseUrl}/${fileUrl}`;
+          ? `${baseUrl}${fileUrl}`
+          : `${baseUrl}/${fileUrl}`;
 
       const response = await fetch(fullUrl);
       if (!response.ok) {
@@ -87,8 +87,8 @@ export const FileMessage = ({ fileUrl, className }: FileMessageProps) => {
       const fullUrl = fileUrl.startsWith("http")
         ? fileUrl
         : fileUrl.startsWith("/")
-        ? `${baseUrl}${fileUrl}`
-        : `${baseUrl}/${fileUrl}`;
+          ? `${baseUrl}${fileUrl}`
+          : `${baseUrl}/${fileUrl}`;
       window.open(fullUrl, "_blank");
     }
   };
@@ -101,7 +101,7 @@ export const FileMessage = ({ fileUrl, className }: FileMessageProps) => {
         "bg-gray-50 border border-gray-200",
         "hover:bg-gray-100 transition-colors",
         "cursor-pointer text-left w-full",
-        className
+        className,
       )}
     >
       <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center">

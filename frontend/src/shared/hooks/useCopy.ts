@@ -5,7 +5,7 @@ export const useCopied = () => {
   const [isPending, startTransition] = useTransition();
 
   const handleCopyClick = async (
-    event: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     startTransition(async () => {
       try {

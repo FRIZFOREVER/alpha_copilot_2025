@@ -29,7 +29,7 @@ export const IntegrationCard = ({
         "min-h-[280px] md:min-h-[320px]",
         "overflow-hidden",
         "border-gray-200 bg-gradient-to-br from-gray-50 to-white hover:border-gray-300 hover:shadow-md",
-        className
+        className,
       )}
       style={{
         backgroundImage: `url(${imageSrc})`,
@@ -75,7 +75,7 @@ export const IntegrationCard = ({
               "self-start px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
               connected
                 ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                : "bg-red-600 text-white hover:bg-red-700"
+                : "bg-red-600 text-white hover:bg-red-700",
             )}
             onClick={(e) => {
               e.stopPropagation();

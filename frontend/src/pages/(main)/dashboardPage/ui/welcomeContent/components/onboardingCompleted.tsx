@@ -12,7 +12,7 @@ export const OnboardingCompleted = ({
     <div
       className={cn(
         "flex flex-col items-center justify-center px-6 py-6",
-        className
+        className,
       )}
     >
       <div className="mb-6">

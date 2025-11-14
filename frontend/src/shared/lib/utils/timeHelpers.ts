@@ -10,4 +10,3 @@ export const formatTime = (seconds: number): string => {
     .toString()
     .padStart(2, "0")}`;
 };
-

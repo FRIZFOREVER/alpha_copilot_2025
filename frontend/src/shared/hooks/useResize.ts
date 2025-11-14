@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export const useResize = <T>(
   resizeHandler?: () => void,
-  dependencies?: T[]
+  dependencies?: T[],
 ) => {
   const [screenWidth, setScreenWidth] = useState<number | null>(null);
 

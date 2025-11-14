@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { ELocalStorageKeys } from "@/shared/lib/storageKeys";
 
 interface OnboardingContextType {
@@ -10,7 +16,7 @@ interface OnboardingContextType {
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const useOnboarding = () => {
@@ -31,7 +37,7 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
 
   useEffect(() => {
     const completed = localStorage.getItem(
-      ELocalStorageKeys.ONBOARDING_COMPLETED
+      ELocalStorageKeys.ONBOARDING_COMPLETED,
     );
     setIsOnboardingCompleted(completed === "true");
   }, []);
@@ -66,4 +72,3 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
     </OnboardingContext.Provider>
   );
 };
-

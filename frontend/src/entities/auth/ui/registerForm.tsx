@@ -57,7 +57,7 @@ export const RegisterForm = () => {
                     label="Почта"
                     className={cn(
                       "py-1.5 text-black bg-[#f0f3f7] rounded-3xl shadow-sm border-[#f0f3f7]",
-                      errors.login && "border-red-700"
+                      errors.login && "border-red-700",
                     )}
                   />
                   {errors.login && (
@@ -91,7 +91,7 @@ export const RegisterForm = () => {
                     label={"ФИО"}
                     className={cn(
                       "py-1.5 text-black bg-[#f0f3f7] rounded-3xl shadow-sm border-[#f0f3f7]",
-                      errors.username && "border-red-700"
+                      errors.username && "border-red-700",
                     )}
                   />
                   {errors.username && (
@@ -127,7 +127,7 @@ export const RegisterForm = () => {
                     type="password"
                     className={cn(
                       "py-1.5 text-black bg-[#f0f3f7] rounded-3xl shadow-sm border-[#f0f3f7]",
-                      errors.password && "border-red-700"
+                      errors.password && "border-red-700",
                     )}
                   />
                   {errors.password && (

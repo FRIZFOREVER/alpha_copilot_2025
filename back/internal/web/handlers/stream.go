@@ -74,7 +74,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	messages, err := database.GetHistory(sh.db, chatID, uuid.String(), sh.logger, sh.historyLen)
+	messages, err := database.GetHistory(sh.db, chatID, uuid.String(), sh.logger, sh.historyLen, streamIn.Tag)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error in database",
@@ -105,6 +105,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		"", //
 		questionTime,
 		questionTime, //
+		streamIn.Tag,
 		streamIn.VoiceURL,
 		streamIn.FileURL,
 		sh.logger,
@@ -132,7 +133,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 
 	messageToModel.Mode = streamIn.Mode
 
-	messageChan, err := sh.client.StreamRequestToModel(messageToModel)
+	messageChan, tag, err := sh.client.StreamRequestToModel(messageToModel)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error start stream",
@@ -210,12 +211,25 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 			}
 		}
 
-		// Сохраняем полный ответ в базу данных
-		fullAnswer := builder.String()
-		_, err = database.UpdateAnswer(sh.db, answerID, fullAnswer, sh.logger)
-		if err != nil {
-			sh.logger.Errorf("Error updating answer in database: %v", err)
+		if tag == streamIn.Tag {
+			// Сохраняем полный ответ в базу данных
+			fullAnswer := builder.String()
+			_, err = database.UpdateAnswer(sh.db, answerID, fullAnswer, sh.logger)
+			if err != nil {
+				sh.logger.Errorf("Error updating answer in database: %v", err)
+			}
+		} else {
+			if tag == "" {
+				tag = streamIn.Tag
+			}
+			// Сохраняем полный ответ в базу данных
+			fullAnswer := builder.String()
+			_, err = database.UpdateAnswerAndQuestionTag(sh.db, answerID, questionID, fullAnswer, tag, sh.logger)
+			if err != nil {
+				sh.logger.Errorf("Error updating answer and question tag in database: %v", err)
+			}
 		}
+
 	})
 
 	return nil
