@@ -13,8 +13,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var ErrFileIsNotAnAudioMpegFile = errors.New("File is not an audio/mpeg file")
-var ErrInvalidFilePath = errors.New("Invalid file path format")
+var (
+	ErrFileIsNotAnAudioMpegFile = errors.New("file is not an audio/mpeg file")
+	ErrInvalidFilePath          = errors.New("invalid file path format")
+)
 
 type Proxy struct {
 	s3     *minio.Client
@@ -33,7 +35,7 @@ func (ph *Proxy) HandlerWebm(c *fiber.Ctx) error {
 
 	// Проверяем что файл имеет расширение .webm
 	if !strings.HasSuffix(fileName, ".webm") {
-		fileName = fileName + ".webm"
+		fileName += ".webm"
 	}
 
 	bucket := "voices"
@@ -44,7 +46,11 @@ func (ph *Proxy) HandlerWebm(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
-	defer object.Close()
+	defer func() {
+		if err := object.Close(); err != nil {
+			ph.logger.Error("Error close s3 object", err)
+		}
+	}()
 
 	c.Set("Content-Type", "audio/mpeg")
 	c.Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", fileName))
@@ -72,7 +78,11 @@ func (ph *Proxy) HandlerFile(c *fiber.Ctx) error {
 			"error": "File not found",
 		})
 	}
-	defer object.Close()
+	defer func() {
+		if err := object.Close(); err != nil {
+			ph.logger.Error("Error close s3 object", err)
+		}
+	}()
 
 	// Получаем информацию о файле для определения Content-Type
 	objectInfo, err := object.Stat()
@@ -103,7 +113,7 @@ func (ph *Proxy) HandlerFile(c *fiber.Ctx) error {
 	return nil
 }
 
-// getContentDisposition определяет Content-Type и Content-Disposition
+// getContentDisposition определяет Content-Type и Content-Disposition.
 func getContentDisposition(contentType, fileName string) (string, string) {
 	// Если Content-Type не определен, пытаемся определить по расширению
 	if contentType == "" || contentType == "application/octet-stream" {
@@ -123,7 +133,7 @@ func getContentDisposition(contentType, fileName string) (string, string) {
 	}
 }
 
-// getContentTypeByExtension определяет Content-Type по расширению файла
+// getContentTypeByExtension определяет Content-Type по расширению файла.
 func getContentTypeByExtension(ext string) string {
 	switch strings.ToLower(ext) {
 	case ".pdf":

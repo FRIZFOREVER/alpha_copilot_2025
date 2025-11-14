@@ -4,19 +4,21 @@ import (
 	"fmt"
 	"log"
 	"testing"
+
+	"github.com/sirupsen/logrus"
 )
 
 func TestMessageStream(t *testing.T) {
-	client := NewStreamMessageClient("POST", "http://localhost:8000", "/message_stream", 5)
+	client := NewStreamMessageClient("POST", "http://localhost:8000", "/message_stream", 5, logrus.New())
 
 	// Создаем payload с правильной структурой
 	payload := PayloadStream{
 		Messages: []Message{
 			{Role: "user", Content: "напиши hello world на java"},
 		},
-		Tag:        "",
-		Mode:       "",
-		System:     "",
+		Tag:    "",
+		Mode:   "",
+		System: "",
 	}
 
 	// Получаем канал для чтения StreamMessage

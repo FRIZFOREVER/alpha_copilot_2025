@@ -30,9 +30,9 @@ func GetProfile(
 }
 
 type Profile struct {
-	ID                     int    `json:"id"`
-	Login                  string `json:"login"`
-	FIO                    string `json:"username"`
+	ID                     int     `json:"id"`
+	Login                  string  `json:"login"`
+	FIO                    string  `json:"username"`
 	UserInfo               *string `json:"user_info"`
 	BusinessInfo           *string `json:"business_info"`
 	AdditionalInstructions *string `json:"additional_instructions"`
@@ -41,14 +41,14 @@ type Profile struct {
 func UpdateOtherProfileInfo(
 	db *sql.DB,
 	uuid string,
-	UserInfo string,
-	BusinessInfo string,
-	AdditionalInstructions string,
+	userInfo string,
+	businessInfo string,
+	additionalInstructions string,
 	logger *logrus.Logger,
 ) (
 	err error,
 ) {
-	_, err = db.Exec(updateOtherProfileInfo, UserInfo, BusinessInfo, AdditionalInstructions, uuid)
+	_, err = db.Exec(updateOtherProfileInfo, userInfo, businessInfo, additionalInstructions, uuid)
 	if err != nil {
 		logger.WithError(err).Error("Failed update other profile info")
 		return err

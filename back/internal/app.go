@@ -2,14 +2,13 @@ package internal
 
 import (
 	"context"
+	"database/sql"
 	"jabki/internal/client"
 	"jabki/internal/database"
 	"jabki/internal/s3"
 	"jabki/internal/settings"
 	"jabki/internal/web"
 	"net/http"
-
-	"database/sql"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/minio/minio-go"
@@ -40,7 +39,6 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 
 	s3client, err := s3.InitMinioClient(config.S3URL, config.S3Login, config.S3Password, false)
 	if err != nil {
-
 		return nil, err
 	}
 	logger.Info("Есть подключение к S3 MINIO! 🐦")
@@ -57,7 +55,7 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 	// }
 	// logger.Info("Есть подключение к recognizer! 🔊")
 
-	modelClient := client.NewModelClient("POST", config.Model, "/message")
+	modelClient := client.NewModelClient("POST", config.Model, "/message", logger)
 
 	// Проверка и логирование API ключа AssemblyAI
 	if config.RecognizerAPIKey == "" {
@@ -71,8 +69,8 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 		}
 		logger.Infof("AssemblyAI API ключ установлен: %s", maskedKey)
 	}
-	recognizerClient := client.NewRecognizerClient("https://api.assemblyai.com/v2", "", config.RecognizerAPIKey)
-	streamClient := client.NewStreamMessageClient(http.MethodPost, config.Model, "/message_stream", config.HistoryLen)
+	recognizerClient := client.NewRecognizerClient("https://api.assemblyai.com/v2", "", config.RecognizerAPIKey, logger)
+	streamClient := client.NewStreamMessageClient(http.MethodPost, config.Model, "/message_stream", config.HistoryLen, logger)
 
 	web.InitServiceRoutes(server, db, config.SecretSerice, logger)
 	web.InitPublicRoutes(server, db, config.SecretUser, config.FrontOrigin, logger)
