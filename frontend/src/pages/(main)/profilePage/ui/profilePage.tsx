@@ -1,5 +1,5 @@
 import { Mail, Calendar, Settings, LogOut } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
+import { Avatar, AvatarImage } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge/badge";
 import { Progress } from "@/shared/ui/progress/progress";
@@ -36,9 +36,6 @@ const ProfilePage = () => {
     ? getDisplayName(profileData.username)
     : "Пользователь";
   const displayEmail = profileData?.login || "";
-  const userInitials = profileData?.username
-    ? getUserInitials(profileData.username)
-    : "П";
 
   const progress = (mockData.xp / mockData.xpToNext) * 100;
 
@@ -65,9 +62,6 @@ const ProfilePage = () => {
                         alt={displayName}
                         className="object-cover rounded-2xl"
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-red-500 to-pink-500 text-white text-4xl md:text-5xl font-bold rounded-2xl">
-                        {userInitials}
-                      </AvatarFallback>
                     </Avatar>
                   </div>
 

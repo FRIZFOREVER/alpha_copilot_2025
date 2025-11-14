@@ -3,6 +3,7 @@ import { Message } from "../message";
 import { ChatEmptyState } from "../chatEmptyState";
 import { useScrollBottom } from "@/shared/hooks/useScrollBottom";
 import { cn } from "@/shared/lib/mergeClass";
+import { useEffect } from "react";
 
 export interface MessageData {
   id: string;
@@ -27,11 +28,38 @@ export const MessageList = ({
   isLoading = false,
   isCompact = false,
 }: MessageListProps) => {
+  const lastMessage = messages[messages.length - 1];
+
   const { contentRef } = useScrollBottom([
     messages.length,
-    messages[messages.length - 1]?.id,
+    lastMessage?.id,
+    lastMessage && !lastMessage.isUser ? lastMessage.content.length : 0,
     isLoading ? "loading" : "loaded",
   ]);
+
+  useEffect(() => {
+    if (!lastMessage || lastMessage.isUser) return;
+
+    const scrollArea = contentRef.current;
+    if (!scrollArea) return;
+
+    const scrollContainer = scrollArea.firstElementChild as HTMLElement;
+    if (!scrollContainer) return;
+
+    const scrollToBottom = () => {
+      scrollContainer.scrollTo({
+        top: scrollContainer.scrollHeight,
+        behavior: "smooth",
+      });
+    };
+
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(scrollToBottom);
+    });
+
+    return () => cancelAnimationFrame(rafId);
+  }, [lastMessage?.content, lastMessage?.isUser, contentRef]);
+
   return (
     <ScrollArea className="flex-1 max-w-[832px]" ref={contentRef}>
       <div
