@@ -39,20 +39,20 @@ class ReasoningModelClient:
                         output_schema: type[T],
                         **kwargs
                         ) -> T:
-        
         response: ChatResponse = chat(
             model=self.settings.model,
-            messages=messages,
+            messages=messages.messages_list(),
             format=output_schema.model_json_schema(),
-            options=self.settings.options | kwargs,
+            options=self.settings.options.model_dump() | kwargs,
             keep_alive=self.settings.keep_alive,
         )
-        
+
         raw = response.message.content
 
         try:
             return output_schema.model_validate_json(raw)
         except Exception as exc:
+            logger.warning("FAILED TO PARSE STRUCTURED OUTPUT")
             raise ValueError("Structured response did not match the expected schema") from exc
 
 class EmbeddingModelClient:
