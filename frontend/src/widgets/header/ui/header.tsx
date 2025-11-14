@@ -42,7 +42,7 @@ export const Header = ({ className }: HeaderProps) => {
     <header
       className={cn(
         "sticky top-0 z-50 w-full",
-        "bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80",
+        "bg-transparent",
         "backdrop-blur-md",
         "shadow-lg shadow-red-500/20",
         className,

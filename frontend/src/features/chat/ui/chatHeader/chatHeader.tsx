@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  SquarePen,
   Sparkles,
   Zap,
   Brain,
@@ -16,8 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select/select";
-import { useNavigate } from "react-router-dom";
-import { ERouteNames } from "@/shared/lib/routeVariables";
 import { useChatCollapse } from "@/shared/lib/chatCollapse";
 
 const modelOptions = [
@@ -50,7 +47,6 @@ const modelOptions = [
 export const ChatHeader = () => {
   const [selectedModel, setSelectedModel] = useState<string>("thinking");
   const [isMobile, setIsMobile] = useState(false);
-  const navigate = useNavigate();
   const { isCollapsed, toggleCollapse } = useChatCollapse();
 
   const currentModel = modelOptions.find((m) => m.value === selectedModel);
@@ -65,10 +61,6 @@ export const ChatHeader = () => {
 
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-  const handleNewChat = () => {
-    navigate(`/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}`);
-  };
 
   return (
     <div className="flex items-center justify-between bg-white px-4 md:px-6 py-3 border-b border-[#0d0d0d0d]">
@@ -109,15 +101,6 @@ export const ChatHeader = () => {
         </Select>
       </div>
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleNewChat}
-          className="h-9 w-9 rounded-xl hover:bg-gray-100 text-gray-900 transition-all cursor-pointer"
-          title="Новый чат"
-        >
-          <SquarePen className="h-4 w-4" />
-        </Button>
         <Button
           variant="ghost"
           size="icon"

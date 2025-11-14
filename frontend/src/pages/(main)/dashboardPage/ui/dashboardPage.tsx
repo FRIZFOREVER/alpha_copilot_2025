@@ -26,9 +26,7 @@ const DashboardPage = () => {
   const { isOnboardingCompleted, startOnboarding, skipOnboarding } =
     useOnboarding();
 
-  const { isGraphLogConnected } = useGraphLogSocket();
-
-  console.log(isGraphLogConnected);
+  useGraphLogSocket();
 
   useGraphLogEvents(
     (data) => {
@@ -99,13 +97,13 @@ const DashboardPage = () => {
   const shouldShowHeader = isCollapsed;
 
   return (
-    <div className="flex h-full w-full relative flex-col">
+    <div className="flex h-full w-full relative flex-col bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80">
       {shouldShowHeader && <Header />}
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <div
           className={cn(
-            "flex-1 flex overflow-hidden relative transition-all duration-300 bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80",
+            "flex-1 flex overflow-hidden relative transition-all duration-300",
             !showWelcomeContent && "border-l border-zinc-100",
             showWelcomeContent && showMinimizedChat && "flex-row"
           )}
