@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Dict, List
+from typing import Any
 
 from ddgs import DDGS
-
 from ml.agent.tools import page_text
 from ml.agent.tools.base import BaseTool, ToolResult
-
 
 DEFAULT_FETCH_TIMEOUT = 5.0
 DEFAULT_MAX_BYTES = 500_000
@@ -37,33 +35,28 @@ class WebSearchTool(BaseTool):
     @property
     def name(self) -> str:
         return "web_search"
-    
+
     @property
     def description(self) -> str:
         return "Поиск информации в интернете с помощью DuckDuckGo. Возвращает результаты поиска с заголовками, ссылками и краткими описаниями."
-    
+
     @property
-    def schema(self) -> Dict[str, Any]:
+    def schema(self) -> dict[str, Any]:
         # TODO: Поменять на Pydantic (наврное)
         return {
             "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "Поисковый запрос"
-                }
-            },
+            "properties": {"query": {"type": "string", "description": "Поисковый запрос"}},
             "required": ["query"],
-            "additionalProperties": False
+            "additionalProperties": False,
         }
-    
+
     def execute(self, query: str, **kwargs: Any) -> ToolResult:
         """
         Execute web search.
-        
+
         Args:
             query: Search query string
-            
+
         Returns:
             ToolResult with search results
         """
@@ -79,17 +72,13 @@ class WebSearchTool(BaseTool):
                 data={
                     "query": query,
                     "results": formatted_results,
-                    "count": len(formatted_results)
-                }
+                    "count": len(formatted_results),
+                },
             )
         except Exception as e:
-            return ToolResult(
-                success=False,
-                data=None,
-                error=str(e)
-            )
+            return ToolResult(success=False, data=None, error=str(e))
 
-    def _format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         formatted = []
         for result in results:
             snippet = result.get("body", "")
@@ -103,7 +92,7 @@ class WebSearchTool(BaseTool):
             )
         return formatted
 
-    def _enrich_results(self, results: List[Dict[str, Any]], query: str) -> None:
+    def _enrich_results(self, results: list[dict[str, Any]], query: str) -> None:
         if not results:
             return
 
@@ -153,4 +142,3 @@ class WebSearchTool(BaseTool):
             max_bytes=self._max_bytes,
         )
         return page_text.html_to_text(html)
-

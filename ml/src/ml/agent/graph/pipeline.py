@@ -1,9 +1,8 @@
 import logging
-from typing import Any, Dict, Iterator
+from collections.abc import Iterator
+from typing import Any
 
 from langgraph.graph import END, StateGraph
-from ollama import ChatResponse
-
 from ml.agent.graph.nodes import (
     fast_answer_node,
     flash_memories_node,
@@ -18,8 +17,9 @@ from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import RequestPayload, Tag
 from ml.utils.tag_validation import define_tag
 from ml.utils.voice_validation import form_final_report, validate_voice
+from ollama import ChatResponse
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _extract_pipeline_mode(state: GraphState) -> str:
@@ -112,21 +112,25 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
     if not payload.tag:
         logger.info("Tag not found. Starting tag definition")
         payload.tag = define_tag(
-            last_message=payload.messages.last_message_as_history(),
-            reasoning_client=client
+            last_message=payload.messages.last_message_as_history(), reasoning_client=client
         )
         logger.info("Defined a tag: %s", payload.tag.value)
-    
+
     # Create Graph
     app: StateGraph = create_pipeline(client)
 
     # Create initial state
     state: GraphState = GraphState(payload=payload)
 
-    raw_result: Dict[str, Any] = app.invoke(state)
-    result: GraphState = GraphState.model_validate(raw_result)
+    raw_result: dict[str, Any] = app.invoke(state)
+    try:
+        result: GraphState = GraphState.model_validate(raw_result)
+    except:
+        RuntimeError("GraphState parse Failed")
+
     logging.debug(
         "Started final prompt generation with payload: \n%s",
         result.final_prompt.model_dump_json(ensure_ascii=False, indent=2),
     )
+
     return client.stream(result.final_prompt), payload.tag
