@@ -46,7 +46,7 @@ class ResearchReactResponse(BaseModel):
 
 
 def research_react_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
-    prompt = get_research_reason_prompt(
+    prompt: ChatHistory = get_research_reason_prompt(
         conversation=state.payload.messages,
         turn_history=state.turn_history,
         latest_reasoning=state.latest_reasoning,
