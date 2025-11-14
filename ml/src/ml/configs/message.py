@@ -23,12 +23,23 @@ class ModelMode(str, Enum):
     Auto = "auto"
 
 
+class Tag(str, Enum):
+    General = "general"
+    Finance = "finance"
+    Law = "law"
+    Marketing = "marketing"
+    Management = "management"
+
+
 class ChatHistory(BaseModel):
     messages: List[Message] = Field(default_factory=list)
 
-    # TODO: Implement overrides for add functions when input is Message class instead of content. Validate it on role as well
+    # TODO: Implement overrides for add functions when input is Message class
+    # instead of content. Validate it on role as well
     def add_or_change_system(self, content: str) -> None:
-        self.messages = [msg for msg in self.messages if msg.role != Role.system]
+        self.messages = [
+            msg for msg in self.messages if msg.role != Role.system
+        ]
         system_message = Message(role=Role.system, content=content)
         self.messages.insert(0, system_message)
         return
@@ -43,17 +54,22 @@ class ChatHistory(BaseModel):
         self.messages.append(msg)
         return
 
-    # def last_message_as_history(self) -> ChatHistory:
-    #     return ChatHistory().add_user(self.messages[-1])
-      
+    def last_message_as_history(self) -> ChatHistory:
+        history: ChatHistory = ChatHistory()
+        history.add_user(self.messages[-1].content)
+        return history
+
     def messages_list(self) -> List[Dict[str, str]]:
-        return [{"role": msg.role.value, "content": msg.content} for msg in self.messages]
+        return [
+            {"role": msg.role.value, "content": msg.content}
+            for msg in self.messages
+        ]
 
 
 class RequestPayload(BaseModel):
     messages: ChatHistory
     chat_id: str
-    tag: str
+    tag: Optional[Tag] = None
     mode: ModelMode
     system: str
     file_url: str
@@ -63,3 +79,10 @@ class RequestPayload(BaseModel):
     @classmethod
     def normalize_messages(cls, message_list):
         return {"messages": message_list}
+    
+    @field_validator("tag", mode="before")
+    @classmethod
+    def replace_tag(cls, v):
+        if v == "":
+            return None
+        return v
