@@ -6,36 +6,23 @@ from ml.agent.graph.state import ResearchTurn
 from ml.configs.message import ChatHistory, Role
 
 
-def _format_conversation(conversation: ChatHistory) -> str:
-    lines: list[str] = []
-    role_labels = {
-        Role.system: "Система",
-        Role.user: "Пользователь",
-        Role.assistant: "Ассистент",
-    }
-    for message in conversation.messages:
-        role_label = role_labels.get(message.role, message.role.value)
-        lines.append(f"{role_label}: {message.content}")
-    return "\n".join(lines)
-
-
 def _format_turn_history(turn_history: Sequence[ResearchTurn]) -> str:
     lines: list[str] = []
     for index, turn in enumerate(turn_history, start=1):
-        if turn.reasoning_summary:
-            lines.append(
-                f"Ход {index} — рассуждение: {turn.reasoning_summary}"
-            )
-        if turn.request:
-            request = turn.request
-            lines.append(
-                f"Ход {index} — запрос к инструменту: {request.tool_name} -> {request.input_text}"
-            )
-        if turn.observation:
-            observation = turn.observation
-            lines.append(
-                f"Ход {index} — наблюдение: {observation.content}"
-            )
+
+        lines.append(
+            f"Ход {index} — рассуждение: {turn.reasoning_summary}"
+        )
+
+        request = turn.request
+        lines.append(
+            f"Ход {index} — запрос к инструменту: {request.tool_name} -> {request.input_text}"
+        )
+
+        observation = turn.observation
+        lines.append(
+            f"Ход {index} — наблюдение: {observation.content}"
+        )
     return "\n".join(lines)
 
 
@@ -55,7 +42,7 @@ def get_research_reason_prompt(
         )
     )
 
-    conversation_block = _format_conversation(conversation)
+    conversation_block = conversation.model_dump_string()
     history_block = _format_turn_history(turn_history)
 
     user_sections: list[str] = []

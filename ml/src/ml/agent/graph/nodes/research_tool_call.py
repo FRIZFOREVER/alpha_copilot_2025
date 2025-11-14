@@ -21,11 +21,11 @@ def research_tool_call_node(state: GraphState, client: Any) -> GraphState:
     payload = dict(tool_result.data)
 
     results = payload.get("results")
-    if results:
-        shuffled_results = list(results)
-        shuffle(shuffled_results)
-        payload["results"] = shuffled_results
-        payload["count"] = len(shuffled_results)
+    
+    shuffled_results = list(results)
+    shuffle(shuffled_results)
+    payload["results"] = shuffled_results
+    payload["count"] = len(shuffled_results)
 
     metadata: Dict[str, Any] = {
         "success": tool_result.success,
