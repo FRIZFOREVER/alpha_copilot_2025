@@ -22,8 +22,8 @@ const AnalyticsPage = () => {
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80">
       <Header />
-      <div className="overflow-hidden">
-        <div className="flex-1 overflow-y-auto bg-zinc-100 rounded-t-2xl h-full">
+      <div className="overflow-hidden md:px-6 md:pb-6">
+        <div className="flex-1 overflow-y-auto scrollbar-hide bg-zinc-100 rounded-t-3xl md:rounded-4xl h-full">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-4 sm:space-y-6">
             <div className="flex items-center gap-3 sm:gap-4 mb-6">
               <Button

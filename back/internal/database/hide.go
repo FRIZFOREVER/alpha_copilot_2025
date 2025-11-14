@@ -26,10 +26,14 @@ func HideMessages(
 
 	defer func() {
 		if p := recover(); p != nil {
-			tx.Rollback()
+			if err := tx.Rollback(); err != nil {
+				logger.Error("Ошибка отката транзакции: ", err)
+			}
 			panic(p)
 		} else if err != nil {
-			tx.Rollback()
+			if err := tx.Rollback(); err != nil {
+				logger.Error("Ошибка отката транзакции: ", err)
+			}
 		} else {
 			err = tx.Commit()
 			if err != nil {

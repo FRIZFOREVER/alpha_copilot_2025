@@ -8,10 +8,10 @@ import (
 	"github.com/minio/minio-go"
 )
 
-// MaxFileSize определяет максимальный размер файла (100 МБ в байтах)
+// MaxFileSize определяет максимальный размер файла (100 МБ в байтах).
 const MaxFileSize = 100 * 1024 * 1024 // 100 МБ
 
-// UploadFileToMinIO загружает любой файл в MinIO с проверкой размера
+// UploadFileToMinIO загружает любой файл в MinIO с проверкой размера.
 func UploadFileToMinIO(s3 *minio.Client, bucketName, uuid, fileExtension string, fileData []byte, contentType string) (string, error) {
 	// Проверяем размер файла
 	fileSize := int64(len(fileData))
@@ -47,7 +47,7 @@ func UploadFileToMinIO(s3 *minio.Client, bucketName, uuid, fileExtension string,
 	return fmt.Sprintf("/%s/%s", bucketName, fileName), nil
 }
 
-// GetFile получает любой файл из MinIO
+// GetFile получает любой файл из MinIO.
 func GetFile(s3 *minio.Client, bucket, fileName string) (*minio.Object, error) {
 	if fileName == "" {
 		return nil, ErrFilenameIsRequired
@@ -82,7 +82,7 @@ func GetFile(s3 *minio.Client, bucket, fileName string) (*minio.Object, error) {
 	return object, nil
 }
 
-// ValidateFileSize проверяет размер файла перед загрузкой
+// ValidateFileSize проверяет размер файла перед загрузкой.
 func ValidateFileSize(fileData []byte) error {
 	fileSize := int64(len(fileData))
 	if fileSize > MaxFileSize {
@@ -94,12 +94,12 @@ func ValidateFileSize(fileData []byte) error {
 	return nil
 }
 
-// GetMaxFileSize возвращает максимальный разрешенный размер файла
+// GetMaxFileSize возвращает максимальный разрешенный размер файла.
 func GetMaxFileSize() int64 {
 	return MaxFileSize
 }
 
-// getContentTypeByExtension определяет Content-Type по расширению файла
+// getContentTypeByExtension определяет Content-Type по расширению файла.
 func getContentTypeByExtension(ext string) string {
 	switch ext {
 	case ".pdf":

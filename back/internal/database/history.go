@@ -33,14 +33,22 @@ func GetHistory(
 			logger.WithError(err).Error("Failed to query history")
 			return nil, err
 		}
-		defer rows.Close()
+		defer func() {
+			if err := rows.Close(); err != nil {
+				logger.Error("Ошибка закрытия строк: ", err)
+			}
+		}()
 	} else {
 		rows, err = db.Query(historyWithLimitQuery, uuid, historyLen, tag)
 		if err != nil {
 			logger.WithError(err).Error("Failed to query history")
 			return nil, err
 		}
-		defer rows.Close()
+		defer func() {
+			if err := rows.Close(); err != nil {
+				logger.Error("Ошибка закрытия строк: ", err)
+			}
+		}()
 	}
 
 	for rows.Next() {

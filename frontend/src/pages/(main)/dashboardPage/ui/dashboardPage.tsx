@@ -97,9 +97,9 @@ const DashboardPage = () => {
   const shouldShowHeader = isCollapsed;
 
   return (
-    <div className="flex h-full w-full relative flex-col bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80">
+    <div className={cn("flex h-full w-full relative flex-col bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80" , !shouldShowHeader && 'bg-white')}>
       {shouldShowHeader && <Header />}
-      <div className="flex flex-1 overflow-hidden">
+      <div className={cn("flex flex-1 overflow-hidden", showWelcomeContent && "md:px-6 md:pb-6")}>
         <Sidebar />
         <div
           className={cn(
@@ -112,7 +112,7 @@ const DashboardPage = () => {
             <>
               <div
                 className={cn(
-                  "flex-1 overflow-hidden min-w-0 border bg-zinc-50 rounded-2xl",
+                  "flex-1 overflow-hidden min-w-0 border bg-zinc-50 rounded-t-3xl md:rounded-4xl",
                   showMinimizedChat && "md:mr-2 "
                 )}
               >
@@ -134,7 +134,7 @@ const DashboardPage = () => {
                     handleMobileChatClick();
                   }}
                   className={cn(
-                    "fixed bottom-6 right-6 z-[105] cursor-pointer",
+                    "fixed bottom-6 right-6 md:bottom-12 md:right-12 z-[105] cursor-pointer",
                     "w-14 h-14 rounded-full",
                     "bg-red-500 hover:bg-red-600",
                     "flex items-center justify-center",
