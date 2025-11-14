@@ -7,6 +7,7 @@ import {
   ChevronUp,
   ChevronRight,
   ChartArea,
+  SquarePen,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
@@ -109,6 +110,11 @@ export const Sidebar = () => {
     setIsMobileOpen(false);
   };
 
+  const handleNewChat = () => {
+    navigate(`/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}`);
+    setIsMobileOpen(false);
+  };
+
   const chatGroups = [
     {
       id: "chats",
@@ -138,7 +144,7 @@ export const Sidebar = () => {
 
       <aside
         className={cn(
-          "fixed left-0 top-0 h-full z-50 flex flex-col transition-all duration-300 rounded-r-xl",
+          "fixed left-0 top-0 h-full z-50 flex flex-col transition-all duration-300 rounded-r-xl md:rounded-r-none",
           "bg-[#f9f9f9]",
           "md:static md:z-auto",
           isCollapsed ? "w-16 md:w-16" : "w-64",
@@ -196,8 +202,19 @@ export const Sidebar = () => {
                 onClick={() => {
                   openModal(EModalVariables.SEARCH_CHATS_MODAL);
                 }}
+                title="Поиск в чатах"
               >
                 <Search className="h-5 w-5" />
+              </button>
+              <button
+                onClick={handleNewChat}
+                className={cn(
+                  "w-10 h-10 rounded-lg flex items-center justify-center transition-all cursor-pointer",
+                  "text-gray-600 hover:bg-gray-100",
+                )}
+                title="Новый чат"
+              >
+                <SquarePen className="h-5 w-5" />
               </button>
               <button
                 onClick={() => {
@@ -235,6 +252,17 @@ export const Sidebar = () => {
               >
                 <Search className="h-5 w-5 text-gray-500" />
                 <span>Поиск в чатах</span>
+              </button>
+
+              <button
+                onClick={handleNewChat}
+                className={cn(
+                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
+                  "text-gray-700 hover:bg-[#0000000f]/60",
+                )}
+              >
+                <SquarePen className="h-5 w-5 text-gray-500" />
+                <span>Новый чат</span>
               </button>
 
               <button
