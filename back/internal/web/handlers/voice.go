@@ -12,7 +12,6 @@ import (
 )
 
 type Voice struct {
-	model      *client.ModelClient
 	recognizer *client.RecognizerClient
 	s3         *minio.Client
 	logger     *logrus.Logger
@@ -49,7 +48,11 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 			"error": "Не удалось открыть файл: " + err.Error(),
 		})
 	}
-	defer uploadedFile.Close()
+	defer func() {
+		if err := uploadedFile.Close(); err != nil {
+			vh.logger.Error("Не удалось закрыть войс файл:", err)
+		}
+	}()
 
 	fileBytes, err := io.ReadAll(uploadedFile)
 	if err != nil {
@@ -66,7 +69,7 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	//jsonBytes := fmt.Sprintf("{\"voice_url\":\"%s\"}", url)
+	// jsonBytes := fmt.Sprintf("{\"voice_url\":\"%s\"}", url)
 
 	question, err := vh.recognizer.MessageToRecognizer(fileBytes)
 	if err != nil {

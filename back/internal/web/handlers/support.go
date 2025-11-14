@@ -25,10 +25,12 @@ func SupportHandler(db *sql.DB, logger *logrus.Logger) fiber.Handler {
 		logger.Infof("WebSocket соединение установлено для чата: %s, пользователь: %s\n", chatID, userUUID)
 
 		// Отправляем пользователю подтверждение подключения
-		c.WriteJSON(map[string]string{
+		if err := c.WriteJSON(map[string]string{
 			"type": "connection_established",
 			"uuid": userUUID,
-		})
+		}); err != nil {
+			logger.Error("Ошибка отправки json ws клиентам:", err)
+		}
 
 		for {
 			var msg ws.Message
@@ -45,7 +47,6 @@ func SupportHandler(db *sql.DB, logger *logrus.Logger) fiber.Handler {
 			chatIDint, err := strconv.Atoi(chatID)
 			if err != nil {
 				logger.Error("chatID не число:", err)
-
 			}
 
 			err = database.CreateSupport(db, userUUID, chatIDint, msg.Message, logger)

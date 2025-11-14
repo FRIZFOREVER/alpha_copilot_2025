@@ -11,7 +11,11 @@ func Ping(url string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			println("Ошибка при закрытии тела запроса: ", err.Error())
+		}
+	}()
 
 	// Проверяем статус код
 	if resp.StatusCode != http.StatusOK {

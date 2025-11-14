@@ -44,7 +44,11 @@ func (fh *File) Handler(c *fiber.Ctx) error {
 			"error": "Не удалось открыть файл: " + err.Error(),
 		})
 	}
-	defer uploadedFile.Close()
+	defer func() {
+		if err := uploadedFile.Close(); err != nil {
+			fh.logger.Error("Error close file: ", err)
+		}
+	}()
 
 	// Читаем содержимое файла в байты
 	fileBytes, err := io.ReadAll(uploadedFile)
