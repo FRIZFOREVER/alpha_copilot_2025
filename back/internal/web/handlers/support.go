@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"database/sql"
-	"jabki/internal/database"
+	database "jabki/internal/repository"
 	"jabki/internal/web/ws"
 	"strconv"
 

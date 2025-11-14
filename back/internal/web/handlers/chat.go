@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"jabki/internal/database"
+	database "jabki/internal/repository"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"

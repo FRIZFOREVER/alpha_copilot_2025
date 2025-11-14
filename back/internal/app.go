@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"jabki/internal/client"
-	"jabki/internal/database"
+	"jabki/internal/repository"
 	"jabki/internal/s3"
 	"jabki/internal/settings"
 	"jabki/internal/web"

@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"database/sql"
-	"jabki/internal/database"
+	database "jabki/internal/repository"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
