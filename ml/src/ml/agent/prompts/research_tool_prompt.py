@@ -40,8 +40,6 @@ def _format_turn_history(turn_history: Sequence[ResearchTurn]) -> str:
 
 
 def _format_metadata(metadata: Mapping[str, object]) -> str:
-    if not metadata:
-        return ""
     lines: list[str] = []
     for key, value in metadata.items():
         lines.append(f"{key}: {value}")

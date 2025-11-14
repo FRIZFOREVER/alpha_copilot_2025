@@ -12,25 +12,13 @@ def research_tool_call_node(state: GraphState, client: Any) -> GraphState:
     request = state.active_tool_request
 
     tool_result: ToolResult
-    comparison_text = ""
 
-    if request is None:
-        tool_result = ToolResult(success=False, data=None, error="No active tool request")
-    else:
-        comparison_text = request.metadata.get("comparison_text", "")
-        tool = get_tool("web_search")
-        if tool is None:
-            tool_result = ToolResult(
-                success=False,
-                data=None,
-                error="web_search tool is not registered",
-            )
-        else:
-            tool_result = tool.execute(query=request.input_text)
+    comparison_text = request.metadata.get("comparison_text", "")
+    tool = get_tool("web_search")
+    tool_result = tool.execute(query=request.input_text)
 
     payload: Dict[str, Any] = {}
-    if tool_result.data and hasattr(tool_result.data, "items"):
-        payload = dict(tool_result.data)
+    payload = dict(tool_result.data)
 
     results = payload.get("results")
     if results:
