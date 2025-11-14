@@ -23,19 +23,35 @@ var renameChatQuery string
 
 var ErrUserByUUIDNotFound = errors.New("user with this UUID not found")
 
-func CreateChat(
-	db *sql.DB,
-	chatName string,
-	userUUID string,
-	logger *logrus.Logger,
-) (
-	chatID int,
-	err error,
-) {
-	err = db.QueryRow(createChatQuery, chatName, userUUID).Scan(&chatID)
+// Chat представляет структуру чата.
+type Chat struct {
+	ChatID     int       `json:"chat_id"`
+	Name       string    `json:"name"`
+	CreateTime time.Time `json:"create_time"`
+}
+
+// ChatService - структура для работы с чатами.
+type ChatService struct {
+	db     *sql.DB
+	logger *logrus.Logger
+}
+
+// NewChatRepository - конструктор для ChatService.
+func NewChatRepository(db *sql.DB, logger *logrus.Logger) *ChatService {
+	return &ChatService{
+		db:     db,
+		logger: logger,
+	}
+}
+
+// CreateChat - метод для создания нового чата.
+func (s *ChatService) CreateChat(chatName string, userUUID string) (int, error) {
+	var chatID int
+
+	err := s.db.QueryRow(createChatQuery, chatName, userUUID).Scan(&chatID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			logger.WithFields(logrus.Fields{
+			s.logger.WithFields(logrus.Fields{
 				"chat_name": chatName,
 				"user_uuid": userUUID,
 				"error":     err,
@@ -43,7 +59,7 @@ func CreateChat(
 			return 0, ErrUserByUUIDNotFound
 		}
 
-		logger.WithFields(logrus.Fields{
+		s.logger.WithFields(logrus.Fields{
 			"chat_name": chatName,
 			"user_uuid": userUUID,
 			"error":     err,
@@ -51,7 +67,7 @@ func CreateChat(
 		return 0, err
 	}
 
-	logger.WithFields(logrus.Fields{
+	s.logger.WithFields(logrus.Fields{
 		"chat_name": chatName,
 		"user_uuid": userUUID,
 		"chat_id":   chatID,
@@ -60,17 +76,11 @@ func CreateChat(
 	return chatID, nil
 }
 
-func GetChats(
-	db *sql.DB,
-	userUUID string,
-	logger *logrus.Logger,
-) (
-	chats []Chat,
-	err error,
-) {
-	rows, err := db.Query(getChatsQuery, userUUID)
+// GetChats - метод для получения списка чатов пользователя.
+func (s *ChatService) GetChats(userUUID string) ([]Chat, error) {
+	rows, err := s.db.Query(getChatsQuery, userUUID)
 	if err != nil {
-		logger.WithFields(logrus.Fields{
+		s.logger.WithFields(logrus.Fields{
 			"user_uuid": userUUID,
 			"error":     err,
 		}).Error("database error during fetching chats")
@@ -78,15 +88,16 @@ func GetChats(
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			logger.Error("Ошибка закрытия строк: ", err)
+			s.logger.Error("Ошибка закрытия строк: ", err)
 		}
 	}()
 
+	var chats []Chat
 	for rows.Next() {
 		var chat Chat
 		err := rows.Scan(&chat.ChatID, &chat.Name, &chat.CreateTime)
 		if err != nil {
-			logger.WithFields(logrus.Fields{
+			s.logger.WithFields(logrus.Fields{
 				"user_uuid": userUUID,
 				"error":     err,
 			}).Error("error scanning chat row")
@@ -96,14 +107,14 @@ func GetChats(
 	}
 
 	if err = rows.Err(); err != nil {
-		logger.WithFields(logrus.Fields{
+		s.logger.WithFields(logrus.Fields{
 			"user_uuid": userUUID,
 			"error":     err,
 		}).Error("error iterating chat rows")
 		return nil, err
 	}
 
-	logger.WithFields(logrus.Fields{
+	s.logger.WithFields(logrus.Fields{
 		"user_uuid":  userUUID,
 		"chat_count": len(chats),
 	}).Info("chats fetched successfully")
@@ -111,44 +122,37 @@ func GetChats(
 	return chats, nil
 }
 
-type Chat struct {
-	ChatID     int       `json:"chat_id"`
-	Name       string    `json:"name"`
-	CreateTime time.Time `json:"create_time"`
-}
+// CheckChat - метод для проверки принадлежности чата пользователю.
+func (s *ChatService) CheckChat(userUUID string, chatID int) (bool, error) {
+	var isCorresponds bool
 
-func CheckChat(
-	db *sql.DB,
-	userUUID string,
-	chatID int,
-	logger *logrus.Logger,
-) (
-	isCorresponds bool,
-	err error,
-) {
-	err = db.QueryRow(checkChatQuery, userUUID, chatID).Scan(&isCorresponds)
+	err := s.db.QueryRow(checkChatQuery, userUUID, chatID).Scan(&isCorresponds)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// Если запрос не вернул строк, считаем что чат не соответствует пользователю
 			return false, nil
 		}
-		logger.WithError(err).Error("failed to check chat ownership")
+		s.logger.WithError(err).Error("failed to check chat ownership")
 		return false, err
 	}
 
 	return isCorresponds, nil
 }
 
-func RenameChat(
-	db *sql.DB,
-	chatID int,
-	newName string,
-	logger *logrus.Logger,
-) error {
-	_, err := db.Exec(renameChatQuery, chatID, newName)
+// RenameChat - метод для переименования чата.
+func (s *ChatService) RenameChat(chatID int, newName string) error {
+	_, err := s.db.Exec(renameChatQuery, chatID, newName)
 	if err != nil {
-		logger.WithError(err).Error("failed to rename chat")
+		s.logger.WithError(err).Error("failed to rename chat")
 	}
 
 	return err
+}
+
+// ChatManager - единый интерфейс для управления чатами.
+type ChatManager interface {
+	CreateChat(chatName string, userUUID string) (int, error)
+	GetChats(userUUID string) ([]Chat, error)
+	CheckChat(userUUID string, chatID int) (bool, error)
+	RenameChat(chatID int, newName string) error
 }

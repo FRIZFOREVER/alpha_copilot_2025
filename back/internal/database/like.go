@@ -11,21 +11,28 @@ import (
 //go:embed queries/like.sql
 var likeyQuery string
 
-func SetLike(
-	db *sql.DB,
-	chatID int,
-	answerID int,
-	rating *int,
-	logger *logrus.Logger,
-) (
-	err error,
-) {
+// LikeService - структура для работы с лайками.
+type LikeService struct {
+	db     *sql.DB
+	logger *logrus.Logger
+}
+
+// NewLikeRepository - конструктор для LikeService.
+func NewLikeRepository(db *sql.DB, logger *logrus.Logger) *LikeService {
+	return &LikeService{
+		db:     db,
+		logger: logger,
+	}
+}
+
+// SetLike - метод для установки лайка/рейтинга.
+func (s *LikeService) SetLike(chatID int, answerID int, rating *int) error {
 	startTime := time.Now()
 
 	// Execute the SQL query
-	result, err := db.Exec(likeyQuery, chatID, answerID, rating)
+	result, err := s.db.Exec(likeyQuery, chatID, answerID, rating)
 	if err != nil {
-		logger.WithFields(logrus.Fields{
+		s.logger.WithFields(logrus.Fields{
 			"chatID":   chatID,
 			"answerID": answerID,
 			"error":    err,
@@ -37,7 +44,7 @@ func SetLike(
 	// Check if any rows were affected
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		logger.WithFields(logrus.Fields{
+		s.logger.WithFields(logrus.Fields{
 			"chatID":   chatID,
 			"answerID": answerID,
 			"error":    err,
@@ -46,7 +53,7 @@ func SetLike(
 		return err
 	}
 
-	logger.WithFields(logrus.Fields{
+	s.logger.WithFields(logrus.Fields{
 		"chatID":       chatID,
 		"answerID":     answerID,
 		"rowsAffected": rowsAffected,
@@ -54,4 +61,14 @@ func SetLike(
 	}).Info("Successfully set like visibility")
 
 	return nil
+}
+
+// LikeManager - интерфейс для управления лайками.
+type LikeManager interface {
+	CheckChat(userUUID string, chatID int) (bool, error)
+	SetLike(chatID int, answerID int, rating *int) error
+}
+
+func (s *LikeService) CheckChat(userUUID string, chatID int) (bool, error) {
+	return checkChat(s.db, userUUID, chatID, s.logger)
 }

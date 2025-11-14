@@ -3,52 +3,37 @@ package web
 import (
 	"database/sql"
 	"jabki/internal/client"
+	"jabki/internal/database"
+	"jabki/internal/s3"
 	"jabki/internal/web/handlers"
 	"jabki/internal/web/middlewares"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/websocket/v2"
 	"github.com/minio/minio-go"
 	"github.com/sirupsen/logrus"
 )
 
 func InitServiceRoutes(server *fiber.App, db *sql.DB, secretServie string, logger *logrus.Logger) {
-	history := handlers.NewHistory(db, logger)
+	history := handlers.NewHistory(database.NewHistoryRepository(db, logger), logger)
 	serviceAuthentication := middlewares.NewServiceAuthentication(secretServie, logger)
 	server.Get("/historyForModel/:uuid/:chat_id", serviceAuthentication.Handler, history.Handler)
-	server.Get(
-		"/graph_log_writer/:chat_id",
-		func(c *fiber.Ctx) error {
-			// Проверяем, является ли запрос WebSocket upgrade
-			if websocket.IsWebSocketUpgrade(c) {
-				c.Locals("allowed", true)
-				return c.Next()
-			}
-			return fiber.ErrUpgradeRequired
-		},
-		handlers.GraphLogHandler(db, "service", logger),
-	)
+	server.Get("/graph_log_writer/:chat_id", middlewares.Upgrader, handlers.GraphLogHandler("service", logger))
 }
 
 func InitPublicRoutes(server *fiber.App, db *sql.DB, secretUser, frontOrigin string, logger *logrus.Logger) {
 	server.Use(middlewares.Cors(frontOrigin))
 
-	auth := handlers.NewAuth(db, secretUser, logger)
+	authRepo := database.NewAuthService(db, logger)
+	auth := handlers.NewAuth(authRepo, secretUser, logger)
 	server.Put("/auth", auth.Handler)
 
-	reg := handlers.NewReg(db, secretUser, logger)
+	regRepo := database.NewRegistrationService(db, logger)
+	reg := handlers.NewReg(regRepo, secretUser, logger)
 	server.Post("/reg", reg.Handler)
 
-	server.Use("/graph_log", func(c *fiber.Ctx) error {
-		// Проверяем, является ли запрос WebSocket upgrade
-		if websocket.IsWebSocketUpgrade(c) {
-			c.Locals("allowed", true)
-			return c.Next()
-		}
-		return fiber.ErrUpgradeRequired
-	})
+	server.Use("/graph_log", middlewares.Upgrader)
 
-	server.Get("/graph_log/:chat_id", handlers.GraphLogHandler(db, secretUser, logger))
+	server.Get("/graph_log/:chat_id", handlers.GraphLogHandler(secretUser, logger))
 }
 
 func InitJWTMiddleware(server *fiber.App, secret, frontOrigin string, logger *logrus.Logger) {
@@ -59,60 +44,53 @@ func InitJWTMiddleware(server *fiber.App, secret, frontOrigin string, logger *lo
 func InitPrivateRoutes(
 	server *fiber.App,
 	db *sql.DB,
-	s3 *minio.Client,
-	model *client.ModelClient,
+	s3Client *minio.Client,
 	recognizer *client.RecognizerClient,
 	streamClient *client.StreamMessageClient,
 	logger *logrus.Logger,
 ) {
-	message := handlers.NewMessage(model, db, logger)
-	server.Post("/message/:chat_id", message.Handler)
-
-	history := handlers.NewHistory(db, logger)
+	historyRepo := database.NewHistoryRepository(db, logger)
+	history := handlers.NewHistory(historyRepo, logger)
 	server.Get("/history/:chat_id", history.Handler)
 
-	clear := handlers.NewClear(db, logger)
+	clear := handlers.NewClear(historyRepo, logger)
 	server.Delete("/clear/:chat_id", clear.Handler)
 
-	like := handlers.NewLike(db, logger)
+	likeRepo := database.NewLikeRepository(db, logger)
+	like := handlers.NewLike(likeRepo, logger)
 	server.Put("/like/:chat_id", like.Handler)
 
-	voice := handlers.NewVoice(recognizer, s3, logger)
+	voiceStorage := s3.NewMinIOAudioFileManager(s3Client)
+	voice := handlers.NewVoice(recognizer, voiceStorage, logger)
 	server.Post("/voice", voice.Handler)
 
-	proxy := handlers.NewProxy(s3, logger)
-	server.Get("/voices/:file_name", proxy.HandlerWebm)
+	fileStorege := s3.NewMinIOFileManager(s3Client)
+	proxy := handlers.NewFileProxy(fileStorege, logger)
 	server.Get("/files/:file_name", proxy.HandlerFile)
 
-	chat := handlers.NewChat(db, logger)
+	audioStorage := s3.NewMinIOAudioFileManager(s3Client)
+	proxyAudio := handlers.NewAudioProxy(audioStorage, logger)
+	server.Get("/voices/:file_name", proxyAudio.HandlerWebm)
+
+	chatRepo := database.NewChatRepository(db, logger)
+	chat := handlers.NewChat(chatRepo, logger)
 	server.Post("/chat", chat.CreateHandler)
 	server.Get("/chats", chat.GetHandler)
 	server.Put("/chat/:chat_id", chat.RenameHandler)
 
-	supportHistory := handlers.NewSupportHistory(db, logger)
-	server.Get("/support_history/:chat_id", supportHistory.GetSupportsHistoryHandler)
-
-	server.Use("/support", func(c *fiber.Ctx) error {
-		// Проверяем, является ли запрос WebSocket upgrade
-		if websocket.IsWebSocketUpgrade(c) {
-			c.Locals("allowed", true)
-			return c.Next()
-		}
-		return fiber.ErrUpgradeRequired
-	})
-
-	server.Get("/support/:chat_id", handlers.SupportHandler(db, logger))
-
-	profile := handlers.NewProfile(db, logger)
+	profileRepo := database.NewProfileRepository(db, logger)
+	profile := handlers.NewProfile(profileRepo, logger)
 	server.Get("/profile", profile.GetHandler)
 	server.Put("/profile_other_info", profile.PutOtherInfoHandler)
 
-	stream := handlers.NewStream(streamClient, db, streamClient.HistoryLen, logger)
+	streamRepo := database.NewMessageRepository(db, logger)
+	stream := handlers.NewStream(streamClient, streamRepo, streamClient.HistoryLen, logger)
 	server.Post("/message_stream/:chat_id", stream.Handler)
 
-	file := handlers.NewFile(s3, logger)
+	file := handlers.NewFile(fileStorege, logger)
 	server.Post("/file", file.Handler)
 
-	search := handlers.NewSearch(db, logger)
+	searchRepo := database.NewSearchRepository(db, logger)
+	search := handlers.NewSearch(searchRepo, logger)
 	server.Get("/search", search.Handler)
 }
