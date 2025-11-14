@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 
 from ml.agent.router import workflow, workflow_collected
-from ml.configs.message import RequestPayload
+from ml.configs.message import RequestPayload, Tag
 import ml.api.ollama_setup as ollama_setup
 
 import logging
@@ -62,13 +62,22 @@ def create_app() -> FastAPI:
         # Check if models are initialized
         if not app.state.models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
+        
+        stream: Iterator[ChatResponse]
+        tag: Tag
+        stream, tag = workflow(payload)
 
-        def event_generator():
-            stream: Iterator[ChatResponse] = workflow(payload)
+        def event_generator(stream):
             for chunk in stream:
                 yield f"data: {chunk.model_dump_json()}\n\n"
-
-        return StreamingResponse(event_generator(), media_type="text/event-stream")
+        
+        headers = {
+            "tag": tag.value
+        }
+        return StreamingResponse(
+            event_generator(stream), 
+            media_type="text/event-stream", 
+            headers=headers)
 
     @app.get("/ping")
     def ping() -> dict[str, str]:
