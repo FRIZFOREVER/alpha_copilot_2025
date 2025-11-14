@@ -37,7 +37,7 @@ export const RegisterForm = () => {
   };
 
   return (
-    <div className="space-y-2 flex flex-col w-full justify-center h-full bg-white p-6 md:p-10 rounded-3xl">
+    <div className="space-y-2 flex flex-col w-full justify-center h-full bg-white p-6 md:p-10 rounded-4xl">
       <Form {...form}>
         <form
           onSubmit={handleSubmit(onSubmit)}

@@ -166,7 +166,7 @@ const ProfilePage = () => {
                     {mockData.recommendations.map((rec, i) => (
                       <div
                         key={i}
-                        className="group relative overflow-hidden rounded-2xl md:rounded-3xl border-2 border-gray-200/50 bg-gradient-to-br from-gray-50 to-white backdrop-blur-sm shadow-md hover:shadow-xl hover:border-red-200 transition-all duration-300"
+                        className="group relative border border-gray-200 overflow-hidden rounded-3xl md:rounded-4xl bg-gradient-to-br from-gray-50 to-white backdrop-blur-sm shadow-md hover:shadow-xl hover:border-red-200 transition-all duration-300"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 via-pink-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
