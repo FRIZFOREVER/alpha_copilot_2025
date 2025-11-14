@@ -18,7 +18,7 @@ func GraphLogHandler(db *sql.DB, secret string, logger *logrus.Logger) fiber.Han
 		if secret != "service" {
 			uuid, err = middlewares.RequestUserUUID(secret, c.Query("jwt"), logger)
 			if err != nil {
-				logger.Error("Error Ошибка при обработки JWT error!!!: %s", err)
+				logger.Errorf("Error Ошибка при обработки JWT error!!!: %s", err)
 				return
 			}
 		}
@@ -34,10 +34,12 @@ func GraphLogHandler(db *sql.DB, secret string, logger *logrus.Logger) fiber.Han
 		logger.Infof("WebSocket соединение установлено для чата: %s, пользователь: %s\n", chatID, userUUID)
 
 		// Отправляем пользователю подтверждение подключения
-		c.WriteJSON(map[string]string{
+		if err := c.WriteJSON(map[string]string{
 			"type": "connection_established",
 			"uuid": userUUID,
-		})
+		}); err != nil {
+			logger.Error("Ошибка отправки json: ", err)
+		}
 
 		for {
 			var msg ws.Message

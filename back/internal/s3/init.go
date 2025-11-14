@@ -6,7 +6,7 @@ import (
 	"github.com/minio/minio-go"
 )
 
-// InitMinioClient инициализирует подключение к MinIO и проверяет наличие бакета voices
+// InitMinioClient инициализирует подключение к MinIO и проверяет наличие бакета voices.
 func InitMinioClient(host, accessKey, secretKey string, useSSL bool) (*minio.Client, error) {
 	// Создаем клиент
 	client, err := minio.New(host, accessKey, secretKey, useSSL)

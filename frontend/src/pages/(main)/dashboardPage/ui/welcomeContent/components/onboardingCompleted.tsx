@@ -12,7 +12,7 @@ export const OnboardingCompleted = ({
     <div
       className={cn(
         "flex flex-col items-center justify-center px-6 py-6",
-        className,
+        className
       )}
     >
       <div className="mb-6">
@@ -25,7 +25,7 @@ export const OnboardingCompleted = ({
         />
       </div>
       <h3 className="text-xl md:text-2xl text-gray-900 mb-3 text-center">
-        Форма уже заполнена
+        Форма заполнена
       </h3>
       <p className="text-lg text-gray-600 text-center leading-2">Спасибо!</p>
     </div>

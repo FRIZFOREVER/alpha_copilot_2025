@@ -39,7 +39,7 @@ export const useSendVoiceMutation = () => {
 
           const processingMessages = old.filter(
             (item) =>
-              item.question === "Обработка аудио..." && item.question_id < 0,
+              item.question === "Обработка аудио..." && item.question_id < 0
           );
 
           if (processingMessages.length === 0) return old;
@@ -47,7 +47,7 @@ export const useSendVoiceMutation = () => {
           const lastProcessingMessage = processingMessages.reduce(
             (latest, current) =>
               current.question_id > latest.question_id ? current : latest,
-            processingMessages[0],
+            processingMessages[0]
           );
 
           tempQuestionId = lastProcessingMessage.question_id;
@@ -66,12 +66,14 @@ export const useSendVoiceMutation = () => {
             }
             return item;
           });
-        },
+        }
       );
 
       const sendMessageDto: SendMessageStreamDto = {
         question: voiceResponse.question,
         voice_url: voiceResponse.voice_url,
+        mode: "fast",
+        tag: "",
       };
 
       return new Promise((resolve, reject) => {
@@ -130,7 +132,7 @@ export const useSendVoiceMutation = () => {
         (old) => {
           if (!old) return [optimisticMessage];
           return [...old, optimisticMessage];
-        },
+        }
       );
 
       return {
@@ -142,7 +144,7 @@ export const useSendVoiceMutation = () => {
       if (context?.previousHistory !== undefined && context?.chatId) {
         queryClient.setQueryData(
           [GET_HISTORY_QUERY, context.chatId],
-          context.previousHistory,
+          context.previousHistory
         );
       }
     },

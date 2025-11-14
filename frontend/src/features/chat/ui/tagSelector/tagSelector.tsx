@@ -65,11 +65,10 @@ export const TagSelector = ({
     <div
       ref={containerRef}
       className={cn(
-        "absolute z-50",
+        "absolute z-50 border border-gray-200 shadow-sm",
         "bg-white/90 backdrop-blur-xl",
-        "rounded-2xl shadow-2xl border border-white/30",
+        "rounded-4xl",
         "p-1 min-w-[240px] max-h-[320px] overflow-y-auto",
-        "ring-1 ring-black/5",
         className,
       )}
       style={{
@@ -86,8 +85,8 @@ export const TagSelector = ({
           type="button"
           onClick={() => onSelect(tag.id)}
           className={cn(
-            "w-full px-5 py-3.5 cursor-pointer text-left text-sm font-medium",
-            "rounded-xl transition-all duration-200",
+            "w-full px-4 py-3 cursor-pointer text-left text-sm font-medium",
+            "rounded-3xl transition-all duration-200",
             "hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100",
             "hover:shadow-sm hover:scale-[0.99]",
             "active:scale-95",
@@ -95,10 +94,6 @@ export const TagSelector = ({
             "flex items-center gap-3 group",
           )}
         >
-          <span
-            className="w-3 h-3 rounded-full flex-shrink-0 shadow-sm ring-2 ring-white"
-            style={{ backgroundColor: tag.color }}
-          />
           <span
             className="group-hover:translate-x-0.5 transition-transform"
             style={{ color: tag.color }}

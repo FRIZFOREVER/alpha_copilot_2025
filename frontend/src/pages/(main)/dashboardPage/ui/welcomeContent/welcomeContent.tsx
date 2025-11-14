@@ -7,6 +7,7 @@ import { ONBOARDING_STEPS } from "./lib/onboardingSteps";
 import { onboardingService } from "./lib/onboardingService";
 import { useUpdateProfile } from "@/entities/auth/hooks/useUpdateProfile";
 import { UpdateProfileDto } from "@/entities/auth/types/types";
+import { cn } from "@/shared/lib/mergeClass";
 
 const TOTAL_STEPS = 3;
 
@@ -106,60 +107,40 @@ export const WelcomeContent = () => {
   const currentStepConfig = ONBOARDING_STEPS[currentStep - 1];
   const canGoBack = currentStep > 1;
 
-  if (isOnboardingCompleted) {
-    return (
-      <div className="h-full overflow-y-auto">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 md:py-6">
-          <div className="mb-8 md:mb-16">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
-              Бизнес-контекст
-            </h2>
-            <div className="p-4 md:p-6 lg:p-10 rounded-2xl md:rounded-3xl bg-white">
-              <OnboardingCompleted />
-            </div>
-          </div>
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
-              Возможности
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              {CAPABILITIES.map((capability) => (
-                <CapabilityCard
-                  key={capability.title}
-                  title={capability.title}
-                  description={capability.description}
-                  imageSrc={capability.imageSrc}
-                  imageAlt={capability.imageAlt}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto scrollbar-hide">
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 md:py-6">
         <div className="mb-8 md:mb-16">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
             Бизнес-контекст
           </h2>
-          <div className="p-4 md:p-6 lg:p-10 rounded-2xl md:rounded-4xl bg-white">
-            <Stepper
-              currentStep={currentStep}
-              totalSteps={TOTAL_STEPS}
-              onStepClick={handleStepClick}
-              completedSteps={completedSteps}
-            />
-            <StepForm
-              stepConfig={currentStepConfig}
-              initialValue=""
-              onSubmit={handleStepSubmit}
-              onBack={handleStepBack}
-              canGoBack={canGoBack}
-            />
+          <div
+            className={cn(
+              "p-4 md:p-6 lg:p-10 rounded-2xl md:rounded-3xl bg-gradient-to-b from-gray-200 to-white",
+              isOnboardingCompleted
+                ? "rounded-2xl md:rounded-3xl bg-gradient-to-b from-gray-200 to-white"
+                : "rounded-3xl md:rounded-4xl bg-white shadow-sm"
+            )}
+          >
+            {isOnboardingCompleted ? (
+              <OnboardingCompleted />
+            ) : (
+              <>
+                <Stepper
+                  currentStep={currentStep}
+                  totalSteps={TOTAL_STEPS}
+                  onStepClick={handleStepClick}
+                  completedSteps={completedSteps}
+                />
+                <StepForm
+                  stepConfig={currentStepConfig}
+                  initialValue=""
+                  onSubmit={handleStepSubmit}
+                  onBack={handleStepBack}
+                  canGoBack={canGoBack}
+                />
+              </>
+            )}
           </div>
         </div>
         <div>
