@@ -2,6 +2,7 @@ from .memories_rag import flash_memories_node
 from .mode_traverse import graph_mode_node
 from .thinking_planner import thinking_planner_node
 from .research_react import research_react_node
+from .research_tool_call import research_tool_call_node
 from .fast_answer import fast_answer_node
 
 __all__ = [
@@ -9,5 +10,6 @@ __all__ = [
     "flash_memories_node",
     "thinking_planner_node",
     "research_react_node",
+    "research_tool_call_node",
     "fast_answer_node"
 ]
