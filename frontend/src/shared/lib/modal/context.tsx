@@ -51,4 +51,3 @@ export const ModalProvider: FC<PropsWithChildren> = ({ children }) => {
     </ModalContext.Provider>
   );
 };
-

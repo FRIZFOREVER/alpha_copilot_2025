@@ -140,7 +140,7 @@ const OnboardingCard = ({
         // Слева, но места выше мало - размещаем как можно выше, но в пределах экрана
         const topPos = Math.max(
           spacing,
-          rect.top - Math.min(cardHeight, spaceAbove - spacing * 2)
+          rect.top - Math.min(cardHeight, spaceAbove - spacing * 2),
         );
         setCardPosition({
           top: topPos,
@@ -154,7 +154,7 @@ const OnboardingCard = ({
         setCardPosition({
           top: Math.min(
             rect.bottom + spacing,
-            window.innerHeight - cardHeight - spacing
+            window.innerHeight - cardHeight - spacing,
           ),
           left: Math.max(spacing, rect.left - cardWidth - spacing),
           right: undefined,
@@ -174,7 +174,10 @@ const OnboardingCard = ({
         // Последний вариант: слева от кнопки, позиционируем так, чтобы карточка была видна
         const calculatedLeft = Math.max(
           spacing,
-          Math.min(rect.left - spacing, window.innerWidth - cardWidth - spacing)
+          Math.min(
+            rect.left - spacing,
+            window.innerWidth - cardWidth - spacing,
+          ),
         );
         const availableVerticalSpace = Math.max(spaceAbove, spaceBelow);
 
@@ -194,8 +197,8 @@ const OnboardingCard = ({
             spacing,
             Math.min(
               rect.bottom + spacing,
-              window.innerHeight - cardHeight - spacing
-            )
+              window.innerHeight - cardHeight - spacing,
+            ),
           );
           setCardPosition({
             top: topPos,
@@ -316,7 +319,7 @@ const OnboardingCard = ({
         className={cn(
           "fixed z-[101] bg-white rounded-3xl shadow-2xl pointer-events-auto",
           !isMobile && "max-w-sm w-full",
-          currentStep === 3 && !isMobile && "max-w-xs"
+          currentStep === 3 && !isMobile && "max-w-xs",
         )}
         style={{
           ...(isMobile
@@ -377,14 +380,14 @@ const OnboardingCard = ({
                         "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0",
                         task.completed
                           ? "bg-purple-500 text-white"
-                          : "border-2 border-gray-300"
+                          : "border-2 border-gray-300",
                       )}
                     >
                       {task.completed && <Check className="h-3 w-3" />}
                     </div>
                     <span
                       className={cn(
-                        task.completed && "line-through text-gray-400"
+                        task.completed && "line-through text-gray-400",
                       )}
                     >
                       {task.label}
@@ -415,7 +418,7 @@ const OnboardingCard = ({
                     "h-2 rounded-full transition-all duration-300",
                     idx + 1 === currentStep
                       ? "w-6 bg-purple-500"
-                      : "w-2 bg-gray-300"
+                      : "w-2 bg-gray-300",
                   )}
                 />
               ))}
@@ -436,14 +439,14 @@ const OnboardingCard = ({
               onClick={isLastStep ? onSkip : onNext}
               className={cn(
                 "flex-1 rounded-2xl cursor-pointer",
-                isFirstStep && "w-full"
+                isFirstStep && "w-full",
               )}
             >
               {isLastStep
                 ? "Завершить"
                 : currentStep === 1
-                ? "Продолжить"
-                : "Далее"}
+                  ? "Продолжить"
+                  : "Далее"}
             </Button>
           </div>
         </div>
@@ -463,7 +466,7 @@ export const Onboarding = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const { isMobileView } = useResize();
   const [targetElement, setTargetElement] = useState<HTMLButtonElement | null>(
-    null
+    null,
   );
 
   // Закрываем онбординг, если чат открыт
@@ -479,7 +482,7 @@ export const Onboarding = () => {
 
       const findButton = () => {
         const button = document.querySelector(
-          'button[aria-label="Открыть чат"]'
+          'button[aria-label="Открыть чат"]',
         ) as HTMLButtonElement;
         if (button) {
           setTargetElement(button);

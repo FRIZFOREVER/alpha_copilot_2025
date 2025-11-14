@@ -15,13 +15,14 @@ import {
   SendMessageStreamCallbacks,
   StreamInitialResponse,
   StreamChunk,
+  SearchMessagesResponse,
 } from "../types/types";
 
 const API_BASE_URL = "http://127.0.0.1:8080";
 
 class ChatService {
   public async createChat(
-    createChatDto: CreateChatDto
+    createChatDto: CreateChatDto,
   ): Promise<CreateChatResponse> {
     const { data } = await axiosAuth.post<CreateChatResponse>("/chat", {
       ...createChatDto,
@@ -38,7 +39,7 @@ class ChatService {
 
   public async getHistory(chatId: number): Promise<GetHistoryResponse> {
     const { data } = await axiosAuth.get<GetHistoryResponse>(
-      `/history/${chatId}`
+      `/history/${chatId}`,
     );
 
     return data;
@@ -46,11 +47,11 @@ class ChatService {
 
   public async likeMessage(
     chatId: number,
-    likeDto: LikeMessageDto
+    likeDto: LikeMessageDto,
   ): Promise<LikeMessageResponse> {
     const { data } = await axiosAuth.put<LikeMessageResponse>(
       `/like/${chatId}`,
-      likeDto as unknown as Record<string, unknown>
+      likeDto as unknown as Record<string, unknown>,
     );
 
     return data;
@@ -58,11 +59,11 @@ class ChatService {
 
   public async sendMessage(
     chatId: number,
-    sendMessageDto: SendMessageDto
+    sendMessageDto: SendMessageDto,
   ): Promise<SendMessageResponse> {
     const { data } = await axiosAuth.post<SendMessageResponse>(
       `/message/${chatId}`,
-      sendMessageDto as unknown as Record<string, unknown>
+      sendMessageDto as unknown as Record<string, unknown>,
     );
 
     return data;
@@ -71,7 +72,7 @@ class ChatService {
   public async sendMessageStream(
     chatId: number,
     sendMessageDto: SendMessageStreamDto,
-    callbacks: SendMessageStreamCallbacks
+    callbacks: SendMessageStreamCallbacks,
   ): Promise<void> {
     const token = getAccessToken();
 
@@ -103,7 +104,7 @@ class ChatService {
       if (!response.ok) {
         const errorText = await response.text().catch(() => "Unknown error");
         throw new Error(
-          `HTTP error! status: ${response.status}, message: ${errorText}`
+          `HTTP error! status: ${response.status}, message: ${errorText}`,
         );
       }
 
@@ -227,7 +228,7 @@ class ChatService {
       callbacks.onComplete?.();
     } catch (error) {
       callbacks.onError?.(
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
     }
   }
@@ -238,7 +239,7 @@ class ChatService {
 
     const { data } = await axiosAuth.post<SendVoiceResponse>(
       "/voice",
-      formData as unknown as Record<string, unknown>
+      formData as unknown as Record<string, unknown>,
     );
 
     return data;
@@ -250,7 +251,20 @@ class ChatService {
 
     const { data } = await axiosAuth.post<UploadFileResponse>(
       "/file",
-      formData as unknown as Record<string, unknown>
+      formData as unknown as Record<string, unknown>,
+    );
+
+    return data;
+  }
+
+  public async searchMessages(
+    pattern: string,
+  ): Promise<SearchMessagesResponse> {
+    // Форматируем паттерн для SQL LIKE: добавляем % вокруг текста для поиска в любом месте
+    const likePattern = `%${pattern}%`;
+    const encodedPattern = encodeURIComponent(likePattern);
+    const { data } = await axiosAuth.get<SearchMessagesResponse>(
+      `/search?pattern=${encodedPattern}`,
     );
 
     return data;
@@ -266,4 +280,5 @@ export const {
   sendMessageStream,
   sendVoice,
   uploadFile,
+  searchMessages,
 } = new ChatService();

@@ -24,7 +24,7 @@ export const FloatingLabelInput = React.forwardRef<
       className={clsx(
         "relative border transition-colors duration-200 ease-in-out",
         className,
-        isFocused && "border-zinc-400"
+        isFocused && "border-zinc-400",
       )}
     >
       <label
@@ -32,7 +32,7 @@ export const FloatingLabelInput = React.forwardRef<
           "absolute left-3 transition-all duration-200 pointer-events-none",
           isFocused || hasValue
             ? "top-[7px] text-[10px] text-zinc-500"
-            : "top-1/2 -translate-y-1/2 text-sm text-zinc-500"
+            : "top-1/2 -translate-y-1/2 text-sm text-zinc-500",
         )}
       >
         {label}

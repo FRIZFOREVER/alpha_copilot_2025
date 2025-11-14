@@ -8,6 +8,7 @@ import type { MessageData } from "../ui/messageList/messageList";
 import { ERouteNames } from "@/shared/lib/routeVariables";
 import { capitalizeFirst } from "@/shared/lib/utils/userHelpers";
 import { type Suggestion } from "../ui/suggestions";
+import { type TagId } from "../ui/tagSelector/tagSelector";
 
 const DEFAULT_SUGGESTIONS: Suggestion[] = [
   {
@@ -70,10 +71,15 @@ export const useChatMessages = () => {
     ];
   }, [messages, isSendingMessage, isSendingVoice, chatId]);
 
-  const handleSendMessage = (data: { message: string; file_url?: string }) => {
+  const handleSendMessage = (data: {
+    message: string;
+    file_url?: string;
+    tag?: TagId;
+  }) => {
     if (!data.message.trim()) return;
 
     const trimmedMessage = data.message.trim();
+    const tag = data.tag || "";
 
     if (!chatId) {
       const truncatedMessage =
@@ -88,20 +94,22 @@ export const useChatMessages = () => {
           onSuccess: (chatData) => {
             navigate(
               `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}/${chatData.chat_id}`,
-              { replace: true }
+              { replace: true },
             );
             sendMessage({
               chatId: chatData.chat_id,
               sendMessageDto: {
                 question: trimmedMessage,
                 file_url: data.file_url,
+                tag: tag,
+                mode: "fast",
               },
             });
           },
           onError: (error) => {
             console.error("Failed to create chat:", error);
           },
-        }
+        },
       );
     } else {
       sendMessage({
@@ -109,6 +117,8 @@ export const useChatMessages = () => {
         sendMessageDto: {
           question: trimmedMessage,
           file_url: data.file_url,
+          tag: tag,
+          mode: "fast",
         },
       });
     }
@@ -125,7 +135,7 @@ export const useChatMessages = () => {
             chatIdRef.current = data.chat_id;
             navigate(
               `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}/${data.chat_id}`,
-              { replace: true }
+              { replace: true },
             );
             sendVoice({
               chatId: data.chat_id,
@@ -135,7 +145,7 @@ export const useChatMessages = () => {
           onError: (error) => {
             console.error("Failed to create chat:", error);
           },
-        }
+        },
       );
     } else {
       sendVoice({
@@ -163,4 +173,3 @@ export const useChatMessages = () => {
     chatId,
   };
 };
-

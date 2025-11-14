@@ -1,2 +1,1 @@
 export { WelcomeContent } from "./welcomeContent";
-

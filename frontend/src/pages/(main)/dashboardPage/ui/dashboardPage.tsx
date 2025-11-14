@@ -11,6 +11,8 @@ import { useResize } from "@/shared/hooks/useResize";
 import { useEffect, useRef } from "react";
 import { Onboarding } from "@/widgets/onboarding";
 import { useOnboarding } from "@/shared/lib/onboarding";
+import { useGraphLogSocket } from "@/shared/hooks/useGraphLogSocket";
+import { useGraphLogEvents } from "@/shared/hooks/useGraphLogEvents";
 
 const DashboardPage = () => {
   const location = useLocation();
@@ -23,6 +25,17 @@ const DashboardPage = () => {
   } = useChatCollapse();
   const { isOnboardingCompleted, startOnboarding, skipOnboarding } =
     useOnboarding();
+
+  useGraphLogSocket();
+
+  useGraphLogEvents(
+    (data) => {
+      console.log("Получено сообщение от graph_log:", data);
+    },
+    (uuid) => {
+      console.log("Подключение к graph_log установлено, UUID:", uuid);
+    }
+  );
 
   const isChatRoute =
     location.pathname.includes(`/${ERouteNames.CHAT_ROUTE}`) ||
@@ -84,13 +97,13 @@ const DashboardPage = () => {
   const shouldShowHeader = isCollapsed;
 
   return (
-    <div className="flex h-full w-full relative flex-col">
+    <div className="flex h-full w-full relative flex-col bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80">
       {shouldShowHeader && <Header />}
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <div
           className={cn(
-            "flex-1 flex overflow-hidden relative transition-all duration-300 bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80",
+            "flex-1 flex overflow-hidden relative transition-all duration-300",
             !showWelcomeContent && "border-l border-zinc-100",
             showWelcomeContent && showMinimizedChat && "flex-row"
           )}

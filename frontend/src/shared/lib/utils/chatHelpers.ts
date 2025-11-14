@@ -24,4 +24,3 @@ export const getChatIcon = (chatId: string): string => {
 export const getChatInitial = (title: string): string => {
   return title.charAt(0).toUpperCase();
 };
-

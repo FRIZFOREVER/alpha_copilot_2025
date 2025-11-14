@@ -50,9 +50,9 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80">
       <Header />
-      <div className=" bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80 overflow-hidden">
+      <div className="overflow-hidden">
         <div className="flex-1 overflow-y-auto bg-zinc-100 rounded-t-2xl h-full">
           <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
             <div className="relative rounded-4xl overflow-hidden border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-white transition-all duration-300">

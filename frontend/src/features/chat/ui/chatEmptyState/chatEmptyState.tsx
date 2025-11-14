@@ -43,13 +43,13 @@ export const ChatEmptyState = ({
     <div
       className={cn(
         "flex items-center justify-center px-3 sm:px-4 md:px-8 py-6 sm:py-8 md:py-12 w-full",
-        isCompact && "px-3 py-6 md:px-3 md:py-6"
+        isCompact && "px-3 py-6 md:px-3 md:py-6",
       )}
     >
       <div
         className={cn(
           "flex flex-col items-center justify-center space-y-4 sm:space-y-6 md:space-y-8 max-w-2xl w-full",
-          isCompact && "space-y-4 md:space-y-4"
+          isCompact && "space-y-4 md:space-y-4",
         )}
       >
         <div className="relative">
@@ -59,7 +59,7 @@ export const ChatEmptyState = ({
               "relative transition-all duration-700 ease-out",
               imageLoaded
                 ? "opacity-100 scale-100 translate-y-0"
-                : "opacity-0 scale-95 translate-y-4"
+                : "opacity-0 scale-95 translate-y-4",
             )}
           >
             <Image
@@ -67,7 +67,7 @@ export const ChatEmptyState = ({
               alt="AI Consultant"
               className={cn(
                 "w-32 sm:w-40 md:w-48 lg:w-64 h-auto drop-shadow-2xl select-none",
-                isCompact && "w-24 sm:w-32 md:w-40 lg:w-48"
+                isCompact && "w-24 sm:w-32 md:w-40 lg:w-48",
               )}
               loading="eager"
               onLoad={() => setImageLoaded(true)}
@@ -78,13 +78,13 @@ export const ChatEmptyState = ({
         <div
           className={cn(
             "text-center transition-opacity duration-700 ease-out px-2 sm:px-4",
-            imageLoaded ? "opacity-100" : "opacity-0"
+            imageLoaded ? "opacity-100" : "opacity-0",
           )}
         >
           <p
             className={cn(
               "text-base sm:text-lg md:text-xl lg:text-2xl font-medium text-gray-800 leading-relaxed",
-              isCompact && "text-base sm:text-base md:text-base lg:text-base"
+              isCompact && "text-base sm:text-base md:text-base lg:text-base",
             )}
           >
             {displayedText}

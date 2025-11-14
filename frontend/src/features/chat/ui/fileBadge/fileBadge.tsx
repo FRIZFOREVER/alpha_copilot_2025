@@ -37,7 +37,7 @@ export const FileBadge = ({
         "flex items-center gap-3 rounded-[16px] px-2",
         "bg-white border border-gray-200",
         "max-w-full md:max-w-1/2",
-        className
+        className,
       )}
     >
       <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
@@ -61,7 +61,7 @@ export const FileBadge = ({
           "text-gray-700 hover:text-gray-900 hover:bg-gray-100",
           "transition-all duration-200",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          "mr-1"
+          "mr-1",
         )}
         aria-label="Удалить файл"
       >

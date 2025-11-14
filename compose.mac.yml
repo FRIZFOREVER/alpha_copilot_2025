@@ -1,0 +1,209 @@
+services:
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "5173:80"
+  #   depends_on:
+  #     - app
+  #   restart: always
+
+  app:
+    build:
+      context: ./back
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./.env
+    environment:
+      # Передаем переменную окружения для AssemblyAI API
+      - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY:-}
+      - MODEL=${MODEL:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      # - recognizer-service
+    restart: always
+    networks:
+      - app-network
+
+  # ml-api:
+  #   build:
+  #     context: ./ml
+  #     dockerfile: Dockerfile
+  #   env_file:
+  #     - ./.env
+  #   environment:
+  #     - OLLAMA_HOST=http://ollama:11434
+  #   ports:
+  #     - "8000:8000"
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - ollama
+
+  mock-ml-service:
+    build: ./mock/ml
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=app
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=app123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  migrations:
+    build:
+      context: ./back/internal/database/migrations
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - app-network
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2024-05-28T17-19-04Z
+    environment:
+      MINIO_ROOT_USER: minio-user
+      MINIO_ROOT_PASSWORD: minio-password
+      MINIO_UPDATE: "off"
+    command: server /data --json --console-address ':9090'
+    ports:
+      - "9000:9000/tcp"
+      - "9090:9090/tcp"
+    volumes:
+      - minio-data:/data:rw
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mc alias set healthcheck http://127.0.0.1:9000 minio-user minio-password >/dev/null 2>&1 && mc ready healthcheck",
+        ]
+      interval: 10s
+      start_period: 10s
+      timeout: 5s
+      retries: 5
+    security_opt: [no-new-privileges:true]
+    networks:
+      - app-network
+
+  # ollama:
+  #   build:
+  #     context: .
+  #     dockerfile: model/Dockerfile
+
+  #   container_name: ollama
+  #   ports:
+  #     - "11434:11434"
+
+  #   volumes:
+  #     - ollama:/root/.ollama
+
+  #   restart: unless-stopped
+
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-fsS", "http://localhost:11434/api/tags"]
+  #     interval: 60s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 20s
+
+  minio-init:
+    image: quay.io/minio/minio:RELEASE.2024-05-28T17-19-04Z
+    entrypoint: >
+      /bin/sh -c '
+        echo "Ожидание запуска MinIO..."
+        mc alias set minio http://minio:9000 minio-user minio-password
+        for i in 1 2 3 4 5 6 7 8 9 10; do
+          if mc ready minio 2>/dev/null; then
+            echo "MinIO готов"
+            break
+          fi
+          echo "Попытка $i/10..."
+          sleep 2
+        done
+        echo "Создание бакетов..."
+        for i in 1 2 3 4 5; do
+          if mc mb minio/voices 2>/dev/null; then
+            echo "Бакет voices создан"
+            break
+          fi
+          if mc ls minio/voices >/dev/null 2>&1; then
+            echo "Бакет voices уже существует"
+            break
+          fi
+          echo "Попытка создания voices $i/5..."
+          sleep 1
+        done
+        for i in 1 2 3 4 5; do
+          if mc mb minio/files 2>/dev/null; then
+            echo "Бакет files создан"
+            break
+          fi
+          if mc ls minio/files >/dev/null 2>&1; then
+            echo "Бакет files уже существует"
+            break
+          fi
+          echo "Попытка создания files $i/5..."
+          sleep 1
+        done
+        mc anonymous set public minio/voices 2>/dev/null || echo "Не удалось установить публичный доступ для voices"
+        mc anonymous set public minio/files 2>/dev/null || echo "Не удалось установить публичный доступ для files"
+        echo "Проверка бакетов..."
+        if ! mc ls minio/voices >/dev/null 2>&1; then
+          echo "ОШИБКА: Бакет voices не найден"
+          exit 1
+        fi
+        if ! mc ls minio/files >/dev/null 2>&1; then
+          echo "ОШИБКА: Бакет files не найден"
+          exit 1
+        fi
+        echo "Бакет voices создан успешно"
+        echo "Бакет files создан успешно"
+        echo "Инициализация MinIO завершена"
+      '
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: "no"
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  ollama:
+  postgres_data:
+  minio-data: {}

@@ -18,7 +18,7 @@ func InitServiceRoutes(server *fiber.App, db *sql.DB, secretServie string, logge
 	server.Get("/historyForModel/:uuid/:chat_id", serviceAuthentication.Handler, history.Handler)
 	server.Get(
 		"/graph_log_writer/:chat_id",
-		serviceAuthentication.Handler, func(c *fiber.Ctx) error {
+		func(c *fiber.Ctx) error {
 			// Проверяем, является ли запрос WebSocket upgrade
 			if websocket.IsWebSocketUpgrade(c) {
 				c.Locals("allowed", true)
@@ -26,7 +26,7 @@ func InitServiceRoutes(server *fiber.App, db *sql.DB, secretServie string, logge
 			}
 			return fiber.ErrUpgradeRequired
 		},
-		handlers.GraphLogHandler(db, logger),
+		handlers.GraphLogHandler(db, "service", logger),
 	)
 }
 
@@ -38,6 +38,17 @@ func InitPublicRoutes(server *fiber.App, db *sql.DB, secretUser, frontOrigin str
 
 	reg := handlers.NewReg(db, secretUser, logger)
 	server.Post("/reg", reg.Handler)
+
+	server.Use("/graph_log", func(c *fiber.Ctx) error {
+		// Проверяем, является ли запрос WebSocket upgrade
+		if websocket.IsWebSocketUpgrade(c) {
+			c.Locals("allowed", true)
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	})
+
+	server.Get("/graph_log/:chat_id", handlers.GraphLogHandler(db, secretUser, logger))
 }
 
 func InitJWTMiddleware(server *fiber.App, secret, frontOrigin string, logger *logrus.Logger) {
@@ -101,17 +112,6 @@ func InitPrivateRoutes(
 
 	file := handlers.NewFile(s3, logger)
 	server.Post("/file", file.Handler)
-
-	server.Use("/graph_log", func(c *fiber.Ctx) error {
-		// Проверяем, является ли запрос WebSocket upgrade
-		if websocket.IsWebSocketUpgrade(c) {
-			c.Locals("allowed", true)
-			return c.Next()
-		}
-		return fiber.ErrUpgradeRequired
-	})
-
-	server.Get("/graph_log/:chat_id", handlers.GraphLogHandler(db, logger))
 
 	search := handlers.NewSearch(db, logger)
 	server.Get("/search", search.Handler)

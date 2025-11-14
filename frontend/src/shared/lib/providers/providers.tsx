@@ -7,19 +7,22 @@ import { ModalProvider as ModalContextProvider } from "@/shared/lib/modal/contex
 import { ModalProvider } from "../modal/modalProvider";
 import { ChatCollapseProvider } from "../chatCollapse";
 import { OnboardingProvider } from "../onboarding";
+import { SocketProvider } from "@/entities/socket/model";
 
 export const Providers = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ViewerProvider>
-        <ModalContextProvider>
-          <ChatCollapseProvider>
-            <OnboardingProvider>
-              <RouterProvider router={routes} />
-              <ModalProvider />
-            </OnboardingProvider>
-          </ChatCollapseProvider>
-        </ModalContextProvider>
+        <SocketProvider>
+          <ModalContextProvider>
+            <ChatCollapseProvider>
+              <OnboardingProvider>
+                <RouterProvider router={routes} />
+                <ModalProvider />
+              </OnboardingProvider>
+            </ChatCollapseProvider>
+          </ModalContextProvider>
+        </SocketProvider>
       </ViewerProvider>
     </QueryClientProvider>
   );
