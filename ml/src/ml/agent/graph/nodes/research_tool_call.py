@@ -1,7 +1,7 @@
 """Tool execution node for research workflow."""
 
 from random import shuffle
-from typing import Any, Dict
+from typing import Any
 
 from ml.agent.graph.state import GraphState, NextAction, ResearchObservation
 from ml.agent.tools.base import ToolResult
@@ -17,17 +17,17 @@ def research_tool_call_node(state: GraphState, client: Any) -> GraphState:
     tool = get_tool("web_search")
     tool_result = tool.execute(query=request.input_text)
 
-    payload: Dict[str, Any] = {}
+    payload: dict[str, Any] = {}
     payload = dict(tool_result.data)
 
     results = payload.get("results")
-    
+
     shuffled_results = list(results)
     shuffle(shuffled_results)
     payload["results"] = shuffled_results
     payload["count"] = len(shuffled_results)
 
-    metadata: Dict[str, Any] = {
+    metadata: dict[str, Any] = {
         "success": tool_result.success,
         "payload": payload,
     }

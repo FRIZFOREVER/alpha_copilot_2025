@@ -1,7 +1,4 @@
 from enum import Enum
-from typing import Optional
-
-from pydantic import BaseModel, Field
 
 from ml.agent.graph.state import (
     GraphState,
@@ -12,6 +9,7 @@ from ml.agent.graph.state import (
 from ml.agent.prompts import get_research_reason_prompt
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory
+from pydantic import BaseModel, Field
 
 
 class ResearchReactAction(str, Enum):
@@ -25,21 +23,19 @@ class ResearchReactResponse(BaseModel):
     action: ResearchReactAction = Field(
         description="Directive emitted by the model for how to proceed"
     )
-    tool_name: Optional[str] = Field(
+    tool_name: str | None = Field(
         default=None,
         description="Identifier for the tool to execute when action requests it",
     )
-    query: Optional[str] = Field(
+    query: str | None = Field(
         default=None,
         description="Primary query or payload that should be sent to the tool",
     )
-    comparison_text: Optional[str] = Field(
+    comparison_text: str | None = Field(
         default=None,
-        description=(
-            "Optional additional instructions for comparing or validating tool output"
-        ),
+        description=("Optional additional instructions for comparing or validating tool output"),
     )
-    final_answer: Optional[str] = Field(
+    final_answer: str | None = Field(
         default=None,
         description="Completed response to return to the user when finalizing",
     )

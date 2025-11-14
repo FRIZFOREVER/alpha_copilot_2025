@@ -1,6 +1,6 @@
 """Observation processing node for the research workflow."""
 
-from typing import Any, Dict, List
+from typing import Any
 
 from ml.agent.graph.state import GraphState, NextAction, ResearchTurn
 from ml.agent.prompts import get_research_observation_prompt
@@ -9,12 +9,12 @@ from ml.api.ollama_calls import ReasoningModelClient
 MAX_RESEARCH_ITERATIONS = 6
 
 
-def _extract_result_documents(payload: Dict[str, Any]) -> List[str]:
-    documents: List[str] = []
+def _extract_result_documents(payload: dict[str, Any]) -> list[str]:
+    documents: list[str] = []
     results = payload.get("results") if payload else None
     if results:
         for index, item in enumerate(results, start=1):
-            lines: List[str] = []
+            lines: list[str] = []
             title = item.get("title")
             url = item.get("url")
             excerpt = item.get("excerpt")
@@ -39,8 +39,8 @@ def _extract_result_documents(payload: Dict[str, Any]) -> List[str]:
     return documents
 
 
-def _collect_documents(observation_metadata: Dict[str, Any]) -> List[str]:
-    documents: List[str] = []
+def _collect_documents(observation_metadata: dict[str, Any]) -> list[str]:
+    documents: list[str] = []
     payload = observation_metadata.get("payload") if observation_metadata else None
     if payload and hasattr(payload, "get"):
         documents.extend(_extract_result_documents(payload))

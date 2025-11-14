@@ -1,15 +1,16 @@
 import logging
-from typing import Iterator, List, TypeVar
+from collections.abc import Iterator
+from typing import TypeVar
 
+from ml.configs.message import ChatHistory
+from ml.configs.model_config import EmbeddingClientSettings, ReasoningClientSettings
 from ollama import ChatResponse, chat, embed
 from pydantic import BaseModel
-
-from ml.configs.model_config import EmbeddingClientSettings, ReasoningClientSettings
-from ml.configs.message import ChatHistory
 
 T = TypeVar("T", bound=BaseModel)
 
 logger = logging.getLogger(__name__)
+
 
 class ReasoningModelClient:
     def __init__(self, settings: ReasoningClientSettings = ReasoningClientSettings()):
@@ -22,7 +23,7 @@ class ReasoningModelClient:
             messages=messages.messages_list(),
             options=self.settings.options.model_dump() | kwargs,
             keep_alive=self.settings.keep_alive,
-            stream=False
+            stream=False,
         ).message.content
 
     def stream(self, messages: ChatHistory, **kwargs) -> Iterator[ChatResponse]:
@@ -33,12 +34,8 @@ class ReasoningModelClient:
             keep_alive=self.settings.keep_alive,
             stream=True,
         )
-    
-    def call_structured(self, 
-                        messages: ChatHistory, 
-                        output_schema: type[T],
-                        **kwargs
-                        ) -> T:
+
+    def call_structured(self, messages: ChatHistory, output_schema: type[T], **kwargs) -> T:
         response: ChatResponse = chat(
             model=self.settings.model,
             messages=messages.messages_list(),
@@ -55,12 +52,12 @@ class ReasoningModelClient:
             logger.warning("FAILED TO PARSE STRUCTURED OUTPUT")
             raise ValueError("Structured response did not match the expected schema") from exc
 
-class EmbeddingModelClient:
 
+class EmbeddingModelClient:
     def __init__(self, settings: EmbeddingClientSettings = EmbeddingClientSettings()):
         self.settings: EmbeddingClientSettings = settings
 
-    def call(self, content: str, **kwargs) -> List[float]:
+    def call(self, content: str, **kwargs) -> list[float]:
         response = embed(
             model=self.settings.model,
             input=content,

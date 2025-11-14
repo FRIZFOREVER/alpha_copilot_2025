@@ -1,26 +1,24 @@
 import asyncio
-from typing import Dict, Iterator, List
+import logging
+from collections.abc import Iterator
 
+import ml.api.ollama_setup as ollama_setup
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
-
 from ml.agent.router import workflow, workflow_collected
 from ml.configs.message import RequestPayload, Tag
-import ml.api.ollama_setup as ollama_setup
-
-import logging
-
 from ollama import ChatResponse
 
 logger = logging.getLogger(__name__)
+
 
 async def lifespan(app: FastAPI):
     app.state.models_ready = asyncio.Event()
 
     async def _init():
         # checking and download missing models
-        available_models: List[str] = await ollama_setup.fetch_available_models()
-        requested_models: List[str] = await ollama_setup.get_models_from_env()
+        available_models: list[str] = await ollama_setup.fetch_available_models()
+        requested_models: list[str] = await ollama_setup.get_models_from_env()
         await ollama_setup.download_missing_models(available_models, requested_models)
 
         # Init and warmup
@@ -39,8 +37,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Agent Base API", lifespan=lifespan)
 
     @app.post("/message")
-    async def message(payload: RequestPayload) -> Dict[str, str]:
-
+    async def message(payload: RequestPayload) -> dict[str, str]:
         # Check if models are initialized
         if not app.state.models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
@@ -61,7 +58,7 @@ def create_app() -> FastAPI:
         # Check if models are initialized
         if not app.state.models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
-        
+
         stream: Iterator[ChatResponse]
         tag: Tag
         stream, tag = workflow(payload)
@@ -69,21 +66,18 @@ def create_app() -> FastAPI:
         def event_generator(stream):
             for chunk in stream:
                 yield f"data: {chunk.model_dump_json()}\n\n"
-        
-        headers = {
-            "tag": tag.value
-        }
+
+        headers = {"tag": tag.value}
         return StreamingResponse(
-            event_generator(stream), 
-            media_type="text/event-stream", 
-            headers=headers)
+            event_generator(stream), media_type="text/event-stream", headers=headers
+        )
 
     @app.get("/ping")
     def ping() -> dict[str, str]:
         return {"message": "pong"}
 
     @app.get("/ollama")
-    async def ollama_models() -> Dict[str, List[str]]:
+    async def ollama_models() -> dict[str, list[str]]:
         available_models = await ollama_setup.fetch_available_models()
         running_models = await ollama_setup.fetch_running_models()
         return {
