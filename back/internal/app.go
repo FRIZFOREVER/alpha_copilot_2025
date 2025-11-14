@@ -2,14 +2,13 @@ package internal
 
 import (
 	"context"
+	"database/sql"
 	"jabki/internal/client"
 	"jabki/internal/database"
 	"jabki/internal/s3"
 	"jabki/internal/settings"
 	"jabki/internal/web"
 	"net/http"
-
-	"database/sql"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/minio/minio-go"
@@ -40,7 +39,6 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 
 	s3client, err := s3.InitMinioClient(config.S3URL, config.S3Login, config.S3Password, false)
 	if err != nil {
-
 		return nil, err
 	}
 	logger.Info("Есть подключение к S3 MINIO! 🐦")

@@ -16,7 +16,7 @@ type Message struct {
 	Content string `json:"content"`
 }
 
-// PayloadStream структура для входных данных
+// PayloadStream структура для входных данных.
 type PayloadStream struct {
 	Messages []Message `json:"messages"`
 	ChatID   string    `json:"chat_id"`
@@ -27,7 +27,7 @@ type PayloadStream struct {
 	IsVoice  bool      `json:"is_voice"`
 }
 
-// StreamMessage представляет структуру сообщения из стрима
+// StreamMessage представляет структуру сообщения из стрима.
 type StreamMessage struct {
 	Model              string         `json:"model"`
 	CreatedAt          string         `json:"created_at"`
@@ -42,7 +42,7 @@ type StreamMessage struct {
 	Message            MessageContent `json:"message"`
 }
 
-// MessageContent представляет содержимое сообщения
+// MessageContent представляет содержимое сообщения.
 type MessageContent struct {
 	Role      string      `json:"role"`
 	Content   string      `json:"content"`
@@ -52,7 +52,7 @@ type MessageContent struct {
 	ToolCalls interface{} `json:"tool_calls"`
 }
 
-// StreamMessageClient клиент для работы с потоковыми сообщениями
+// StreamMessageClient клиент для работы с потоковыми сообщениями.
 type StreamMessageClient struct {
 	method     string
 	url        string
@@ -61,7 +61,7 @@ type StreamMessageClient struct {
 	HistoryLen int
 }
 
-// NewStreamMessageClient создает новый клиент
+// NewStreamMessageClient создает новый клиент.
 func NewStreamMessageClient(method, url, path string, historyLen int) *StreamMessageClient {
 	return &StreamMessageClient{
 		method: method,
@@ -74,7 +74,7 @@ func NewStreamMessageClient(method, url, path string, historyLen int) *StreamMes
 	}
 }
 
-// StreamRequestToModel выполняет запрос и возвращает канал для чтения сообщений StreamMessage
+// StreamRequestToModel выполняет запрос и возвращает канал для чтения сообщений StreamMessage.
 func (c *StreamMessageClient) StreamRequestToModel(payload PayloadStream) (<-chan *StreamMessage, string, error) {
 	var tag string
 	// Маршалим payload в JSON
@@ -116,7 +116,7 @@ func (c *StreamMessageClient) StreamRequestToModel(payload PayloadStream) (<-cha
 	return messageChan, tag, nil
 }
 
-// processSSEStream обрабатывает SSE поток и отправляет StreamMessage в канал
+// processSSEStream обрабатывает SSE поток и отправляет StreamMessage в канал.
 func (c *StreamMessageClient) processSSEStream(resp *http.Response, messageChan chan<- *StreamMessage) {
 	defer resp.Body.Close()
 	defer close(messageChan)
@@ -163,7 +163,7 @@ func (c *StreamMessageClient) processSSEStream(resp *http.Response, messageChan 
 	}
 }
 
-// StreamRequestToModelWithTimeout версия с таймаутом
+// StreamRequestToModelWithTimeout версия с таймаутом.
 func (c *StreamMessageClient) StreamRequestToModelWithTimeout(payload PayloadStream, timeout time.Duration) (<-chan *StreamMessage, string, error) {
 	messageChan := make(chan *StreamMessage)
 

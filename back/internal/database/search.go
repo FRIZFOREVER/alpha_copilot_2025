@@ -20,11 +20,11 @@ func GetSerchedMessages(
 	err error,
 ) {
 	rows, err := db.Query(searchMessageQuery, uuid, searchQuery)
-		if err != nil {
-			logger.WithError(err).Error("Failed to query search")
-			return nil, err
-		}
-		defer rows.Close()
+	if err != nil {
+		logger.WithError(err).Error("Failed to query search")
+		return nil, err
+	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var msg Message

@@ -45,7 +45,6 @@ func SupportHandler(db *sql.DB, logger *logrus.Logger) fiber.Handler {
 			chatIDint, err := strconv.Atoi(chatID)
 			if err != nil {
 				logger.Error("chatID не число:", err)
-
 			}
 
 			err = database.CreateSupport(db, userUUID, chatIDint, msg.Message, logger)

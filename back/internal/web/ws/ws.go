@@ -11,17 +11,19 @@ type Message struct {
 	Message string `json:"message"`
 }
 
-// Структура для хранения информации о соединении
+// Структура для хранения информации о соединении.
 type ConnectionInfo struct {
 	Conn *websocket.Conn
 	UUID string
 }
 
-// Изменяем структуру хранения соединений
-var Connections = make(map[string]map[string]*ConnectionInfo) // chatID -> userUUID -> ConnectionInfo
-var mu sync.RWMutex
+// Изменяем структуру хранения соединений.
+var (
+	Connections = make(map[string]map[string]*ConnectionInfo) // chatID -> userUUID -> ConnectionInfo
+	mu          sync.RWMutex
+)
 
-// Функция для отправки сообщения всем пользователям в чате, кроме отправителя
+// Функция для отправки сообщения всем пользователям в чате, кроме отправителя.
 func BroadcastMessage(chatID, senderUUID string, message Message) {
 	mu.RLock()
 	defer mu.RUnlock()
@@ -44,7 +46,7 @@ func BroadcastMessage(chatID, senderUUID string, message Message) {
 	}
 }
 
-// Функция для добавления соединения
+// Функция для добавления соединения.
 func AddConnection(chatID, userUUID string, conn *websocket.Conn) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -59,7 +61,7 @@ func AddConnection(chatID, userUUID string, conn *websocket.Conn) {
 	}
 }
 
-// Функция для удаления соединения
+// Функция для удаления соединения.
 func RemoveConnection(chatID, userUUID string) {
 	mu.Lock()
 	defer mu.Unlock()

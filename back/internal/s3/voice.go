@@ -9,12 +9,14 @@ import (
 	"github.com/minio/minio-go"
 )
 
-var ErrFilenameIsRequired = errors.New("Filename is required")
-var ErrFailedToCheckBucketExistence = errors.New("Failed to check bucket existence")
-var ErrBucketNotFound = errors.New("Bucket not found")
-var ErrFileNotFound = errors.New("File not found")
-var ErrFailedToGetFileInfo = errors.New("Failed to get file info")
-var ErrFileIsNotAnAudioMpegFile = errors.New("File is not an audio/mpeg file")
+var (
+	ErrFilenameIsRequired           = errors.New("Filename is required")
+	ErrFailedToCheckBucketExistence = errors.New("Failed to check bucket existence")
+	ErrBucketNotFound               = errors.New("Bucket not found")
+	ErrFileNotFound                 = errors.New("File not found")
+	ErrFailedToGetFileInfo          = errors.New("Failed to get file info")
+	ErrFileIsNotAnAudioMpegFile     = errors.New("File is not an audio/mpeg file")
+)
 
 func UploadMP3ToMinIO(s3 *minio.Client, bucketName, uuid string, mp3Data []byte) (string, error) {
 	fileName := fmt.Sprintf("%s_%d.webm", uuid, time.Now().Unix())
@@ -25,7 +27,7 @@ func UploadMP3ToMinIO(s3 *minio.Client, bucketName, uuid string, mp3Data []byte)
 		ContentType: "audio/mpeg",
 	})
 	if err != nil {
-		//TODO обернуть fmt.Errorf
+		// TODO обернуть fmt.Errorf
 		return "", fmt.Errorf("ошибка загрузки файла в MinIO: %w", err)
 	}
 
@@ -37,7 +39,6 @@ func UploadMP3ToMinIO(s3 *minio.Client, bucketName, uuid string, mp3Data []byte)
 }
 
 func GetMpegFile(s3 *minio.Client, backet, fileName string) (*minio.Object, error) {
-
 	if fileName == "" {
 		return nil, ErrFilenameIsRequired
 	}
