@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"jabki/internal/client"
-	"jabki/internal/database"
+	database "jabki/internal/repository"
 	"strconv"
 	"strings"
 	"time"

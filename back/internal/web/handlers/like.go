@@ -3,7 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
-	"jabki/internal/database"
+	database "jabki/internal/repository"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
