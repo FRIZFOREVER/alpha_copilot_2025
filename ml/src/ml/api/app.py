@@ -63,6 +63,11 @@ def create_app() -> FastAPI:
         if not app.state.models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
         
+        payload.system = (
+            "Ты полезный персональный ассистент. Выполяй запрос пользователя.\n"
+            "Если сообщение пользователя не несёт в себе вопроса или запроса, отвечай приветливо и по делу"
+            )
+
         stream: Iterator[ChatResponse]
         tag: Tag
         stream, tag = workflow(payload)
