@@ -58,7 +58,6 @@ def create_app() -> FastAPI:
 
     @app.post("/message_stream")
     async def message_stream(payload: RequestPayload) -> StreamingResponse:
-
         # Check if models are initialized
         if not app.state.models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
