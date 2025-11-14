@@ -116,10 +116,10 @@ export const WelcomeContent = () => {
           </h2>
           <div
             className={cn(
-              "p-4 md:p-6 lg:p-10",
+              "p-4 md:p-6 lg:p-10 rounded-2xl md:rounded-3xl bg-gradient-to-b from-gray-200 to-white",
               isOnboardingCompleted
                 ? "rounded-2xl md:rounded-3xl bg-gradient-to-b from-gray-200 to-white"
-                : "rounded-3xl md:rounded-4xl bg-white shadow-sm",
+                : "rounded-3xl md:rounded-4xl bg-white shadow-sm"
             )}
           >
             {isOnboardingCompleted ? (
