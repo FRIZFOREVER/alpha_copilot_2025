@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bufio"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"jabki/internal/client"
@@ -17,16 +16,16 @@ import (
 )
 
 type Stream struct {
-	client     *client.StreamMessageClient
-	db         *sql.DB
+	client     client.StreamMessageProcessor
+	repo       database.MessageManager
 	historyLen int
 	logger     *logrus.Logger
 }
 
-func NewStream(client *client.StreamMessageClient, db *sql.DB, historyLen int, logger *logrus.Logger) *Stream {
+func NewStream(client client.StreamMessageProcessor, repo database.MessageManager, historyLen int, logger *logrus.Logger) *Stream {
 	return &Stream{
 		client:     client,
-		db:         db,
+		repo:       repo,
 		historyLen: historyLen,
 		logger:     logger,
 	}
@@ -60,7 +59,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	isCorresponds, err := database.CheckChat(sh.db, uuid.String(), chatID, sh.logger)
+	isCorresponds, err := sh.repo.CheckChat(uuid.String(), chatID)
 	if err != nil || !isCorresponds {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Chat ID is not corresponds to user uuid",
@@ -74,7 +73,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	messages, err := database.GetHistory(sh.db, chatID, uuid.String(), sh.logger, sh.historyLen, streamIn.Tag)
+	messages, err := sh.repo.GetHistory(chatID, uuid.String(), sh.historyLen, streamIn.Tag)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error in database",
@@ -98,8 +97,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		)
 	}
 
-	questionID, answerID, err := database.WriteMessage(
-		sh.db,
+	questionID, answerID, err := sh.repo.WriteMessage(
 		chatID,
 		streamIn.Question,
 		"", //
@@ -108,7 +106,6 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		streamIn.Tag,
 		streamIn.VoiceURL,
 		streamIn.FileURL,
-		sh.logger,
 	)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -223,7 +220,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		if tag == streamIn.Tag {
 			// Сохраняем полный ответ в базу данных
 			fullAnswer := builder.String()
-			_, err = database.UpdateAnswer(sh.db, answerID, fullAnswer, sh.logger)
+			_, err = sh.repo.UpdateAnswer(answerID, fullAnswer)
 			if err != nil {
 				sh.logger.Errorf("Error updating answer in database: %v", err)
 			}
@@ -233,7 +230,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 			}
 			// Сохраняем полный ответ в базу данных
 			fullAnswer := builder.String()
-			_, err = database.UpdateAnswerAndQuestionTag(sh.db, answerID, questionID, fullAnswer, tag, sh.logger)
+			_, err = sh.repo.UpdateAnswerAndQuestionTag(answerID, questionID, fullAnswer, tag)
 			if err != nil {
 				sh.logger.Errorf("Error updating answer and question tag in database: %v", err)
 			}

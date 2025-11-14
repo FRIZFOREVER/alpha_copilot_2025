@@ -7,21 +7,20 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/minio/minio-go"
 	"github.com/sirupsen/logrus"
 )
 
 type Voice struct {
-	recognizer *client.RecognizerClient
-	s3         *minio.Client
-	logger     *logrus.Logger
+	client  client.Recognizer
+	storage s3.AudioFileManager
+	logger  *logrus.Logger
 }
 
-func NewVoice(recognizer *client.RecognizerClient, s3 *minio.Client, logger *logrus.Logger) *Voice {
+func NewVoice(client client.Recognizer, storage s3.AudioFileManager, logger *logrus.Logger) *Voice {
 	return &Voice{
-		recognizer: recognizer,
-		s3:         s3,
-		logger:     logger,
+		client:  client,
+		storage: storage,
+		logger:  logger,
 	}
 }
 
@@ -61,7 +60,7 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	url, err := s3.UploadMP3ToMinIO(vh.s3, "voices", uuid.String(), fileBytes)
+	url, err := vh.storage.Upload("voices", uuid.String(), fileBytes)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error upload to S3",
@@ -71,7 +70,7 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 
 	// jsonBytes := fmt.Sprintf("{\"voice_url\":\"%s\"}", url)
 
-	question, err := vh.recognizer.MessageToRecognizer(fileBytes)
+	question, err := vh.client.MessageToRecognizer(fileBytes)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error send message",

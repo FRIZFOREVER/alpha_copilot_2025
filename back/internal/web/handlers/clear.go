@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"jabki/internal/database"
 	"strconv"
 
@@ -11,13 +10,13 @@ import (
 )
 
 type Clear struct {
-	db     *sql.DB
+	repo   database.HistoryManager
 	logger *logrus.Logger
 }
 
-func NewClear(db *sql.DB, logger *logrus.Logger) *Clear {
+func NewClear(repo database.HistoryManager, logger *logrus.Logger) *Clear {
 	return &Clear{
-		db:     db,
+		repo:   repo,
 		logger: logger,
 	}
 }
@@ -33,14 +32,14 @@ func (ch *Clear) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	isCorresponds, err := database.CheckChat(ch.db, uuid.String(), chatID, ch.logger)
+	isCorresponds, err := ch.repo.CheckChat(uuid.String(), chatID)
 	if err != nil || !isCorresponds {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Chat ID is not corresponds to user uuid",
 		})
 	}
 
-	if err := database.HideMessages(ch.db, chatID, ch.logger); err != nil {
+	if err := ch.repo.HideMessages(chatID); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error in database",
 			"details": err.Error(),

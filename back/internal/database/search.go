@@ -10,26 +10,34 @@ import (
 //go:embed queries/search_message.sql
 var searchMessageQuery string
 
-func GetSerchedMessages(
-	db *sql.DB,
-	uuid string,
-	searchQuery string,
-	logger *logrus.Logger,
-) (
-	messages []Message,
-	err error,
-) {
-	rows, err := db.Query(searchMessageQuery, uuid, searchQuery)
+// SearchService - структура для поиска сообщений.
+type SearchService struct {
+	db     *sql.DB
+	logger *logrus.Logger
+}
+
+// NewSearchRepository - конструктор для SearchService.
+func NewSearchRepository(db *sql.DB, logger *logrus.Logger) *SearchService {
+	return &SearchService{
+		db:     db,
+		logger: logger,
+	}
+}
+
+// GetSearchedMessages - метод для поиска сообщений.
+func (s *SearchService) GetSearchedMessages(uuid string, searchQuery string) ([]Message, error) {
+	rows, err := s.db.Query(searchMessageQuery, uuid, searchQuery)
 	if err != nil {
-		logger.WithError(err).Error("Failed to query search")
+		s.logger.WithError(err).Error("Failed to query search")
 		return nil, err
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			logger.Error("Ошибка закрытия строк: ", err)
+			s.logger.Error("Ошибка закрытия строк: ", err)
 		}
 	}()
 
+	var messages []Message
 	for rows.Next() {
 		var msg Message
 		err := rows.Scan(
@@ -44,16 +52,21 @@ func GetSerchedMessages(
 			&msg.Rating,
 		)
 		if err != nil {
-			logger.WithError(err).Error("Failed to scan row")
+			s.logger.WithError(err).Error("Failed to scan row")
 			continue
 		}
 		messages = append(messages, msg)
 	}
 
 	if err = rows.Err(); err != nil {
-		logger.WithError(err).Error("Error during rows iteration")
+		s.logger.WithError(err).Error("Error during rows iteration")
 		return nil, err
 	}
 
 	return messages, nil
+}
+
+// SearchManager - интерфейс для поиска сообщений.
+type SearchManager interface {
+	GetSearchedMessages(uuid string, searchQuery string) ([]Message, error)
 }
