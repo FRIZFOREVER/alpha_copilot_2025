@@ -56,7 +56,7 @@ services:
 
   migrations:
     build:
-      context: ./back/internal/database/migrations
+      context: ./back/internal/repository/postgres/migrations
       dockerfile: Dockerfile
     depends_on:
       postgres:
