@@ -46,7 +46,7 @@ export const ChatInput = ({
   const [shouldShowTagSelector, setShouldShowTagSelector] = useState(false);
   const tagSelectorRef = useRef<HTMLDivElement>(null);
 
-  const { files, addFiles, removeFile, clearFiles, selectFiles, hasFiles } =
+  const { file, addFile, removeFile, clearFile, selectFile, hasFile } =
     useFileAttachments();
 
   const { isRecording, elapsedSec, error, startRecording, stopRecording } =
@@ -79,11 +79,10 @@ export const ChatInput = ({
     if (message.trim() && !disabled) {
       let fileUrl: string | undefined;
 
-      if (files.length > 0) {
+      if (file) {
         try {
-          const uploadPromises = files.map((file) => uploadFile(file.file));
-          const uploadResults = await Promise.all(uploadPromises);
-          fileUrl = uploadResults[0]?.file_url;
+          const uploadResult = await uploadFile(file.file);
+          fileUrl = uploadResult?.file_url;
         } catch (error) {
           console.error("Ошибка при загрузке файла:", error);
         }
@@ -106,7 +105,7 @@ export const ChatInput = ({
       });
       setMessage("");
       setSelectedTag(undefined);
-      clearFiles();
+      clearFile();
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
         setIsMultiLine(false);
@@ -221,9 +220,9 @@ export const ChatInput = ({
   const handleFileSelect = async () => {
     if (disabled) return;
 
-    const selectedFiles = await selectFiles();
-    if (selectedFiles) {
-      addFiles(selectedFiles);
+    const selectedFile = await selectFile();
+    if (selectedFile) {
+      addFile(selectedFile);
     }
   };
 
@@ -231,7 +230,7 @@ export const ChatInput = ({
     requestAnimationFrame(() => {
       updateTextareaHeight();
     });
-  }, [message, files]);
+  }, [message, file]);
 
   useEffect(() => {
     if (
@@ -245,8 +244,20 @@ export const ChatInput = ({
           const containerRect = tagSelectorRef.current.getBoundingClientRect();
 
           if (containerRect && textareaRect) {
-            const left = textareaRect.left - containerRect.left + 12;
-            const bottom = containerRect.bottom - textareaRect.top + 8;
+            const left = textareaRect.left - containerRect.left;
+            let bottom = containerRect.bottom - textareaRect.top + 8;
+
+            if(file && !selectedTag) {
+              bottom += 75;
+            }
+
+            if(selectedTag && !file) {
+              bottom += 45;
+            }
+
+            if(selectedTag && file) {
+              bottom += 110;
+            }
 
             setTagSelectorPosition({ bottom, left });
             setShowTagSelector(true);
@@ -357,7 +368,7 @@ export const ChatInput = ({
                 "flex flex-col",
               )}
             >
-              {(hasFiles || selectedTag) && (
+              {(hasFile || selectedTag) && (
                 <div className="px-3 pt-3 pb-2 flex flex-col gap-2">
                   {selectedTag && (
                     <div className="flex items-center">
@@ -368,16 +379,13 @@ export const ChatInput = ({
                       />
                     </div>
                   )}
-                  {hasFiles && (
-                    <div className="flex flex-wrap items-center gap-2">
-                      {files.map((file) => (
-                        <FileBadge
-                          key={file.id}
-                          file={file}
-                          onRemove={removeFile}
-                          disabled={disabled}
-                        />
-                      ))}
+                  {hasFile && file && (
+                    <div className="flex items-center">
+                      <FileBadge
+                        file={file}
+                        onRemove={removeFile}
+                        disabled={disabled}
+                      />
                     </div>
                   )}
                 </div>

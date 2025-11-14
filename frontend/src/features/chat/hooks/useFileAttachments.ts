@@ -20,7 +20,7 @@ const ALLOWED_FILE_TYPES = [
 const ALLOWED_EXTENSIONS = [".pdf", ".txt", ".xlsx", ".xls", ".doc", ".docx"];
 
 export const useFileAttachments = () => {
-  const [files, setFiles] = useState<AttachedFile[]>([]);
+  const [file, setFile] = useState<AttachedFile | null>(null);
 
   const validateFile = useCallback((file: File): boolean => {
     const fileExtension = file.name
@@ -34,46 +34,41 @@ export const useFileAttachments = () => {
     return isValidType;
   }, []);
 
-  const addFiles = useCallback(
-    (newFiles: FileList | File[]) => {
-      const fileArray = Array.from(newFiles);
-      const validFiles: AttachedFile[] = [];
-
-      fileArray.forEach((file) => {
-        if (validateFile(file)) {
-          validFiles.push({
-            id: `${file.name}-${Date.now()}-${Math.random()}`,
-            file,
-            name: file.name,
-            type: file.type,
-            size: file.size,
-          });
-        }
-      });
-
-      setFiles((prev) => [...prev, ...validFiles]);
+  const addFile = useCallback(
+    (newFile: File) => {
+      if (validateFile(newFile)) {
+        setFile({
+          id: `${newFile.name}-${Date.now()}-${Math.random()}`,
+          file: newFile,
+          name: newFile.name,
+          type: newFile.type,
+          size: newFile.size,
+        });
+        return true;
+      }
+      return false;
     },
     [validateFile],
   );
 
-  const removeFile = useCallback((fileId: string) => {
-    setFiles((prev) => prev.filter((f) => f.id !== fileId));
+  const removeFile = useCallback(() => {
+    setFile(null);
   }, []);
 
-  const clearFiles = useCallback(() => {
-    setFiles([]);
+  const clearFile = useCallback(() => {
+    setFile(null);
   }, []);
 
-  const selectFiles = useCallback(() => {
-    return new Promise<FileList | null>((resolve) => {
+  const selectFile = useCallback(() => {
+    return new Promise<File | null>((resolve) => {
       const input = document.createElement("input");
       input.type = "file";
-      input.multiple = true;
+      input.multiple = false;
       input.accept = ALLOWED_EXTENSIONS.join(",");
 
       input.onchange = (e) => {
         const target = e.target as HTMLInputElement;
-        resolve(target.files);
+        resolve(target.files?.[0] || null);
       };
 
       input.oncancel = () => {
@@ -85,11 +80,11 @@ export const useFileAttachments = () => {
   }, []);
 
   return {
-    files,
-    addFiles,
+    file,
+    addFile,
     removeFile,
-    clearFiles,
-    selectFiles,
-    hasFiles: files.length > 0,
+    clearFile,
+    selectFile,
+    hasFile: file !== null,
   };
 };

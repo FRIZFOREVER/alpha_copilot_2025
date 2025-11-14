@@ -82,7 +82,7 @@ export const StepForm = ({
                 "w-full resize-none",
                 "px-4 py-3 md:px-5 md:py-4",
                 "text-sm md:text-base text-gray-900",
-                "bg-[#f0f3f7] rounded-2xl",
+                "bg-white rounded-2xl",
                 "border border-[#f0f3f7]",
                 "shadow-sm",
                 "placeholder:text-gray-400",

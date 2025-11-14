@@ -56,13 +56,13 @@ export const MinimizedChat = ({
     <div
       className={cn(
         "w-[450px] h-full",
-        "bg-white rounded-2xl",
+        "bg-white rounded-4xl",
         "flex flex-col",
         "transition-all duration-300 ease-in-out",
         "shrink-0",
       )}
     >
-      <div className="flex items-center justify-between px-4 py-3 bg-white rounded-2xl">
+      <div className="flex items-center justify-between px-4 py-4 bg-white rounded-4xl">
         <div className="flex items-center gap-2">
           <button className="flex items-center gap-2 h-auto p-0 border-0 bg-transparent hover:bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg md:text-xl font-medium text-gray-900 hover:text-gray-700 transition-colors cursor-pointer data-[state=open]:text-gray-700 [&>svg]:opacity-60 [&>svg]:hover:opacity-100 [&_[data-slot=select-value]]:hidden">
             <div className="group cursor-pointer rounded-lg transition-all duration-300 hover:bg-red-50/50">
@@ -95,7 +95,7 @@ export const MinimizedChat = ({
           </Button>
         </div>
       </div>
-      <div className="flex-1 overflow-hidden rounded-b-2xl">
+      <div className="flex-1 overflow-hidden rounded-b-4xl">
         <Chat
           messages={messages}
           onSendMessage={handleSendMessage}
