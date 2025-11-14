@@ -8,6 +8,7 @@ import { useCopied } from "@/shared/hooks/useCopy";
 import { Image } from "@/shared/ui/image/image";
 import { useParams } from "react-router-dom";
 import { FileMessage } from "./fileMessage";
+import { TAG_COLORS } from "../tagSelector/tagSelector";
 
 export interface MessageProps {
   content: string;
@@ -17,12 +18,14 @@ export interface MessageProps {
   isTyping?: boolean;
   file_url?: string;
   isCompact?: boolean;
+  tag: string;
 }
 
 export const Message = ({
   content,
   isUser,
   answerId,
+  tag,
   rating,
   isTyping = false,
   file_url,
@@ -48,7 +51,7 @@ export const Message = ({
       className={cn(
         "flex gap-4 px-4 md:px-8 py-4 md:py-6",
         isUser ? "justify-end" : "justify-start",
-        isCompact && "px-4 md:px-4 py-4 md:py-4",
+        isCompact && "px-4 md:px-4 py-4 md:py-4"
       )}
     >
       {!isUser && (
@@ -64,13 +67,21 @@ export const Message = ({
         className={cn(
           "flex flex-col max-w-[85%] md:max-w-[80%]",
           isUser ? "items-end" : "items-start",
-          isCompact && "max-w-[85%] md:max-w-[85%]",
+          isCompact && "max-w-[85%] md:max-w-[85%]"
         )}
       >
         {!isUser && !isTyping && (
           <div className="mb-2">
-            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-teal-50 text-teal-700 border border-teal-100">
-              #Law
+            <span
+              className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium border"
+              style={{
+                borderColor: TAG_COLORS[tag as keyof typeof TAG_COLORS],
+                backgroundColor:
+                  TAG_COLORS[tag as keyof typeof TAG_COLORS] + "20",
+                color: TAG_COLORS[tag as keyof typeof TAG_COLORS],
+              }}
+            >
+              {tag}
             </span>
           </div>
         )}
@@ -79,7 +90,7 @@ export const Message = ({
           <div
             className={cn(
               "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed mt-2",
-              "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30",
+              "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
             )}
           >
             {content}
@@ -92,7 +103,7 @@ export const Message = ({
               isUser
                 ? "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
                 : "text-foreground rounded-xl py-0 px-0 dark:border-gray-700",
-              isCompact && "text-sm md:text-sm",
+              isCompact && "text-sm md:text-sm"
             )}
           >
             {isTyping ? (
@@ -127,7 +138,7 @@ export const Message = ({
               disabled={!answerId}
               className={cn(
                 "p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer",
-                !answerId && "opacity-50 cursor-not-allowed",
+                !answerId && "opacity-50 cursor-not-allowed"
               )}
               aria-label="Нравится"
               onClick={handleLikeClick}
@@ -137,7 +148,7 @@ export const Message = ({
                   "h-4 w-4",
                   rating && rating > 0
                     ? "text-red-600 dark:text-yellow-400"
-                    : "text-gray-600 dark:text-gray-400",
+                    : "text-gray-600 dark:text-gray-400"
                 )}
               />
             </button>

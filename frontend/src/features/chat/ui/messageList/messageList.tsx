@@ -13,6 +13,7 @@ export interface MessageData {
   rating?: number | null;
   isTyping?: boolean;
   file_url?: string;
+  tag: string;
 }
 
 export interface MessageListProps {
@@ -35,7 +36,7 @@ export const MessageList = ({
     <ScrollArea className="flex-1 max-w-[832px]" ref={contentRef}>
       <div
         className={cn(
-          messages.length === 0 && "h-full flex items-center justify-center",
+          messages.length === 0 && "h-full flex items-center justify-center"
         )}
       >
         {messages.length === 0 ? (
@@ -50,6 +51,7 @@ export const MessageList = ({
               answerId={message.answerId}
               rating={message.rating}
               isTyping={message.isTyping}
+              tag={message.tag}
               file_url={message.file_url}
             />
           ))

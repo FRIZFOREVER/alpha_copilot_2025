@@ -1,15 +1,41 @@
-version: '3.8'
+version: "3.8"
 
 services:
+  ollama:
+    build:
+      context: .
+      dockerfile: model/Dockerfile
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      - OLLAMA_AUTH=disabled
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
   mock-ml-service:
     build: ./mock/ml
     ports:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
+
+volumes:
+  ollama:
