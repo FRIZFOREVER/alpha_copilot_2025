@@ -8,10 +8,12 @@ from ml.agent.graph.nodes import (
     fast_answer_node,
     flash_memories_node,
     graph_mode_node,
+    research_observer_node,
     research_react_node,
+    research_tool_call_node,
     thinking_planner_node,
 )
-from ml.agent.graph.state import GraphState
+from ml.agent.graph.state import GraphState, NextAction
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import RequestPayload, Tag
 from ml.utils.tag_validation import define_tag
@@ -22,6 +24,12 @@ logger = logging.getLogger(__name__)
 
 def _extract_pipeline_mode(state: GraphState) -> str:
     return state.payload.mode.value
+
+
+def _extract_research_route(state: GraphState) -> str:
+    if state.final_prompt is not None:
+        return NextAction.FINISH.value
+    return state.next_action.value
 
 
 def create_pipeline(client: ReasoningModelClient) -> StateGraph:
@@ -36,6 +44,8 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow.add_node("Flash Memories", flash_memories_node)
     workflow.add_node("Thinking planner", thinking_planner_node, client=client)
     workflow.add_node("Research react", research_react_node, client=client)
+    workflow.add_node("Research tool call", research_tool_call_node, client=client)
+    workflow.add_node("Research observer", research_observer_node, client=client)
     workflow.add_node(
         "Fast answer", fast_answer_node
     )  # not passing model cuz forming a final prompt
@@ -60,6 +70,26 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     # Fast
     workflow.add_edge("Flash Memories", "Fast answer")
     workflow.add_edge("Fast answer", END)
+
+    # Research
+    workflow.add_conditional_edges(
+        "Research react",
+        _extract_research_route,
+        {
+            NextAction.THINK.value: "Research react",
+            NextAction.REQUEST_TOOL.value: "Research tool call",
+            NextAction.FINISH.value: "Fast answer",
+        },
+    )
+    workflow.add_edge("Research tool call", "Research observer")
+    workflow.add_conditional_edges(
+        "Research observer",
+        _extract_research_route,
+        {
+            NextAction.THINK.value: "Research react",
+            NextAction.FINISH.value: "Fast answer",
+        },
+    )
 
     app: StateGraph = workflow.compile()
 
