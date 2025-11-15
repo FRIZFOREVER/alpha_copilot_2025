@@ -16,6 +16,7 @@ from ml.agent.graph.nodes import (
     thinking_planner_node,
 )
 from ml.agent.graph.state import GraphState, NextAction
+from ml.agent.prompts.system_prompt import get_system_prompt
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import RequestPayload, Tag
 from ml.utils.tag_validation import define_tag
@@ -112,6 +113,10 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
     # Create Reasoning model client
     client: ReasoningModelClient = ReasoningModelClient()
 
+    # form system prompt for this dialogue
+    system_prompt: str = get_system_prompt(payload.profile)
+    payload.messages.add_or_change_system(system_prompt)
+
     # validate user request if voice
     if payload.is_voice:
         voice_is_valid: bool = validate_voice(
@@ -124,9 +129,7 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
                 payload.messages.model_dump_string(),
             )
             if not payload.tag:
-                error_message: str = (
-                    "Voice validation failed for a conversation without a tag."
-                )
+                error_message: str = "Voice validation failed for a conversation without a tag."
                 logger.error(error_message)
                 raise RuntimeError(error_message)
             logger.info("Returning fallback stream with tag %s", payload.tag.value)
