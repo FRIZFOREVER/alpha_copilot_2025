@@ -109,3 +109,40 @@ export interface TelegramSendMessageResponse {
   date?: string;
   error?: string;
 }
+
+// Todoist Integration Types
+export interface TodoistAuthSaveRequest {
+  user_id: string;
+  token: string;
+}
+
+export interface TodoistAuthSaveResponse {
+  status: "ok" | "error";
+  message?: string;
+  error?: string;
+}
+
+export interface TodoistStatusRequest {
+  user_id: string;
+}
+
+export interface TodoistStatusResponse {
+  status: "ok";
+  authorized: boolean;
+}
+
+export interface TodoistCreateTaskRequest {
+  user_id: string;
+  content: string;
+  description?: string;
+  labels?: string[];
+}
+
+export interface TodoistCreateTaskResponse {
+  status: "ok" | "error";
+  task_id?: string;
+  content?: string;
+  url?: string;
+  message?: string;
+  error?: string;
+}

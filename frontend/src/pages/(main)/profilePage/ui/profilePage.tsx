@@ -14,6 +14,7 @@ import { useChatCollapse } from "@/shared/lib/chatCollapse";
 import { Header } from "@/widgets/header";
 import { IntegrationCard } from "./components/integrationCard";
 import { useTelegramStatusQuery } from "@/entities/auth/hooks/useTelegramStatus";
+import { useTodoistStatusQuery } from "@/entities/auth/hooks/useTodoistStatus";
 import { useModal } from "@/shared/lib/modal/context";
 import { EModalVariables } from "@/shared/lib/modal/constants";
 
@@ -39,6 +40,7 @@ const ProfilePage = () => {
   const phone_number = getStoredPhoneNumber();
 
   const { data: telegramStatus } = useTelegramStatusQuery(phone_number);
+  const { data: todoistStatus } = useTodoistStatusQuery(user_id);
 
   if (isLoadingProfile) {
     return (
@@ -149,8 +151,11 @@ const ProfilePage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {mockData.integrations.map((integration, i) => {
                   const isTelegram = integration.name === "Telegram";
+                  const isTodoist = integration.name === "Todoist";
                   const isConnected = isTelegram
                     ? telegramStatus?.authorized ?? false
+                    : isTodoist
+                    ? todoistStatus?.authorized ?? false
                     : integration.connected;
 
                   return (
@@ -164,6 +169,10 @@ const ProfilePage = () => {
                       onClick={() => {
                         if (isTelegram && !isConnected && user_id) {
                           openModal(EModalVariables.TELEGRAM_AUTH_MODAL, {
+                            user_id,
+                          });
+                        } else if (isTodoist && user_id && !isConnected) {
+                          openModal(EModalVariables.TODOIST_AUTH_MODAL, {
                             user_id,
                           });
                         } else {

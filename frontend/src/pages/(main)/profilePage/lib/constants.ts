@@ -33,12 +33,11 @@ export const mockData = {
   },
   integrations: [
     {
-      name: "Альфа-Бизнес",
-      connected: true,
+      name: "Todoist",
+      connected: false,
       icon: "🏦",
       imageSrc: "/images/D03_CardPromo1_210325.webp",
-      description:
-        "Документооборот, счета, зарплатный проект, кредиты, депозиты — более 70 решений",
+      description: "Управление задачами, проектами, списками и многое другое",
       category: "ДЛЯ ЛЮБЫХ СОТРУДНИКОВ",
     },
     {
@@ -52,7 +51,7 @@ export const mockData = {
     },
     {
       name: "Email",
-      connected: true,
+      connected: false,
       icon: "📧",
       imageSrc: "/images/D04_CardPromo3_210325.webp",
       description:
