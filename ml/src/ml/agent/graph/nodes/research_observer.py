@@ -104,7 +104,7 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
 
     state.turn_history.append(current_turn)
 
-    if state.loop_counter < MAX_RESEARCH_ITERATIONS and state.final_answer_draft is None:
+    if state.loop_counter < MAX_RESEARCH_ITERATIONS:
         state.next_action = NextAction.THINK
     else:
         state.next_action = NextAction.ANSWER

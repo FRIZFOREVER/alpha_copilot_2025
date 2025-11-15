@@ -2,33 +2,8 @@
 
 from collections.abc import Sequence
 
-from ml.agent.graph.state import ResearchTurn
-from ml.configs.message import ChatHistory, Message, Role
-
-
-def _compress_dialogue(messages: Sequence[Message], limit: int = 6) -> str:
-    selected = list(messages[-limit:])
-    lines: list[str] = []
-    for message in selected:
-        if message.role == Role.system:
-            prefix = "Система"
-        elif message.role == Role.user:
-            prefix = "Пользователь"
-        else:
-            prefix = "Ассистент"
-        lines.append(f"{prefix}: {message.content}")
-    return "\n".join(lines)
-
-
-def _summarize_turns(turn_history: Sequence[ResearchTurn], limit: int = 5) -> str:
-    summaries: list[str] = []
-    for index, turn in enumerate(turn_history[-limit:], start=1):
-        note = turn.reasoning_summary or "Нет заметок"
-        summaries.append(f"Шаг {index}: {note}")
-        observation = turn.observation
-        if observation and observation.content:
-            summaries.append(f"Наблюдение: {observation.content}")
-    return "\n".join(summaries)
+from ml.agent.prompts.system_prompt import get_system_prompt
+from ml.configs.message import ChatHistory, UserProfile
 
 
 def _format_evidence(evidence_snippets: Sequence[str]) -> str:
@@ -38,39 +13,57 @@ def _format_evidence(evidence_snippets: Sequence[str]) -> str:
     return "\n".join(lines)
 
 
-def get_research_answer_prompt(
+def _compose_system_message(
     *,
-    system_prompt: str,
-    conversation: ChatHistory,
-    turn_history: Sequence[ResearchTurn],
-    answer_draft: str,
+    profile: UserProfile,
+    turn_highlights: Sequence[str],
+    latest_reasoning: str,
     evidence_snippets: Sequence[str],
-) -> ChatHistory:
-    prompt = ChatHistory()
-    prompt.add_or_change_system(system_prompt)
+) -> str:
+    persona = get_system_prompt(profile)
+    sections: list[str] = [persona]
 
-    context_block = _compress_dialogue(conversation.messages)
-    history_block = _summarize_turns(turn_history)
-    evidence_block = _format_evidence(evidence_snippets)
+    if turn_highlights:
+        highlights = "\n".join(f"- {highlight}" for highlight in turn_highlights)
+        sections.append("Ключевые шаги исследования:\n" + highlights)
 
-    user_sections: list[str] = []
-    if context_block:
-        user_sections.append("Краткий контекст:\n" + context_block)
-    if history_block:
-        user_sections.append("Хронология исследования:\n" + history_block)
-    user_sections.append("Черновик ответа:\n" + answer_draft)
-    if evidence_block:
-        user_sections.append("Источники:\n" + evidence_block)
-    user_sections.append(
-        "Сформируй развёрнутый финальный ответ для пользователя на основе черновика и сведений из"
-        " источников. Укажи конкретные сайты или публикации, из которых взята информация,"
-        " и оформи блок с источниками отдельным списком. Ответ должен быть самодостаточным,"
-        " содержательным и структурированным (используй подзаголовки или списки для рецептов,"
-        ' этапов и рекомендаций). Не начинай ответ с формулировок вроде "Ответ пользователя" и'
-        " не предлагай продолжить исследование — считаем, что найден максимум информации.\n"
-        "Не указывай источники, содержащие нерелевантную информацию\n"
-        "Если все источники неревантны, то скажи, что не смог найти подходящую информацию"
+    if latest_reasoning:
+        sections.append("Последняя сводка рассуждений:\n" + latest_reasoning)
+
+    if evidence_snippets:
+        sections.append("Доступные источники:\n" + _format_evidence(evidence_snippets))
+
+    sections.append(
+        "Правила финального ответа:\n"
+        "1. Сформируй развёрнутый ответ на основе предоставленных данных.\n"
+        "2. Укажи конкретные сайты или публикации и оформи блок «Источники» со ссылками на"
+        " номера из списка источников.\n"
+        "3. Структурируй ответ: используй подзаголовки, списки и шаги для рекомендаций.\n"
+        "4. Не начинай ответ с формулировок вроде «Ответ пользователя» и не предлагай продолжить"
+        " исследование.\n"
+        "5. Не ссылайся на нерелевантные источники. Если все источники бесполезны, честно сообщи"
+        " об этом."
     )
 
-    prompt.add_user("\n\n".join(user_sections))
+    return "\n\n".join(sections)
+
+
+def get_research_answer_prompt(
+    *,
+    profile: UserProfile,
+    conversation: ChatHistory,
+    turn_highlights: Sequence[str],
+    latest_reasoning: str,
+    evidence_snippets: Sequence[str],
+) -> ChatHistory:
+    """Recreate the conversation with an updated system message for the final answer."""
+
+    prompt: ChatHistory = conversation.model_copy(deep=True)
+    system_message = _compose_system_message(
+        profile=profile,
+        turn_highlights=turn_highlights,
+        latest_reasoning=latest_reasoning,
+        evidence_snippets=evidence_snippets,
+    )
+    prompt.add_or_change_system(system_message)
     return prompt
