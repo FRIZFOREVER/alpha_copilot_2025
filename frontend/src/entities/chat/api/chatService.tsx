@@ -99,6 +99,9 @@ class ChatService {
           file_url: sendMessageDto.file_url || "",
           tag: sendMessageDto.tag || "",
           mode: sendMessageDto.mode || "",
+          send_to_telegram: sendMessageDto.send_to_telegram || false,
+          phone_number: sendMessageDto.phone_number || "",
+          recipient_id: sendMessageDto.recipient_id || "",
         }),
       });
 
