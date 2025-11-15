@@ -12,6 +12,7 @@ from fastapi.responses import StreamingResponse
 from ollama import Client
 from pydantic import BaseModel
 from telegram_user_service import TelegramUserService
+from email_service import EmailService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -105,6 +106,7 @@ app = FastAPI(title="Mock ML Service")
 
 app.state.models_ready = asyncio.Event()
 app.state.telegram_user_service = TelegramUserService()
+app.state.email_service = EmailService()
 
 
 @app.on_event("startup")
@@ -742,6 +744,131 @@ async def disconnect_telegram_user(request: Request):
         raise
     except Exception as e:
         logger.error(f"Error disconnecting Telegram user: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/email/auth/save")
+async def save_email_credentials(request: Request):
+    """Сохраняет учетные данные email пользователя"""
+    try:
+        payload: dict[str, Any] = await request.json()
+        user_id = payload.get("user_id")
+        email = payload.get("email")
+        password = payload.get("password")
+
+        if not user_id:
+            raise HTTPException(status_code=400, detail="user_id is required")
+        if not email:
+            raise HTTPException(status_code=400, detail="email is required")
+        if not password:
+            raise HTTPException(status_code=400, detail="password is required")
+
+        email_service: EmailService = app.state.email_service
+        result = email_service.save_email_credentials(
+            user_id=user_id,
+            email=email,
+            password=password,
+        )
+
+        if result.get("status") == "error":
+            raise HTTPException(status_code=400, detail=result.get("error"))
+
+        return {"status": "ok", **result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error saving email credentials: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/email/status")
+async def get_email_status(request: Request):
+    """Получает статус авторизации email по email адресу"""
+    try:
+        payload: dict[str, Any] = await request.json()
+        email = payload.get("email")
+
+        if not email:
+            raise HTTPException(status_code=400, detail="email is required")
+
+        email_service: EmailService = app.state.email_service
+        logger.info(f"Checking email status for: {email}")
+
+        is_authorized = email_service.is_authorized_by_email(email)
+
+        result = {
+            "status": "ok",
+            "authorized": is_authorized,
+        }
+
+        if is_authorized:
+            user_id = email_service.find_user_by_email(email)
+            if user_id:
+                result["user_id"] = user_id
+                result["email"] = email
+                logger.info(f"Email {email} is authorized for user_id: {user_id}")
+        else:
+            logger.warning(f"Email {email} is not authorized")
+
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting email status: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/email/send/message")
+async def send_email_message(request: Request):
+    """Отправляет email сообщение от имени пользователя"""
+    try:
+        payload: dict[str, Any] = await request.json()
+        email = payload.get("email")  # Email отправителя (для поиска user_id)
+        to_email = payload.get("to_email")
+        subject = payload.get("subject", "Сообщение от AI Copilot")
+        text = payload.get("text")
+        html = payload.get("html")
+
+        if not email:
+            raise HTTPException(status_code=400, detail="email is required")
+        if not to_email:
+            raise HTTPException(status_code=400, detail="to_email is required")
+        if not text:
+            raise HTTPException(status_code=400, detail="text is required")
+
+        email_service: EmailService = app.state.email_service
+
+        logger.info(f"Attempting to send email. From: {email}, To: {to_email}")
+
+        # Находим user_id по email
+        found_user_id = email_service.find_user_by_email(email)
+        if not found_user_id:
+            logger.warning(f"User not found for email: {email}")
+            raise HTTPException(
+                status_code=404,
+                detail="User not found by email. Please authorize your email first.",
+            )
+
+        logger.info(f"Found user_id: {found_user_id} for email: {email}")
+
+        result = await email_service.send_message(
+            user_id=found_user_id,
+            to_email=to_email,
+            subject=subject,
+            text=text,
+            html=html,
+        )
+
+        if result.get("success"):
+            return {"status": "ok", **result}
+        else:
+            raise HTTPException(
+                status_code=400, detail=result.get("error", "Failed to send email")
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error sending email: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
