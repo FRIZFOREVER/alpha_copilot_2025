@@ -4,6 +4,8 @@ from functools import partial
 from typing import Any
 
 from langgraph.graph import END, StateGraph
+from ollama import ChatResponse
+
 from ml.agent.graph.nodes import (
     fast_answer_node,
     flash_memories_node,
@@ -21,7 +23,6 @@ from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import RequestPayload, Tag
 from ml.utils.tag_validation import define_tag
 from ml.utils.voice_validation import form_final_report, validate_voice
-from ollama import ChatResponse
 
 logger: logging.Logger = logging.getLogger(__name__)
 
