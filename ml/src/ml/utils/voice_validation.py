@@ -1,11 +1,12 @@
-from typing import Iterator
+from collections.abc import Iterator
 
+from ml.agent.prompts import VoiceValidationResponse, get_voice_validation_prompt
 from ml.api.ollama_calls import ReasoningModelClient
-from ollama import ChatResponse, Message as OllamaMessage
+from ml.configs.message import ChatHistory
+from ml.configs.message import Message as ChatMessage
+from ollama import ChatResponse
+from ollama import Message as OllamaMessage
 from pydantic import BaseModel
-
-from ml.agent.prompts import get_voice_validation_prompt, VoiceValidationResponse
-from ml.configs.message import ChatHistory, Message as ChatMessage
 
 
 class StreamChunk(BaseModel):
@@ -39,8 +40,7 @@ def validate_voice(voice_decoding: ChatMessage, reasoning_client: ReasoningModel
 
 def form_final_report(reasoning_client: ReasoningModelClient) -> Iterator[ChatResponse]:
     fallback_message: str = (
-        "Извините, мне не удалось распознать вашу просьбу\n"
-        "Попробуйте ещё раз или напишите текстом"
+        "Извините, мне не удалось распознать вашу просьбу\nПопробуйте ещё раз или напишите текстом"
     )
 
     for _, char in enumerate(fallback_message):
@@ -53,4 +53,3 @@ def form_final_report(reasoning_client: ReasoningModelClient) -> Iterator[ChatRe
             ),
         )
         yield response
-

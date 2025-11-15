@@ -1,7 +1,7 @@
 """Finalization node for research workflow responses."""
 
-from collections.abc import Sequence
 import logging
+from collections.abc import Sequence
 
 from ml.agent.graph.state import GraphState, NextAction, ResearchObservation, ResearchTurn
 from ml.agent.prompts import get_research_answer_prompt

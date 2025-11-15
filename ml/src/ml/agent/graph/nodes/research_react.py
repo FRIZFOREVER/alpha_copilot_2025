@@ -1,6 +1,8 @@
 import logging
 from enum import Enum
 
+from pydantic import BaseModel, Field
+
 from ml.agent.graph.state import (
     GraphState,
     NextAction,
@@ -10,7 +12,6 @@ from ml.agent.graph.state import (
 from ml.agent.prompts import get_research_reason_prompt
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory
-from pydantic import BaseModel, Field
 
 logger: logging.Logger = logging.getLogger(__name__)
 

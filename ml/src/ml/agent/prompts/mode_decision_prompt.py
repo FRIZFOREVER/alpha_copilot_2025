@@ -1,7 +1,8 @@
 """Prompt builder and structured schema for selecting the reasoning mode."""
 
-from ml.configs.message import ChatHistory, ModelMode, RequestPayload
 from pydantic import BaseModel, Field, field_validator
+
+from ml.configs.message import ChatHistory, ModelMode, RequestPayload
 
 
 class ModeDecisionResponse(BaseModel):
