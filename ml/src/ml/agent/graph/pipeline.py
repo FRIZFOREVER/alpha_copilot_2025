@@ -103,15 +103,23 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
 
     # validate user request if voice
     if payload.is_voice:
-        if not validate_voice(
+        voice_is_valid: bool = validate_voice(
             voice_decoding=payload.messages.last_message_as_history(),
             reasoning_client=client,
-        ):
+        )
+        if not voice_is_valid:
             logger.warning(
                 "Voice validation failed. Returning fallback stream. Conversation: %s",
                 payload.messages.model_dump_string(),
             )
-            return form_final_report(reasoning_client=client)
+            if not payload.tag:
+                error_message: str = (
+                    "Voice validation failed for a conversation without a tag."
+                )
+                logger.error(error_message)
+                raise RuntimeError(error_message)
+            logger.info("Returning fallback stream with tag %s", payload.tag.value)
+            return form_final_report(reasoning_client=client), payload.tag
 
     # FUTURE: validate tag if tag is empty
     if not payload.tag:
