@@ -63,6 +63,24 @@ class ResearchTurn(BaseModel):
     )
 
 
+class PlannerToolExecution(BaseModel):
+    tool_name: str = Field(
+        description="Name of the tool that was executed by the planner",
+    )
+    arguments: Dict[str, str] = Field(
+        default_factory=dict,
+        description="Arguments that were forwarded to the tool",
+    )
+    success: bool = Field(
+        default=False,
+        description="Indicator showing whether the tool call succeeded",
+    )
+    output_preview: str = Field(
+        default="",
+        description="Short textual summary of the tool output or error",
+    )
+
+
 class GraphState(BaseModel):
     """State model for LangGraph pipeline."""
 
@@ -83,6 +101,22 @@ class GraphState(BaseModel):
         description=(
             "Evidence snippets or references collected during reasoning"
         ),
+    )
+    thinking_plan_summary: Optional[str] = Field(
+        default=None,
+        description="High-level recap of the thinking planner strategy",
+    )
+    thinking_plan_steps: List[str] = Field(
+        default_factory=list,
+        description="Ordered list of planner steps produced by the model",
+    )
+    thinking_tool_executions: List[PlannerToolExecution] = Field(
+        default_factory=list,
+        description="Detailed record of each tool call performed by the planner",
+    )
+    thinking_evidence: List[str] = Field(
+        default_factory=list,
+        description="Evidence items gathered directly by the thinking planner",
     )
     turn_history: List[ResearchTurn] = Field(
         default_factory=list,

@@ -5,6 +5,7 @@ from .research_answer import research_answer_node
 from .research_observer import research_observer_node
 from .research_react import research_react_node
 from .research_tool_call import research_tool_call_node
+from .thinking_answer import thinking_answer_node
 from .thinking_planner import thinking_planner_node
 
 __all__: list[str] = [
@@ -15,5 +16,6 @@ __all__: list[str] = [
     "research_observer_node",
     "research_react_node",
     "research_tool_call_node",
+    "thinking_answer_node",
     "thinking_planner_node",
 ]
