@@ -8,7 +8,9 @@ import (
 )
 
 type Message struct {
-	Message string `json:"message"`
+	Tag      string `json:"tag"`
+	AnswerID int    `json:"answer_id"`
+	Message  string `json:"message"`
 }
 
 // Структура для хранения информации о соединении.
