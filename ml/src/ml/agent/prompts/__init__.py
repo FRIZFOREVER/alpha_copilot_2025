@@ -1,4 +1,4 @@
-from .fast_answer_prompt import get_fast_answer_prompt
+from .fast_answer_prompt import compose_fast_final_prompt
 from .mode_decision_prompt import ModeDecisionResponse, get_mode_decision_prompt
 from .research_answer_prompt import get_research_answer_prompt
 from .research_observation_prompt import get_research_observation_prompt
@@ -19,7 +19,7 @@ from .voice_validation_prompt import (
 __all__: list[str] = [
     "get_voice_validation_prompt",
     "VoiceValidationResponse",  # Voice validation
-    "get_fast_answer_prompt",  # Fast answer prompting
+    "compose_fast_final_prompt",  # Fast answer prompting
     "get_research_reason_prompt",  # Research reasoning stage
     "get_research_tool_prompt",  # Research tool selection stage
     "get_research_observation_prompt",  # Research observation synthesis

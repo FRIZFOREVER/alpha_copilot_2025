@@ -5,6 +5,7 @@ from collections.abc import Sequence
 
 from ml.agent.graph.state import GraphState, NextAction, ResearchObservation, ResearchTurn
 from ml.agent.prompts import get_research_answer_prompt
+from ml.agent.prompts.system_prompt import extract_system_prompt
 from ml.configs.message import ChatHistory
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -76,8 +77,9 @@ def research_answer_node(state: GraphState) -> GraphState:
     if not evidence_pool:
         evidence_pool = _gather_turn_evidence(state.turn_history)
 
+    system_prompt = extract_system_prompt(state.payload.messages)
     prompt: ChatHistory = get_research_answer_prompt(
-        system_prompt=state.payload.system,
+        system_prompt=system_prompt,
         conversation=state.payload.messages,
         turn_history=state.turn_history,
         answer_draft=draft,

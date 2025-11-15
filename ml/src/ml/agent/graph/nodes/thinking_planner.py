@@ -6,6 +6,7 @@ from ml.agent.prompts import (
     ThinkingPlannerStructuredOutput,
     get_thinking_planner_prompt,
 )
+from ml.agent.prompts.system_prompt import extract_system_prompt
 from ml.agent.tools.registry import get_tool_registry
 from ml.api.ollama_calls import ReasoningModelClient
 
@@ -23,8 +24,9 @@ def _summarize_payload(payload: Any) -> str:
 def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Thinking planner node")
     registry = get_tool_registry()
+    system_prompt = extract_system_prompt(state.payload.messages)
     prompt = get_thinking_planner_prompt(
-        system_prompt=state.payload.system,
+        system_prompt=system_prompt,
         conversation=state.payload.messages,
         memories=state.memories.extracted_memories,
         available_tools=list(registry.values()),
