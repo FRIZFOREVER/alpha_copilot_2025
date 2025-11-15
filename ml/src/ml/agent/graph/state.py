@@ -17,6 +17,7 @@ class NextAction(str, Enum):
     THINK = "think"
     REQUEST_TOOL = "request_tool"
     AWAIT_OBSERVATION = "await_observation"
+    ANSWER = "answer"
     FINISH = "finish"
 
 
@@ -72,6 +73,16 @@ class GraphState(BaseModel):
     final_prompt: Optional[ChatHistory] = Field(
         default=None,
         description="Field for storing final prompt",
+    )
+    final_answer_draft: Optional[str] = Field(
+        default=None,
+        description="Draft of the final assistant answer before formatting",
+    )
+    final_answer_evidence: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Evidence snippets or references collected during reasoning"
+        ),
     )
     turn_history: List[ResearchTurn] = Field(
         default_factory=list,
