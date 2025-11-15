@@ -12,11 +12,11 @@ import (
 )
 
 type History struct {
-	repo   database.HistoryManager
+	repo   database.HistoryRepository
 	logger *logrus.Logger
 }
 
-func NewHistory(repo database.HistoryManager, logger *logrus.Logger) *History {
+func NewHistory(repo database.HistoryRepository, logger *logrus.Logger) *History {
 	return &History{
 		repo:   repo,
 		logger: logger,

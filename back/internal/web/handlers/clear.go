@@ -10,11 +10,11 @@ import (
 )
 
 type Clear struct {
-	repo   database.HistoryManager
+	repo   database.HistoryRepository
 	logger *logrus.Logger
 }
 
-func NewClear(repo database.HistoryManager, logger *logrus.Logger) *Clear {
+func NewClear(repo database.HistoryRepository, logger *logrus.Logger) *Clear {
 	return &Clear{
 		repo:   repo,
 		logger: logger,

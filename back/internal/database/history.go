@@ -107,8 +107,8 @@ func (s *HistoryService) HideMessages(chatID int) error {
 	return nil
 }
 
-// HistoryManager - единый интерфейс для управления историей сообщений.
-type HistoryManager interface {
+// HistoryRepository - единый интерфейс для управления историей сообщений.
+type HistoryRepository interface {
 	GetHistory(chatID int, uuid string, historyLen int, tag string) ([]Message, error)
 	HideMessages(chatID int) error
 	CheckChat(userUUID string, chatID int) (bool, error)
