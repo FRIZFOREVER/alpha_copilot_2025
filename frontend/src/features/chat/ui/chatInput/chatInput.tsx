@@ -10,8 +10,6 @@ import { FileBadge } from "../fileBadge";
 import { uploadFile } from "@/entities/chat/api/chatService";
 import { TagSelector, type TagId } from "../tagSelector/tagSelector";
 import { TagBadge } from "../tagBadge/tagBadge";
-import { TelegramContact } from "@/entities/auth/types/types";
-
 export interface ChatInputProps {
   onSend?: (data: { message: string; file_url?: string; tag?: TagId }) => void;
   onSendVoice?: (voiceBlob: Blob) => void;
@@ -19,8 +17,6 @@ export interface ChatInputProps {
   disabled?: boolean;
   suggestions?: Suggestion[];
   isCompact?: boolean;
-  selectedTelegramContact?: TelegramContact | null;
-  onTelegramContactClick?: () => void;
 }
 
 const MIN_HEIGHT = 52;
@@ -32,8 +28,6 @@ export const ChatInput = ({
   disabled = false,
   suggestions,
   isCompact = false,
-  selectedTelegramContact,
-  onTelegramContactClick,
 }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -96,7 +90,7 @@ export const ChatInput = ({
       let finalTag: TagId | undefined = selectedTag;
       if (!finalTag) {
         const tagMatch = message.match(
-          /#(general|finance|law|marketing|managment)\b/,
+          /#(general|finance|law|marketing|managment)\b/
         );
         if (tagMatch) {
           finalTag = tagMatch[1] as TagId;
@@ -176,7 +170,7 @@ export const ChatInput = ({
           const newCursorPosition = lastAtIndex;
           textareaRef.current.setSelectionRange(
             newCursorPosition,
-            newCursorPosition,
+            newCursorPosition
           );
           textareaRef.current.focus();
         }
@@ -252,15 +246,15 @@ export const ChatInput = ({
             const left = textareaRect.left - containerRect.left;
             let bottom = containerRect.bottom - textareaRect.top + 8;
 
-            if(file && !selectedTag) {
+            if (file && !selectedTag) {
               bottom += 75;
             }
 
-            if(selectedTag && !file) {
+            if (selectedTag && !file) {
               bottom += 45;
             }
 
-            if(selectedTag && file) {
+            if (selectedTag && file) {
               bottom += 110;
             }
 
@@ -299,7 +293,7 @@ export const ChatInput = ({
       <div
         className={cn(
           "mx-auto max-w-[832px] px-4 md:px-8 py-4",
-          isCompact && "px-4 md:px-4",
+          isCompact && "px-4 md:px-4"
         )}
       >
         {suggestions && suggestions.length > 0 && (
@@ -339,7 +333,7 @@ export const ChatInput = ({
               <button
                 type="button"
                 className={cn(
-                  "absolute right-12 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200",
+                  "absolute right-12 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200"
                 )}
                 disabled={disabled}
                 onClick={handleCancelRecording}
@@ -355,7 +349,7 @@ export const ChatInput = ({
                   "bg-black hover:bg-gray-800",
                   "text-white transition-all shadow-sm duration-200",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
-                  "active:scale-95 flex items-center justify-center",
+                  "active:scale-95 flex items-center justify-center"
                 )}
                 onClick={handleSendVoice}
               >
@@ -370,10 +364,10 @@ export const ChatInput = ({
                 "focus-within:border-gray-300",
                 "transition-all",
                 "relative",
-                "flex flex-col",
+                "flex flex-col"
               )}
             >
-              {(hasFile || selectedTag || selectedTelegramContact) && (
+              {(hasFile || selectedTag) && (
                 <div className="px-3 pt-3 pb-2 flex flex-col gap-2">
                   {selectedTag && (
                     <div className="flex items-center">
@@ -391,33 +385,6 @@ export const ChatInput = ({
                         onRemove={removeFile}
                         disabled={disabled}
                       />
-                    </div>
-                  )}
-                  {selectedTelegramContact && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
-                      <Send className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm text-blue-900 font-medium">
-                        {selectedTelegramContact.first_name}{" "}
-                        {selectedTelegramContact.last_name}
-                      </span>
-                      {selectedTelegramContact.username && (
-                        <span className="text-xs text-blue-600">
-                          @{selectedTelegramContact.username}
-                        </span>
-                      )}
-                      {onTelegramContactClick && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onTelegramContactClick();
-                          }}
-                          className="ml-auto text-blue-600 hover:text-blue-800"
-                          disabled={disabled}
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
                     </div>
                   )}
                 </div>
@@ -438,7 +405,7 @@ export const ChatInput = ({
                     "transition-all",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
                     needsScrollbar && "overflow-y-auto custom-scrollbar",
-                    !needsScrollbar && "overflow-hidden",
+                    !needsScrollbar && "overflow-hidden"
                   )}
                   style={{
                     height: "auto",
@@ -450,7 +417,7 @@ export const ChatInput = ({
                   type="button"
                   className={cn(
                     "absolute left-3 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
-                    isMultiLine ? "bottom-3" : "top-[50%] -translate-y-1/2",
+                    isMultiLine ? "bottom-3" : "top-[50%] -translate-y-1/2"
                   )}
                   disabled={disabled}
                   onClick={handleFileSelect}
@@ -458,34 +425,12 @@ export const ChatInput = ({
                   <Paperclip className="h-5 w-5" />
                 </button>
 
-                {onTelegramContactClick && (
-                  <button
-                    type="button"
-                    className={cn(
-                      "absolute left-12 h-6 w-6 flex items-center cursor-pointer justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
-                      isMultiLine ? "bottom-3" : "top-[50%] -translate-y-1/2",
-                      selectedTelegramContact
-                        ? "text-blue-600 hover:text-blue-800"
-                        : "text-gray-700 hover:text-gray-900",
-                    )}
-                    disabled={disabled}
-                    onClick={onTelegramContactClick}
-                    title={
-                      selectedTelegramContact
-                        ? "Изменить контакт Telegram"
-                        : "Выбрать контакт Telegram"
-                    }
-                  >
-                    <Send className="h-5 w-5" />
-                  </button>
-                )}
-
                 <button
                   type="button"
                   className={cn(
                     "absolute right-12 h-6 w-6 flex items-center cursor-pointer justify-center text-gray-700 hover:text-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
                     isMultiLine ? "bottom-3" : "top-[50%] -translate-y-1/2",
-                    isRecording && "text-red-500",
+                    isRecording && "text-red-500"
                   )}
                   disabled={disabled}
                   onClick={handleMicClick}
@@ -502,7 +447,7 @@ export const ChatInput = ({
                     "text-white transition-all shadow-sm duration-200",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
                     "active:scale-95 p-0",
-                    isMultiLine ? "bottom-2" : "top-[50%] -translate-y-1/2",
+                    isMultiLine ? "bottom-2" : "top-[50%] -translate-y-1/2"
                   )}
                   size="icon"
                 >

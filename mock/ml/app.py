@@ -494,163 +494,21 @@ async def message_stream(request: Request) -> StreamingResponse:
     payload: dict[str, Any] = await request.json()
     logger.info(f"Handling /message_stream request with payload: {payload}")
 
-    for item in payload:
-        if item != "messages":
-            logger.info("Got item: %s", item)
-
-    # Нормализуем send_to_telegram - может прийти как строка "true"/"false" или булево значение
-    send_to_telegram_raw = payload.get("send_to_telegram", False)
-    if isinstance(send_to_telegram_raw, str):
-        send_to_telegram = send_to_telegram_raw.lower() in ("true", "1", "yes")
-    else:
-        send_to_telegram = bool(send_to_telegram_raw)
-
-    logger.info(
-        f"Parsed send_to_telegram: raw={send_to_telegram_raw}, type={type(send_to_telegram_raw).__name__}, normalized={send_to_telegram}"
-    )
-
-    user_id = payload.get("user_id")
-    recipient_id = payload.get("recipient_id")  # Telegram user ID получателя
-    tg_user_id = payload.get("tg_user_id")  # Альтернативное поле для recipient_id
-
     def event_generator():
-        # Логируем значения переменных в начале генератора
-        logger.info(
-            f"event_generator started. send_to_telegram={send_to_telegram}, "
-            f"type={type(send_to_telegram).__name__}, "
-            f"recipient_id={recipient_id}, phone_number={payload.get('phone_number')}"
-        )
 
         stream = mock_workflow(payload, streaming=True)
         accumulated_content = ""
 
         for chunk in stream:
             chunk_data = chunk.model_dump_json()
-            # Сохраняем накопленный контент для возможной отправки в Telegram
             if chunk.message and chunk.message.content:
                 accumulated_content += chunk.message.content
             yield f"data: {chunk_data}\n\n"
 
-        # Логируем состояние перед проверкой отправки в Telegram
         logger.info(
-            f"Stream completed. send_to_telegram={send_to_telegram}, "
-            f"type={type(send_to_telegram).__name__}, "
-            f"accumulated_content length={len(accumulated_content)}, "
+            f"Stream completed. accumulated_content length={len(accumulated_content)}, "
             f"accumulated_content preview={accumulated_content[:100] if accumulated_content else 'empty'}"
         )
-
-        # Отправляем в Telegram после завершения стрима, если указано
-        if send_to_telegram and accumulated_content:
-            logger.info("Entering Telegram send block")
-            try:
-                logger.info(
-                    f"Starting Telegram send process. send_to_telegram={send_to_telegram}, content_length={len(accumulated_content)}"
-                )
-                target_recipient = recipient_id or tg_user_id
-                phone_number = payload.get(
-                    "phone_number"
-                )  # Номер телефона для поиска user_id
-                telegram_user_service: TelegramUserService = (
-                    app.state.telegram_user_service
-                )
-
-                logger.info(
-                    f"Attempting to send Telegram message. "
-                    f"send_to_telegram={send_to_telegram}, "
-                    f"recipient_id={recipient_id}, "
-                    f"tg_user_id={tg_user_id}, "
-                    f"target_recipient={target_recipient}, "
-                    f"phone_number={phone_number}, "
-                    f"accumulated_content length={len(accumulated_content)}"
-                )
-
-                if not target_recipient:
-                    logger.warning("recipient_id required for sending Telegram message")
-                    logger.warning(
-                        f"target_recipient={target_recipient}, recipient_id={recipient_id}, tg_user_id={tg_user_id}"
-                    )
-                elif not phone_number:
-                    logger.warning("phone_number required for sending Telegram message")
-                    logger.warning(f"phone_number={phone_number}")
-                else:
-                    # Находим user_id по номеру телефона
-                    found_user_id = telegram_user_service.find_user_by_phone(
-                        phone_number
-                    )
-                    logger.info(
-                        f"Found user_id={found_user_id} for phone_number={phone_number}"
-                    )
-                    if not found_user_id:
-                        logger.warning(
-                            f"User not found by phone number: {phone_number}"
-                        )
-                    else:
-                        try:
-                            loop = asyncio.get_event_loop()
-                        except RuntimeError:
-                            loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(loop)
-
-                        # Преобразуем recipient_id в строку для передачи
-                        recipient_id_str = str(target_recipient)
-
-                        if loop.is_running():
-
-                            async def send_telegram_with_logging():
-                                try:
-                                    result = await telegram_user_service.send_message(
-                                        user_id=found_user_id,
-                                        recipient_id=recipient_id_str,
-                                        text=accumulated_content,
-                                    )
-                                    if result.get("success"):
-                                        logger.info(
-                                            f"Telegram message sent successfully as user {found_user_id} "
-                                            f"(phone: {phone_number}) to {target_recipient}"
-                                        )
-                                    else:
-                                        logger.error(
-                                            f"Failed to send Telegram message: {result.get('error')}"
-                                        )
-                                except Exception as e:
-                                    logger.error(
-                                        f"Exception while sending Telegram message: {e}",
-                                        exc_info=True,
-                                    )
-
-                            task = asyncio.create_task(send_telegram_with_logging())
-                            logger.info(
-                                f"Telegram message task created for user {found_user_id} "
-                                f"(phone: {phone_number}) to {target_recipient}"
-                            )
-                        else:
-                            result = loop.run_until_complete(
-                                telegram_user_service.send_message(
-                                    user_id=found_user_id,
-                                    recipient_id=recipient_id_str,
-                                    text=accumulated_content,
-                                )
-                            )
-                            if result.get("success"):
-                                logger.info(
-                                    f"Telegram message sent successfully as user {found_user_id} "
-                                    f"(phone: {phone_number}) to {target_recipient}"
-                                )
-                            else:
-                                logger.error(
-                                    f"Failed to send Telegram message: {result.get('error')}"
-                                )
-            except Exception as tg_error:
-                logger.error(
-                    f"Failed to send Telegram message: {tg_error}", exc_info=True
-                )
-        else:
-            if not send_to_telegram:
-                logger.info("send_to_telegram is False, skipping Telegram send")
-            elif not accumulated_content:
-                logger.warning(
-                    f"accumulated_content is empty (length={len(accumulated_content)}), skipping Telegram send"
-                )
 
         yield "data: [DONE]\n\n"
 
@@ -794,7 +652,6 @@ async def get_telegram_user_contacts(request: Request):
 
         telegram_user_service: TelegramUserService = app.state.telegram_user_service
 
-        # Приоритет: сначала пробуем по tg_user_id, потом по phone_number
         if tg_user_id:
             try:
                 tg_id = int(tg_user_id)
@@ -817,15 +674,36 @@ async def get_telegram_user_contacts(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/telegram/user/send")
-async def send_telegram_user_message(request: TelegramUserSendRequest):
+@app.post("/telegram/user/send/message")
+async def send_telegram_user_message(request: Request):
     """Отправляет сообщение от имени пользователя в Telegram"""
     try:
+        payload: dict[str, Any] = await request.json()
+        phone_number = payload.get("phone_number")
+        recipient_id = payload.get("recipient_id")
+        text = payload.get("text")
+
+        if not phone_number:
+            raise HTTPException(status_code=400, detail="phone_number is required")
+        if not recipient_id:
+            raise HTTPException(status_code=400, detail="recipient_id is required")
+        if not text:
+            raise HTTPException(status_code=400, detail="text is required")
+
         telegram_user_service: TelegramUserService = app.state.telegram_user_service
+
+        found_user_id = telegram_user_service.find_user_by_phone(phone_number)
+        if not found_user_id:
+            raise HTTPException(
+                status_code=404, detail="User not found by phone number"
+            )
+
+        recipient_id_str = str(recipient_id)
+
         result = await telegram_user_service.send_message(
-            user_id=request.user_id,
-            recipient_id=request.recipient_id,
-            text=request.text,
+            user_id=found_user_id,
+            recipient_id=recipient_id_str,
+            text=text,
         )
 
         if result.get("success"):

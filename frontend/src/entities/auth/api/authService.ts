@@ -17,6 +17,8 @@ import {
   TelegramStatusResponse,
   TelegramContactsRequest,
   TelegramContactsResponse,
+  TelegramSendMessageRequest,
+  TelegramSendMessageResponse,
 } from "../types/types";
 
 class AuthService {
@@ -94,6 +96,16 @@ class AuthService {
     );
     return data;
   }
+
+  public async sendTelegramMessage(
+    request: TelegramSendMessageRequest
+  ): Promise<TelegramSendMessageResponse> {
+    const { data } = await axiosMockML.post<TelegramSendMessageResponse>(
+      "/telegram/user/send/message",
+      { ...request }
+    );
+    return data;
+  }
 }
 
 const authService = new AuthService();
@@ -107,5 +119,6 @@ export const {
   getTelegramStatus,
   startTelegramAuth,
   verifyTelegramAuth,
+  sendTelegramMessage,
   getTelegramContacts,
 } = authService;
