@@ -19,6 +19,10 @@ export const Header = ({ className }: HeaderProps) => {
     `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.PROFILE_ROUTE}`
   );
 
+  const isDashboardActive = location.pathname.includes(
+    `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}`
+  );
+
   const displayName = profileData?.username
     ? getDisplayName(profileData.username)
     : "Пользователь";
@@ -28,7 +32,9 @@ export const Header = ({ className }: HeaderProps) => {
   };
 
   const handleLogoClick = () => {
-    navigate(`/${ERouteNames.DASHBOARD_ROUTE}`);
+    if (!isDashboardActive) {
+      navigate(-1);
+    }
   };
 
   return (

@@ -16,6 +16,7 @@ import { useState, useEffect } from "react";
 import { EModalVariables } from "./constants";
 import { Input } from "@/shared/ui/input/input";
 import { Label } from "@/shared/ui/label/label";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/shared/ui/input-otp";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { TELEGRAM_STATUS_QUERY } from "@/entities/auth/hooks/useTelegramStatus";
@@ -212,15 +213,20 @@ export const TelegramAuthModal = () => {
           {step === "code" && (
             <div className="space-y-2">
               <Label htmlFor="code">Код подтверждения</Label>
-              <Input
-                id="code"
-                type="text"
-                placeholder="12345"
+              <InputOTP
+                maxLength={5}
                 value={phoneCode}
-                onChange={(e) => setPhoneCode(e.target.value)}
+                onChange={(value) => setPhoneCode(value)}
                 disabled={isVerifying}
-                required
-              />
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                </InputOTPGroup>
+              </InputOTP>
             </div>
           )}
 
