@@ -82,7 +82,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
             NextAction.THINK.value: "Research react",
             NextAction.REQUEST_TOOL.value: "Research tool call",
             NextAction.ANSWER.value: "Research answer",
-            NextAction.FINISH.value: "Fast answer",
+            NextAction.FINISH.value: "Research answer",
         },
     )
     workflow.add_edge("Research tool call", "Research observer")
@@ -92,7 +92,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
         {
             NextAction.THINK.value: "Research react",
             NextAction.ANSWER.value: "Research answer",
-            NextAction.FINISH.value: "Fast answer",
+            NextAction.FINISH.value: "Research answer",
         },
     )
     workflow.add_edge("Research answer", END)
