@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+from dataclasses import dataclass
 from collections.abc import Iterable
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from typing import Any
@@ -7,6 +9,9 @@ from typing import Any
 from ddgs import DDGS
 from ml.agent.tools import page_text
 from ml.agent.tools.base import BaseTool, ToolResult
+from ml.api.ollama_calls import ReasoningModelClient
+from ml.configs.message import ChatHistory
+from pydantic import BaseModel, Field
 
 DEFAULT_FETCH_TIMEOUT = 5.0
 DEFAULT_MAX_BYTES = 500_000
@@ -16,6 +21,29 @@ MAX_FETCH_WORKERS = 5
 
 
 SearchResult = dict[str, Any]
+
+
+logger = logging.getLogger(__name__)
+
+
+class PageSummaryResponse(BaseModel):
+    """Structured summary returned by the local LLM."""
+
+    is_information_viable: bool = Field(
+        description="Whether the page contains information relevant to the user's request.",
+    )
+    summarization: str = Field(
+        description="Detailed summary of all relevant information extracted from the page.",
+    )
+
+
+@dataclass
+class FetchedPage:
+    """Container for raw page text and summarization metadata."""
+
+    text: str
+    summary: str
+    is_viable: bool
 
 
 class WebSearchTool(BaseTool):
@@ -29,12 +57,14 @@ class WebSearchTool(BaseTool):
         max_bytes: int = DEFAULT_MAX_BYTES,
         excerpt_window: int = DEFAULT_EXCERPT_WINDOW,
         content_preview: int = DEFAULT_CONTENT_PREVIEW,
+        reasoning_client: ReasoningModelClient | None = None,
     ):
         self._max_results = max_results
         self._fetch_timeout = fetch_timeout
         self._max_bytes = max_bytes
         self._excerpt_window = excerpt_window
         self._content_preview = content_preview
+        self._reasoning_client = reasoning_client or ReasoningModelClient()
 
     @property
     def name(self) -> str:
@@ -104,18 +134,18 @@ class WebSearchTool(BaseTool):
         if max_workers <= 0:
             return
 
-        futures: dict[Future[str], SearchResult] = {}
+        futures: dict[Future[FetchedPage], SearchResult] = {}
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             for result in results:
                 url = result.get("url")
                 if not url:
                     continue
-                futures[executor.submit(self._fetch_text, url)] = result
+                futures[executor.submit(self._fetch_text, url, query)] = result
 
             for future in as_completed(futures):
                 result = futures[future]
                 try:
-                    text = future.result()
+                    page = future.result()
                 except Exception as exc:  # pragma: no cover - defensive fallback
                     errors = result.setdefault("errors", [])
                     if isinstance(errors, list):
@@ -124,29 +154,73 @@ class WebSearchTool(BaseTool):
                         result["errors"] = [str(exc)]
                     continue
 
-                if not text:
+                if not page.text:
                     continue
 
                 excerpt = page_text.build_excerpt(
-                    text,
+                    page.text,
                     query,
                     window=self._excerpt_window,
                 )
                 if excerpt:
                     result["excerpt"] = excerpt
 
-                preview = text[: self._content_preview].strip()
+                preview = page.text[: self._content_preview]
                 if preview:
                     result["content"] = preview
+
+                result["is_viable"] = page.is_viable
+                if page.summary and page.is_viable:
+                    result["summary"] = page.summary
+                    result["content"] = page.summary
 
         for result in results:
             if not result.get("excerpt"):
                 result["excerpt"] = result.get("snippet", "")
 
-    def _fetch_text(self, url: str) -> str:
+    def _fetch_text(self, url: str, query: str) -> FetchedPage:
         html = page_text.fetch_page_html(
             url,
             timeout=self._fetch_timeout,
             max_bytes=self._max_bytes,
         )
-        return page_text.html_to_text(html)
+        text = page_text.html_to_text(html)
+        summary = ""
+        is_viable = False
+
+        if text:
+            try:
+                summary_response = self._summarize_text(text, query)
+            except Exception:
+                logger.exception("Failed to summarize page %s", url)
+            else:
+                summary = summary_response.summarization
+                is_viable = summary_response.is_information_viable
+
+        return FetchedPage(text=text, summary=summary, is_viable=is_viable)
+
+    def _summarize_text(self, text: str, query: str) -> PageSummaryResponse:
+        prompt = ChatHistory()
+        prompt.add_or_change_system(
+            (
+                "You are a diligent research assistant. Evaluate the provided web page and determine "
+                "whether it contains information that directly helps address the user's request. "
+                "When it does, summarise every relevant fact without omitting details. You may use "
+                "bullet lists, tables, or other structured formats to make the summary easy to parse. "
+                "If the page lacks useful information, clearly mark it as not viable while keeping the "
+                "summary concise. Behave simultaneously as a precise filter and an exhaustive summarizer."
+            )
+        )
+        prompt.add_user(
+            (
+                "User request:\n"
+                f"{query}\n\n"
+                "Web page content:\n"
+                f"{text}"
+            )
+        )
+
+        return self._reasoning_client.call_structured(
+            messages=prompt,
+            output_schema=PageSummaryResponse,
+        )

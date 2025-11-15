@@ -14,9 +14,13 @@ def _extract_result_documents(payload: dict[str, Any]) -> list[str]:
     results: Any | None = payload.get("results") if payload else None
     if results:
         for index, item in enumerate(results, start=1):
+            is_viable = item.get("is_viable") if hasattr(item, "get") else None
+            if is_viable is False:
+                continue
             lines: list[str] = []
             title = item.get("title")
             url = item.get("url")
+            summary = item.get("summary")
             excerpt = item.get("excerpt")
             if not excerpt:
                 snippet = item.get("snippet")
@@ -26,6 +30,8 @@ def _extract_result_documents(payload: dict[str, Any]) -> list[str]:
                     content = item.get("content")
                     if content:
                         excerpt = content
+            if is_viable and summary:
+                excerpt = summary
             if title:
                 lines.append(f"Title: {title}")
             if url:
