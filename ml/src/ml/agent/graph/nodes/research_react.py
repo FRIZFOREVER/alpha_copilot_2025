@@ -72,12 +72,9 @@ def research_react_node(state: GraphState, client: ReasoningModelClient) -> Grap
         state.active_tool_request = tool_request
         state.next_action = NextAction.REQUEST_TOOL
     elif response.action == ResearchReactAction.FINALIZE:
-        final_prompt = ChatHistory()
-        final_prompt.add_or_change_system(state.payload.system)
-        final_prompt.add_assistant(response.final_answer or "")
-        state.final_prompt = final_prompt
+        state.final_answer_draft = response.final_answer or ""
         state.active_tool_request = None
-        state.next_action = NextAction.FINISH
+        state.next_action = NextAction.ANSWER
     else:
         state.active_tool_request = None
         state.next_action = NextAction.THINK

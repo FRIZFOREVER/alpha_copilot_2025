@@ -61,6 +61,13 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
 
     documents = _collect_documents(observation.metadata)
 
+    if documents:
+        collected: list[str] = list(state.final_answer_evidence)
+        for doc in documents:
+            if doc not in collected:
+                collected.append(doc)
+        state.final_answer_evidence = collected
+
     prompt = get_research_observation_prompt(
         conversation=state.payload.messages,
         turn_history=state.turn_history,
@@ -85,9 +92,9 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
 
     state.turn_history.append(current_turn)
 
-    if state.loop_counter < MAX_RESEARCH_ITERATIONS and state.final_prompt is None:
+    if state.loop_counter < MAX_RESEARCH_ITERATIONS and state.final_answer_draft is None:
         state.next_action = NextAction.THINK
     else:
-        state.next_action = NextAction.FINISH
+        state.next_action = NextAction.ANSWER
 
     return state
