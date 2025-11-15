@@ -494,6 +494,10 @@ async def message_stream(request: Request) -> StreamingResponse:
     payload: dict[str, Any] = await request.json()
     logger.info(f"Handling /message_stream request with payload: {payload}")
 
+    for item in payload:
+        if item != "messages":
+            logger.info("Got item: %s", item)
+
     # Нормализуем send_to_telegram - может прийти как строка "true"/"false" или булево значение
     send_to_telegram_raw = payload.get("send_to_telegram", False)
     if isinstance(send_to_telegram_raw, str):
