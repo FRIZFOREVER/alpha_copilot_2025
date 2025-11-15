@@ -1,8 +1,7 @@
 """Prompt builder and structured schema for selecting the reasoning mode."""
 
-from pydantic import BaseModel, Field, field_validator
-
 from ml.configs.message import ChatHistory, ModelMode, RequestPayload
+from pydantic import BaseModel, Field, field_validator
 
 
 class ModeDecisionResponse(BaseModel):
@@ -38,9 +37,7 @@ def get_mode_decision_prompt(payload: RequestPayload) -> ChatHistory:
         "Выбери один режим из списка: fast (моментальный ответ), "
         "thiking (углублённое рассуждение) или research (исследование с инструментами)."
     )
-    system_sections.append(
-        "Ответ должен быть в формате JSON с единственным полем mode."
-    )
+    system_sections.append("Ответ должен быть в формате JSON с единственным полем mode.")
     prompt.add_or_change_system("\n".join(system_sections))
 
     user_sections: list[str] = []
@@ -55,7 +52,13 @@ def get_mode_decision_prompt(payload: RequestPayload) -> ChatHistory:
 
     user_sections.append("Запрошенный режим: auto")
     user_sections.append(
-        "Учти сложность и контекст задачи, а затем выбери наиболее подходящий режим."
+        "Учти сложность и контекст задачи, а затем выбери наиболее подходящий режим.\n"
+        "Для Задач, которые не требуют поиска дополнительной информации, определи режим fast\n"
+        "Если пользователь уточняет, что требуется исследование или просить сравнить информацию из "
+        "разных источников, то выбери режим research\n"
+        "Если пользователь спрашивает вопрос, фактов для ответа на которой не содержиться в "
+        "истории чата, то следует выбрать режим thinking"
+        "Если ты сомневаешься, то выбирай режим thinking"
     )
 
     prompt.add_user("\n\n".join(user_sections))

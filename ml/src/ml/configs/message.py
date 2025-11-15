@@ -1,7 +1,8 @@
 from __future__ import annotations
-from pydantic import BaseModel, Field, field_validator
+
 from enum import Enum
-from typing import List, Dict, Optional
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class Role(str, Enum):
@@ -11,20 +12,18 @@ class Role(str, Enum):
 
 
 class Message(BaseModel):
-    id: Optional[int] = None
+    id: int | None = None
     role: Role
     content: str
 
 
 class ChatHistory(BaseModel):
-    messages: List[Message] = Field(default_factory=list)
+    messages: list[Message] = Field(default_factory=list)
 
     # TODO: Implement overrides for add functions when input is Message class
     # instead of content. Validate it on role as well
     def add_or_change_system(self, content: str) -> None:
-        self.messages = [
-            msg for msg in self.messages if msg.role != Role.system
-        ]
+        self.messages = [msg for msg in self.messages if msg.role != Role.system]
         system_message = Message(role=Role.system, content=content)
         self.messages.insert(0, system_message)
         return
@@ -44,21 +43,16 @@ class ChatHistory(BaseModel):
         history.add_user(self.messages[-1].content)
         return history
 
-    def messages_list(self) -> List[Dict[str, str]]:
-        return [
-            {"role": msg.role.value, "content": msg.content}
-            for msg in self.messages
-        ]
-    
+    def messages_list(self) -> list[dict[str, str]]:
+        return [{"role": msg.role.value, "content": msg.content} for msg in self.messages]
+
     def model_dump_string(self) -> str:
-        return "\n\n".join(
-            f"{msg.role.value}: {msg.content}"
-            for msg in self.messages
-        )
+        return "\n\n".join(f"{msg.role.value}: {msg.content}" for msg in self.messages)
+
 
 class ModelMode(str, Enum):
     Fast = "fast"
-    Thiking = "thiking"
+    Thiking = "thinking"
     Research = "research"
     Auto = "auto"
 
@@ -70,10 +64,11 @@ class Tag(str, Enum):
     Marketing = "marketing"
     Management = "management"
 
+
 class RequestPayload(BaseModel):
     messages: ChatHistory
     chat_id: str
-    tag: Optional[Tag] = None
+    tag: Tag | None = None
     mode: ModelMode
     system: str
     file_url: str
@@ -83,7 +78,7 @@ class RequestPayload(BaseModel):
     @classmethod
     def normalize_messages(cls, message_list):
         return {"messages": message_list}
-    
+
     @field_validator("tag", mode="before")
     @classmethod
     def replace_tag(cls, v):

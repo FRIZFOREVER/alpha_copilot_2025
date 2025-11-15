@@ -23,7 +23,7 @@ class WebSearchTool(BaseTool):
 
     def __init__(
         self,
-        max_results: int = 5,
+        max_results: int = 10,
         *,
         fetch_timeout: float = DEFAULT_FETCH_TIMEOUT,
         max_bytes: int = DEFAULT_MAX_BYTES,
