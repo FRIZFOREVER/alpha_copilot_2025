@@ -13,22 +13,7 @@ var getProfileQuery string
 //go:embed queries/update_other_users_info.sql
 var updateOtherProfileInfo string
 
-func GetProfile(
-	db *sql.DB,
-	uuid string,
-	logger *logrus.Logger,
-) (
-	profile Profile,
-	err error,
-) {
-	err = db.QueryRow(getProfileQuery, uuid).Scan(&profile.ID, &profile.FIO, &profile.Login, &profile.UserInfo, &profile.BusinessInfo, &profile.AdditionalInstructions)
-	if err != nil {
-		logger.WithError(err).Error("Failed to query supports")
-		return profile, err
-	}
-	return profile, nil
-}
-
+// Profile представляет структуру профиля пользователя.
 type Profile struct {
 	ID                     int     `json:"id"`
 	Login                  string  `json:"login"`
@@ -38,20 +23,56 @@ type Profile struct {
 	AdditionalInstructions *string `json:"additional_instructions"`
 }
 
-func UpdateOtherProfileInfo(
-	db *sql.DB,
+// ProfileService - структура для работы с профилями пользователей.
+type ProfileService struct {
+	db     *sql.DB
+	logger *logrus.Logger
+}
+
+// NewProfileRepository - конструктор для ProfileService.
+func NewProfileRepository(db *sql.DB, logger *logrus.Logger) *ProfileService {
+	return &ProfileService{
+		db:     db,
+		logger: logger,
+	}
+}
+
+// GetProfile - метод для получения профиля пользователя.
+func (s *ProfileService) GetProfile(uuid string) (Profile, error) {
+	var profile Profile
+
+	err := s.db.QueryRow(getProfileQuery, uuid).Scan(
+		&profile.ID,
+		&profile.FIO,
+		&profile.Login,
+		&profile.UserInfo,
+		&profile.BusinessInfo,
+		&profile.AdditionalInstructions,
+	)
+	if err != nil {
+		s.logger.WithError(err).Error("Failed to query profile")
+		return profile, err
+	}
+	return profile, nil
+}
+
+// UpdateOtherProfileInfo - метод для обновления информации профиля.
+func (s *ProfileService) UpdateOtherProfileInfo(
 	uuid string,
 	userInfo string,
 	businessInfo string,
 	additionalInstructions string,
-	logger *logrus.Logger,
-) (
-	err error,
-) {
-	_, err = db.Exec(updateOtherProfileInfo, userInfo, businessInfo, additionalInstructions, uuid)
+) error {
+	_, err := s.db.Exec(updateOtherProfileInfo, userInfo, businessInfo, additionalInstructions, uuid)
 	if err != nil {
-		logger.WithError(err).Error("Failed update other profile info")
+		s.logger.WithError(err).Error("Failed update other profile info")
 		return err
 	}
 	return nil
+}
+
+// ProfileManager - интерфейс для управления профилями пользователей.
+type ProfileManager interface {
+	GetProfile(uuid string) (Profile, error)
+	UpdateOtherProfileInfo(uuid string, userInfo string, businessInfo string, additionalInstructions string) error
 }

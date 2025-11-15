@@ -20,60 +20,74 @@ var updateAnswerQuery string
 //go:embed queries/update_question_tag.sql
 var updateQuestionTag string
 
-func WriteMessage(
-	db *sql.DB,
+// MessageService - структура для работы с сообщениями.
+type MessageService struct {
+	db     *sql.DB
+	logger *logrus.Logger
+}
+
+// GetHistory implements MessageManager.
+func (s *MessageService) GetHistory(chatID int, uuid string, historyLen int, tag string) ([]Message, error) {
+	return getHistory(s.db, chatID, uuid, historyLen, tag, s.logger)
+}
+
+// NewMessageRepository - конструктор для MessageService.
+func NewMessageRepository(db *sql.DB, logger *logrus.Logger) *MessageService {
+	return &MessageService{
+		db:     db,
+		logger: logger,
+	}
+}
+
+// WriteMessage - метод для записи сообщения.
+func (s *MessageService) WriteMessage(
 	chatID int,
 	question, answer string,
 	questionTime, answerTime time.Time,
 	tag string,
 	voiceURL string,
 	fileURL string,
-	logger *logrus.Logger,
-) (
-	questionID int,
-	answerID int,
-	err error,
-) {
-	tx, err := db.Begin()
+) (questionID int, answerID int, err error) {
+	tx, err := s.db.Begin()
 	if err != nil {
-		logger.WithError(err).Error("Failed to begin transaction")
+		s.logger.WithError(err).Error("Failed to begin transaction")
 		return 0, 0, err
 	}
 
 	defer func() {
 		if p := recover(); p != nil {
 			if err := tx.Rollback(); err != nil {
-				logger.Error("Ошибка отката транзакции: ", err)
+				s.logger.Error("Ошибка отката транзакции: ", err)
 			}
 			panic(p)
 		} else if err != nil {
 			if err := tx.Rollback(); err != nil {
-				logger.Error("Ошибка отката транзакции: ", err)
+				s.logger.Error("Ошибка отката транзакции: ", err)
 			}
 		} else {
 			err = tx.Commit()
 			if err != nil {
-				logger.WithError(err).Error("Failed to commit transaction")
+				s.logger.WithError(err).Error("Failed to commit transaction")
 			}
 		}
 	}()
 
 	err = tx.QueryRow(answerQuery, answerTime, answer, chatID).Scan(&answerID)
 	if err != nil {
-		logger.WithError(err).Error("Failed to insert answer")
+		s.logger.WithError(err).Error("Failed to insert answer")
 		return 0, 0, err
 	}
-	logger.WithFields(logrus.Fields{
+	s.logger.WithFields(logrus.Fields{
 		"answer_id": answerID,
 		"chat_id":   chatID,
 	}).Info("Answer inserted successfully")
 
 	err = tx.QueryRow(questionQuery, questionTime, question, chatID, answerID, voiceURL, fileURL, tag).Scan(&questionID)
 	if err != nil {
-		logger.WithError(err).Error("Failed to insert question")
+		s.logger.WithError(err).Error("Failed to insert question")
 		return 0, 0, err
 	}
-	logger.WithFields(logrus.Fields{
+	s.logger.WithFields(logrus.Fields{
 		"question_id": questionID,
 		"chat_id":     chatID,
 	}).Info("Question inserted successfully")
@@ -81,27 +95,26 @@ func WriteMessage(
 	return questionID, answerID, nil
 }
 
-func UpdateAnswer(
-	db *sql.DB,
+// UpdateAnswer - метод для обновления ответа.
+func (s *MessageService) UpdateAnswer(
 	answerID int,
 	answer string,
-	logger *logrus.Logger,
-) (rowsAffected int64, err error) {
-	result, err := db.Exec(updateAnswerQuery, answer, time.Now().UTC(), answerID)
+) (int64, error) {
+	result, err := s.db.Exec(updateAnswerQuery, answer, time.Now().UTC(), answerID)
 	if err != nil {
-		logger.WithError(err).WithFields(logrus.Fields{
+		s.logger.WithError(err).WithFields(logrus.Fields{
 			"answer_id": answerID,
 		}).Error("Failed to update answer")
 		return 0, err
 	}
 
-	rowsAffected, err = result.RowsAffected()
+	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		logger.WithError(err).Error("Failed to get rows affected")
+		s.logger.WithError(err).Error("Failed to get rows affected")
 		return 0, err
 	}
 
-	logger.WithFields(logrus.Fields{
+	s.logger.WithFields(logrus.Fields{
 		"answer_id":     answerID,
 		"rows_affected": rowsAffected,
 	}).Info("Answer updated successfully")
@@ -109,33 +122,32 @@ func UpdateAnswer(
 	return rowsAffected, nil
 }
 
-func UpdateAnswerAndQuestionTag(
-	db *sql.DB,
+// UpdateAnswerAndQuestionTag - метод для обновления ответа и тега вопроса.
+func (s *MessageService) UpdateAnswerAndQuestionTag(
 	answerID, questionID int,
 	answer string,
 	tag string,
-	logger *logrus.Logger,
-) (rowsAffected int64, err error) {
-	tx, err := db.Begin()
+) (int64, error) {
+	tx, err := s.db.Begin()
 	if err != nil {
-		logger.WithError(err).Error("Failed to begin transaction")
+		s.logger.WithError(err).Error("Failed to begin transaction")
 		return 0, err
 	}
 
 	defer func() {
 		if p := recover(); p != nil {
 			if err := tx.Rollback(); err != nil {
-				logger.Error("Ошибка отката транзакции: ", err)
+				s.logger.Error("Ошибка отката транзакции: ", err)
 			}
 			panic(p)
 		} else if err != nil {
 			if err := tx.Rollback(); err != nil {
-				logger.Error("Ошибка отката транзакции: ", err)
+				s.logger.Error("Ошибка отката транзакции: ", err)
 			}
 		} else {
 			err = tx.Commit()
 			if err != nil {
-				logger.WithError(err).Error("Failed to commit transaction")
+				s.logger.WithError(err).Error("Failed to commit transaction")
 			}
 		}
 	}()
@@ -143,7 +155,7 @@ func UpdateAnswerAndQuestionTag(
 	// Обновляем ответ
 	result, err := tx.Exec(updateAnswerQuery, answer, time.Now().UTC(), answerID)
 	if err != nil {
-		logger.WithError(err).WithFields(logrus.Fields{
+		s.logger.WithError(err).WithFields(logrus.Fields{
 			"answer_id": answerID,
 		}).Error("Failed to update answer")
 		return 0, err
@@ -151,11 +163,11 @@ func UpdateAnswerAndQuestionTag(
 
 	answerRowsAffected, err := result.RowsAffected()
 	if err != nil {
-		logger.WithError(err).Error("Failed to get rows affected for answer")
+		s.logger.WithError(err).Error("Failed to get rows affected for answer")
 		return 0, err
 	}
 
-	logger.WithFields(logrus.Fields{
+	s.logger.WithFields(logrus.Fields{
 		"answer_id":     answerID,
 		"rows_affected": answerRowsAffected,
 	}).Info("Answer updated successfully")
@@ -163,7 +175,7 @@ func UpdateAnswerAndQuestionTag(
 	// Обновляем тег вопроса
 	result, err = tx.Exec(updateQuestionTag, tag, questionID)
 	if err != nil {
-		logger.WithError(err).WithFields(logrus.Fields{
+		s.logger.WithError(err).WithFields(logrus.Fields{
 			"question_id": questionID,
 			"tag":         tag,
 		}).Error("Failed to update question tag")
@@ -172,18 +184,93 @@ func UpdateAnswerAndQuestionTag(
 
 	tagRowsAffected, err := result.RowsAffected()
 	if err != nil {
-		logger.WithError(err).Error("Failed to get rows affected for tag")
+		s.logger.WithError(err).Error("Failed to get rows affected for tag")
 		return 0, err
 	}
 
-	logger.WithFields(logrus.Fields{
+	s.logger.WithFields(logrus.Fields{
 		"question_id":   questionID,
 		"tag":           tag,
 		"rows_affected": tagRowsAffected,
 	}).Info("Question tag updated successfully")
 
 	// Суммируем общее количество затронутых строк
-	rowsAffected = answerRowsAffected + tagRowsAffected
+	rowsAffected := answerRowsAffected + tagRowsAffected
 
 	return rowsAffected, nil
+}
+
+// WriteEmptyMessage - метод для записи пустого сообщения.
+func (s *MessageService) WriteEmptyMessage(
+	chatID int,
+	questionTime, answerTime time.Time,
+	voiceURL string,
+) (questionID int, answerID int, err error) {
+	tx, err := s.db.Begin()
+	if err != nil {
+		s.logger.WithError(err).Error("Failed to begin transaction")
+		return 0, 0, err
+	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			if err := tx.Rollback(); err != nil {
+				s.logger.Error("Ошибка отката транзакции: ", err)
+			}
+			panic(p)
+		} else if err != nil {
+			if err := tx.Rollback(); err != nil {
+				s.logger.Error("Ошибка отката транзакции: ", err)
+			}
+		} else {
+			err = tx.Commit()
+			if err != nil {
+				s.logger.WithError(err).Error("Failed to commit transaction")
+			}
+		}
+	}()
+
+	err = tx.QueryRow(answerQuery, answerTime, "", chatID).Scan(&answerID)
+	if err != nil {
+		s.logger.WithError(err).Error("Failed to insert answer")
+		return 0, 0, err
+	}
+	s.logger.WithFields(logrus.Fields{
+		"answer_id": answerID,
+		"chat_id":   chatID,
+	}).Info("Answer inserted successfully")
+
+	err = tx.QueryRow(questionQuery, questionTime, "", chatID, answerID, voiceURL).Scan(&questionID)
+	if err != nil {
+		s.logger.WithError(err).Error("Failed to insert question")
+		return 0, 0, err
+	}
+
+	s.logger.WithFields(logrus.Fields{
+		"question_id": questionID,
+		"chat_id":     chatID,
+	}).Info("Question inserted successfully")
+
+	return questionID, answerID, nil
+}
+
+// MessageManager - единый интерфейс для управления сообщениями.
+type MessageManager interface {
+	WriteMessage(
+		chatID int,
+		question, answer string,
+		questionTime, answerTime time.Time,
+		tag string,
+		voiceURL string,
+		fileURL string,
+	) (questionID int, answerID int, err error)
+	UpdateAnswer(answerID int, answer string) (int64, error)
+	UpdateAnswerAndQuestionTag(answerID, questionID int, answer string, tag string) (int64, error)
+	WriteEmptyMessage(chatID int, questionTime, answerTime time.Time, voiceURL string) (questionID int, answerID int, err error)
+	CheckChat(userUUID string, chatID int) (bool, error)
+	GetHistory(chatID int, uuid string, historyLen int, tag string) ([]Message, error)
+}
+
+func (s *MessageService) CheckChat(userUUID string, chatID int) (bool, error) {
+	return checkChat(s.db, userUUID, chatID, s.logger)
 }

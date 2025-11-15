@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"jabki/internal/database"
@@ -12,13 +11,13 @@ import (
 )
 
 type Profile struct {
-	db     *sql.DB
+	repo   database.ProfileManager
 	logger *logrus.Logger
 }
 
-func NewProfile(db *sql.DB, logger *logrus.Logger) *Profile {
+func NewProfile(repo database.ProfileManager, logger *logrus.Logger) *Profile {
 	return &Profile{
-		db:     db,
+		repo:   repo,
 		logger: logger,
 	}
 }
@@ -26,7 +25,7 @@ func NewProfile(db *sql.DB, logger *logrus.Logger) *Profile {
 func (ph *Profile) GetHandler(c *fiber.Ctx) error {
 	uuid := c.Locals("uuid").(uuid.UUID)
 
-	profile, err := database.GetProfile(ph.db, uuid.String(), ph.logger)
+	profile, err := ph.repo.GetProfile(uuid.String())
 	if err != nil {
 		if errors.Is(err, database.ErrUserNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -60,13 +59,11 @@ func (ph *Profile) PutOtherInfoHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := database.UpdateOtherProfileInfo(
-		ph.db,
+	if err := ph.repo.UpdateOtherProfileInfo(
 		uuid.String(),
 		info.UserInfo,
 		info.BusinessInfo,
 		info.AdditionalInstructions,
-		ph.logger,
 	); err != nil {
 		if errors.Is(err, database.ErrUserNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
