@@ -57,7 +57,6 @@ class TodoistService:
             logger.debug(f"Saving Todoist auth data to: {TODOIST_AUTH_DATA_FILE}")
             logger.debug(f"Data to save: {list(auth_data.keys())}")
 
-            # Убеждаемся, что директория существует
             TODOIST_AUTH_DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
 
             with open(TODOIST_AUTH_DATA_FILE, "w", encoding="utf-8") as f:
@@ -98,7 +97,6 @@ class TodoistService:
             }
             self._save_auth_data(auth_data)
 
-            # Проверяем, что данные сохранились
             verify_data = self._load_auth_data()
             logger.info(f"Todoist token saved for user {user_id}")
             logger.debug(f"Auth data keys after save: {list(verify_data.keys())}")
@@ -173,11 +171,10 @@ class TodoistService:
                     "error": "Todoist token incomplete",
                 }
 
-            # Формируем тело запроса
             task_data = {
                 "content": content,
-                "priority": 3,  # Приоритет по умолчанию
-                "due_date": date.today().isoformat(),  # Текущая дата
+                "priority": 3,
+                "due_date": date.today().isoformat(),
             }
 
             if description:
@@ -186,7 +183,6 @@ class TodoistService:
             if labels:
                 task_data["labels"] = labels
 
-            # Отправляем запрос в Todoist API
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     f"{TODOIST_API_BASE}/tasks",
