@@ -18,7 +18,6 @@ func TestMessageStream(t *testing.T) {
 		},
 		Tag:    "",
 		Mode:   "",
-		System: "",
 	}
 
 	// Получаем канал для чтения StreamMessage
