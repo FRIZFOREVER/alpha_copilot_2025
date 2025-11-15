@@ -79,7 +79,6 @@ def research_react_node(state: GraphState, client: ReasoningModelClient) -> Grap
         state.active_tool_request = tool_request
         state.next_action = NextAction.REQUEST_TOOL
     elif response.action == ResearchReactAction.FINALIZE:
-        state.final_answer_draft = response.final_answer or ""
         state.active_tool_request = None
         state.next_action = NextAction.ANSWER
     else:
