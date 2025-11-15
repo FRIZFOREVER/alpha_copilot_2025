@@ -12,8 +12,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем исходный код
 COPY app.py .
+COPY config.py .
 COPY telegram_service.py .
 COPY telegram_user_service.py .
+COPY todoist_service.py .
+
+# Копируем директории
+COPY models/ ./models/
+COPY utils/ ./utils/
+COPY handlers/ ./handlers/
 
 # Открываем порт
 EXPOSE 8000

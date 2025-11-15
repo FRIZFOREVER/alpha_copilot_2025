@@ -4,6 +4,8 @@ import { RatingModal } from "./ratingModal";
 import { SearchChatsModal } from "./searchChatsModal";
 import { TelegramAuthModal } from "./telegramAuthModal";
 import { TelegramContactsModal } from "./telegramContactsModal";
+import { TodoistAuthModal } from "./todoisAuthModal";
+import { TodoistCreateTaskModal } from "./todoistCreateTaskModal";
 
 export const ModalProvider = () => {
   const { selectType } = useModal();
@@ -19,6 +21,10 @@ export const ModalProvider = () => {
       return <TelegramAuthModal />;
     case EModalVariables.TELEGRAM_CONTACTS_MODAL:
       return <TelegramContactsModal />;
+    case EModalVariables.TODOIST_AUTH_MODAL:
+      return <TodoistAuthModal />;
+    case EModalVariables.TODOIST_CREATE_TASK_MODAL:
+      return <TodoistCreateTaskModal />;
     default:
       return null;
   }
