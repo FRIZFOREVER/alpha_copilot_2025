@@ -17,7 +17,8 @@ func InitServiceRoutes(server *fiber.App, db *sql.DB, secretServie string, logge
 	history := handlers.NewHistory(database.NewHistoryRepository(db, logger), logger)
 	serviceAuthentication := middlewares.NewServiceAuthentication(secretServie, logger)
 	server.Get("/historyForModel/:uuid/:chat_id", serviceAuthentication.Handler, history.Handler)
-	server.Get("/graph_log_writer/:chat_id", middlewares.Upgrader, handlers.GraphLogHandler("service", logger))
+	graphLogRepo := database.NewGraphLogRepository(db, logger)
+	server.Get("/graph_log_writer/:chat_id", middlewares.Upgrader, handlers.GraphLogHandlerWS("service", graphLogRepo, logger))
 }
 
 func InitPublicRoutes(server *fiber.App, db *sql.DB, secretUser, frontOrigin string, logger *logrus.Logger) {
@@ -32,8 +33,8 @@ func InitPublicRoutes(server *fiber.App, db *sql.DB, secretUser, frontOrigin str
 	server.Post("/reg", reg.Handler)
 
 	server.Use("/graph_log", middlewares.Upgrader)
-
-	server.Get("/graph_log/:chat_id", handlers.GraphLogHandler(secretUser, logger))
+	graphLogRepo := database.NewGraphLogRepository(db, logger)
+	server.Get("/graph_log/:chat_id", handlers.GraphLogHandlerWS(secretUser, graphLogRepo, logger))
 }
 
 func InitJWTMiddleware(server *fiber.App, secret, frontOrigin string, logger *logrus.Logger) {
@@ -93,4 +94,8 @@ func InitPrivateRoutes(
 	searchRepo := database.NewSearchRepository(db, logger)
 	search := handlers.NewSearch(searchRepo, logger)
 	server.Get("/search", search.Handler)
+
+	graphLogRepo := database.NewGraphLogRepository(db, logger)
+	graphLog := handlers.NewGraphLog(graphLogRepo, logger)
+	server.Get("/graph_log", graphLog.Handler)
 }
