@@ -42,7 +42,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow: StateGraph = StateGraph(GraphState)
 
     # Nodes
-    workflow.add_node("Mode Decider", graph_mode_node)
+    workflow.add_node("Mode Decider", partial(graph_mode_node, client=client))
     # Not implemented yet
     workflow.add_node("Flash Memories", flash_memories_node)
     workflow.add_node("Thinking planner", partial(thinking_planner_node, client=client))

@@ -1,4 +1,5 @@
 from .fast_answer_prompt import get_fast_answer_prompt
+from .mode_decision_prompt import ModeDecisionResponse, get_mode_decision_prompt
 from .research_answer_prompt import get_research_answer_prompt
 from .research_observation_prompt import get_research_observation_prompt
 from .research_reason_prompt import get_research_reason_prompt
@@ -28,4 +29,6 @@ __all__: list[str] = [
     "ThinkingPlannerStructuredOutput",
     "PlannerToolCall",
     "get_thinking_answer_prompt",  # Thinking answer stage
+    "get_mode_decision_prompt",  # Mode selection helper
+    "ModeDecisionResponse",
 ]
