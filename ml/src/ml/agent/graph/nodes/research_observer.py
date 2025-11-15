@@ -1,5 +1,6 @@
 """Observation processing node for the research workflow."""
 
+import logging
 from typing import Any
 
 from ml.agent.graph.state import GraphState, NextAction, ResearchTurn
@@ -7,6 +8,9 @@ from ml.agent.prompts import get_research_observation_prompt
 from ml.api.ollama_calls import ReasoningModelClient
 
 MAX_RESEARCH_ITERATIONS = 6
+
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _extract_result_documents(payload: dict[str, Any]) -> list[str]:
@@ -60,6 +64,7 @@ def _collect_documents(observation_metadata: dict[str, Any]) -> list[str]:
 
 
 def research_observer_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
+    logger.info("Entered Research observer node")
     observation = state.active_observation
     if observation is None:
         state.next_action = NextAction.THINK
@@ -82,6 +87,7 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
     )
 
     summary: str = client.call(messages=prompt)
+    logger.info("Research observer summary: %s", summary)
 
     current_turn: ResearchTurn
     if state.turn_history:
