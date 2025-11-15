@@ -51,7 +51,11 @@ def get_ollama_client():
             try:
                 if ":" in host_for_client:
                     host_only = host_for_client.split(":")[0]
-                    port = host_for_client.split(":")[1] if ":" in host_for_client else "11434"
+                    port = (
+                        host_for_client.split(":")[1]
+                        if ":" in host_for_client
+                        else "11434"
+                    )
                     ollama_client = Client(host=f"{host_only}:{port}")
                     logger.info(f"Ollama client created with host: {host_only}:{port}")
                 else:
@@ -80,7 +84,9 @@ def check_ollama_available(max_retries=5, retry_delay=2):
 
             if "401" in error_str or "unauthorized" in error_str.lower():
                 logger.error("401 Unauthorized error detected. This might indicate:")
-                logger.error("  1. Ollama requires authentication (check OLLAMA_API_KEY)")
+                logger.error(
+                    "  1. Ollama requires authentication (check OLLAMA_API_KEY)"
+                )
                 logger.error(f"  2. Incorrect host format (current: {OLLAMA_HOST})")
                 logger.error("  3. Network connectivity issue")
 
@@ -88,7 +94,9 @@ def check_ollama_available(max_retries=5, retry_delay=2):
                 logger.warning(f"Retrying in {retry_delay}s...")
                 time.sleep(retry_delay)
             else:
-                logger.error(f"Ollama is not available after {max_retries} attempts: {error_str}")
+                logger.error(
+                    f"Ollama is not available after {max_retries} attempts: {error_str}"
+                )
                 return False
     return False
 
@@ -103,7 +111,9 @@ app.state.telegram_user_service = TelegramUserService()
 async def startup_event():
     """Проверяем доступность Ollama при старте приложения"""
     logger.info("Starting up Mock ML Service...")
-    logger.info(f"OLLAMA_HOST environment variable: {os.getenv('OLLAMA_HOST', 'not set')}")
+    logger.info(
+        f"OLLAMA_HOST environment variable: {os.getenv('OLLAMA_HOST', 'not set')}"
+    )
     logger.info(f"Using OLLAMA_HOST: {OLLAMA_HOST}")
 
     await asyncio.sleep(5)
@@ -112,7 +122,9 @@ async def startup_event():
         app.state.models_ready.set()
         logger.info("Mock ML Service is ready and Ollama is available")
     else:
-        logger.warning("Ollama is not available, but service will continue. Requests may fail.")
+        logger.warning(
+            "Ollama is not available, but service will continue. Requests may fail."
+        )
         app.state.models_ready.set()
 
 
@@ -166,16 +178,21 @@ def ensure_model_available(client: Client, model_name: str):
             available_models = [m.get("name", "") for m in models_response["models"]]
         elif isinstance(models_response, list):
             available_models = [
-                m.get("name", "") if isinstance(m, dict) else str(m) for m in models_response
+                m.get("name", "") if isinstance(m, dict) else str(m)
+                for m in models_response
             ]
 
         model_found = any(
-            model_name in model or model == model_name or model.startswith(model_name.split(":")[0])
+            model_name in model
+            or model == model_name
+            or model.startswith(model_name.split(":")[0])
             for model in available_models
         )
 
         if not model_found:
-            logger.info(f"Model '{model_name}' not found. Available models: {available_models}")
+            logger.info(
+                f"Model '{model_name}' not found. Available models: {available_models}"
+            )
             logger.info(f"Attempting to pull model '{model_name}'...")
             try:
                 client.pull(model=model_name)
@@ -183,7 +200,9 @@ def ensure_model_available(client: Client, model_name: str):
             except Exception as pull_error:
                 logger.error(f"Failed to pull model '{model_name}': {pull_error}")
                 if available_models:
-                    logger.warning(f"Using first available model instead: {available_models[0]}")
+                    logger.warning(
+                        f"Using first available model instead: {available_models[0]}"
+                    )
                     return available_models[0]
                 else:
                     raise Exception(
@@ -256,9 +275,7 @@ def mock_workflow(payload: dict[str, Any], streaming: bool = True):
                         if error_lines:
                             error_text = " ".join(error_lines)[:500]
                     except Exception as e:
-                        error_text = (
-                            f"Status {response.status_code}, could not read error: {str(e)}"
-                        )
+                        error_text = f"Status {response.status_code}, could not read error: {str(e)}"
                     logger.error(f"Chat request failed: {error_text}")
                     raise Exception(
                         f"Ollama API returned status {response.status_code}: {error_text}"
@@ -281,7 +298,9 @@ def mock_workflow(payload: dict[str, Any], streaming: bool = True):
                         json_data = json.loads(line)
 
                         message_data = json_data.get("message", {})
-                        chunk_content = message_data.get("content", "") if message_data else ""
+                        chunk_content = (
+                            message_data.get("content", "") if message_data else ""
+                        )
                         done = json_data.get("done", False)
                         done_reason = json_data.get("done_reason")
 
@@ -304,7 +323,9 @@ def mock_workflow(payload: dict[str, Any], streaming: bool = True):
                                     len(messages) if messages else 1,
                                 ),
                                 total_duration=json_data.get("total_duration"),
-                                prompt_eval_duration=json_data.get("prompt_eval_duration"),
+                                prompt_eval_duration=json_data.get(
+                                    "prompt_eval_duration"
+                                ),
                                 eval_duration=json_data.get("eval_duration"),
                                 load_duration=json_data.get("load_duration"),
                             )
@@ -327,7 +348,9 @@ def mock_workflow(payload: dict[str, Any], streaming: bool = True):
                                         len(messages) if messages else 1,
                                     ),
                                     total_duration=json_data.get("total_duration"),
-                                    prompt_eval_duration=json_data.get("prompt_eval_duration"),
+                                    prompt_eval_duration=json_data.get(
+                                        "prompt_eval_duration"
+                                    ),
                                     eval_duration=json_data.get("eval_duration"),
                                     load_duration=json_data.get("load_duration"),
                                 )
@@ -398,7 +421,9 @@ async def check_ollama():
 
         models_list = []
         if isinstance(models_response, dict) and "models" in models_response:
-            models_list = [model.get("name", "unknown") for model in models_response["models"]]
+            models_list = [
+                model.get("name", "unknown") for model in models_response["models"]
+            ]
         elif isinstance(models_response, list):
             models_list = [
                 model.get("name", "unknown") if isinstance(model, dict) else str(model)
@@ -518,8 +543,12 @@ async def message_stream(request: Request) -> StreamingResponse:
                     f"Starting Telegram send process. send_to_telegram={send_to_telegram}, content_length={len(accumulated_content)}"
                 )
                 target_recipient = recipient_id or tg_user_id
-                phone_number = payload.get("phone_number")  # Номер телефона для поиска user_id
-                telegram_user_service: TelegramUserService = app.state.telegram_user_service
+                phone_number = payload.get(
+                    "phone_number"
+                )  # Номер телефона для поиска user_id
+                telegram_user_service: TelegramUserService = (
+                    app.state.telegram_user_service
+                )
 
                 logger.info(
                     f"Attempting to send Telegram message. "
@@ -541,10 +570,16 @@ async def message_stream(request: Request) -> StreamingResponse:
                     logger.warning(f"phone_number={phone_number}")
                 else:
                     # Находим user_id по номеру телефона
-                    found_user_id = telegram_user_service.find_user_by_phone(phone_number)
-                    logger.info(f"Found user_id={found_user_id} for phone_number={phone_number}")
+                    found_user_id = telegram_user_service.find_user_by_phone(
+                        phone_number
+                    )
+                    logger.info(
+                        f"Found user_id={found_user_id} for phone_number={phone_number}"
+                    )
                     if not found_user_id:
-                        logger.warning(f"User not found by phone number: {phone_number}")
+                        logger.warning(
+                            f"User not found by phone number: {phone_number}"
+                        )
                     else:
                         try:
                             loop = asyncio.get_event_loop()
@@ -602,7 +637,9 @@ async def message_stream(request: Request) -> StreamingResponse:
                                     f"Failed to send Telegram message: {result.get('error')}"
                                 )
             except Exception as tg_error:
-                logger.error(f"Failed to send Telegram message: {tg_error}", exc_info=True)
+                logger.error(
+                    f"Failed to send Telegram message: {tg_error}", exc_info=True
+                )
         else:
             if not send_to_telegram:
                 logger.info("send_to_telegram is False, skipping Telegram send")
@@ -759,7 +796,9 @@ async def get_telegram_user_contacts(request: Request):
                 tg_id = int(tg_user_id)
                 result = await telegram_user_service.get_contacts_by_tg_id(tg_id)
             except (ValueError, TypeError):
-                raise HTTPException(status_code=400, detail="tg_user_id must be a valid integer")
+                raise HTTPException(
+                    status_code=400, detail="tg_user_id must be a valid integer"
+                )
         else:
             result = await telegram_user_service.get_contacts_by_phone(phone_number)
 
@@ -814,7 +853,9 @@ async def disconnect_telegram_user(request: Request):
         if success:
             return {"status": "ok", "message": "Telegram user disconnected"}
         else:
-            raise HTTPException(status_code=404, detail="Telegram user connection not found")
+            raise HTTPException(
+                status_code=404, detail="Telegram user connection not found"
+            )
     except HTTPException:
         raise
     except Exception as e:
