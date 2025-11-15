@@ -97,5 +97,5 @@ func InitPrivateRoutes(
 
 	graphLogRepo := database.NewGraphLogRepository(db, logger)
 	graphLog := handlers.NewGraphLog(graphLogRepo, logger)
-	server.Get("/graph_log", graphLog.Handler)
+	server.Get("/log/graph", graphLog.Handler)
 }
