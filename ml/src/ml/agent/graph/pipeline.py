@@ -8,6 +8,7 @@ from ml.agent.graph.nodes import (
     fast_answer_node,
     flash_memories_node,
     graph_mode_node,
+    research_answer_node,
     research_observer_node,
     research_react_node,
     research_tool_call_node,
@@ -47,6 +48,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow.add_node("Research react", partial(research_react_node, client=client))
     workflow.add_node("Research tool call", partial(research_tool_call_node, client=client))
     workflow.add_node("Research observer", partial(research_observer_node, client=client))
+    workflow.add_node("Research answer", research_answer_node)
     workflow.add_node(
         "Fast answer", fast_answer_node
     )  # not passing model cuz forming a final prompt
@@ -79,6 +81,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
         {
             NextAction.THINK.value: "Research react",
             NextAction.REQUEST_TOOL.value: "Research tool call",
+            NextAction.ANSWER.value: "Research answer",
             NextAction.FINISH.value: "Fast answer",
         },
     )
@@ -88,9 +91,11 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
         _extract_research_route,
         {
             NextAction.THINK.value: "Research react",
+            NextAction.ANSWER.value: "Research answer",
             NextAction.FINISH.value: "Fast answer",
         },
     )
+    workflow.add_edge("Research answer", END)
 
     app: StateGraph = workflow.compile()
 
