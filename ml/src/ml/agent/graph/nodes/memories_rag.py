@@ -1,7 +1,9 @@
-from ml.agent.graph.state import GraphState
 import logging
 
-logger = logging.getLogger(__name__)
+from ml.agent.graph.state import GraphState
+
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 def flash_memories_node(state: GraphState) -> GraphState:
     logger.info("Entered Flash memory node")

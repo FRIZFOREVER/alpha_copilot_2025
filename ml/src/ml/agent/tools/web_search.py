@@ -1,19 +1,21 @@
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Dict, List
+from collections.abc import Iterable
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
+from typing import Any
 
 from ddgs import DDGS
-
 from ml.agent.tools import page_text
 from ml.agent.tools.base import BaseTool, ToolResult
-
 
 DEFAULT_FETCH_TIMEOUT = 5.0
 DEFAULT_MAX_BYTES = 500_000
 DEFAULT_EXCERPT_WINDOW = 160
 DEFAULT_CONTENT_PREVIEW = 2_000
 MAX_FETCH_WORKERS = 5
+
+
+SearchResult = dict[str, Any]
 
 
 class WebSearchTool(BaseTool):
@@ -37,38 +39,33 @@ class WebSearchTool(BaseTool):
     @property
     def name(self) -> str:
         return "web_search"
-    
+
     @property
     def description(self) -> str:
         return "Поиск информации в интернете с помощью DuckDuckGo. Возвращает результаты поиска с заголовками, ссылками и краткими описаниями."
-    
+
     @property
-    def schema(self) -> Dict[str, Any]:
+    def schema(self) -> dict[str, Any]:
         # TODO: Поменять на Pydantic (наврное)
         return {
             "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "Поисковый запрос"
-                }
-            },
+            "properties": {"query": {"type": "string", "description": "Поисковый запрос"}},
             "required": ["query"],
-            "additionalProperties": False
+            "additionalProperties": False,
         }
-    
+
     def execute(self, query: str, **kwargs: Any) -> ToolResult:
         """
         Execute web search.
-        
+
         Args:
             query: Search query string
-            
+
         Returns:
             ToolResult with search results
         """
         try:
-            with DDGS() as ddgs:
+            with DDGS() as ddgs:  # type: ignore
                 results = list(ddgs.text(query, max_results=self._max_results))
 
             formatted_results = self._format_results(results)
@@ -79,18 +76,14 @@ class WebSearchTool(BaseTool):
                 data={
                     "query": query,
                     "results": formatted_results,
-                    "count": len(formatted_results)
-                }
+                    "count": len(formatted_results),
+                },
             )
         except Exception as e:
-            return ToolResult(
-                success=False,
-                data=None,
-                error=str(e)
-            )
+            return ToolResult(success=False, data=None, error=str(e))
 
-    def _format_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        formatted = []
+    def _format_results(self, results: Iterable[dict[str, Any]]) -> list[SearchResult]:
+        formatted: list[SearchResult] = []
         for result in results:
             snippet = result.get("body", "")
             formatted.append(
@@ -103,7 +96,7 @@ class WebSearchTool(BaseTool):
             )
         return formatted
 
-    def _enrich_results(self, results: List[Dict[str, Any]], query: str) -> None:
+    def _enrich_results(self, results: list[SearchResult], query: str) -> None:
         if not results:
             return
 
@@ -111,7 +104,7 @@ class WebSearchTool(BaseTool):
         if max_workers <= 0:
             return
 
-        futures = {}
+        futures: dict[Future[str], SearchResult] = {}
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             for result in results:
                 url = result.get("url")
@@ -124,7 +117,11 @@ class WebSearchTool(BaseTool):
                 try:
                     text = future.result()
                 except Exception as exc:  # pragma: no cover - defensive fallback
-                    result.setdefault("errors", []).append(str(exc))
+                    errors = result.setdefault("errors", [])
+                    if isinstance(errors, list):
+                        errors.append(str(exc))
+                    else:
+                        result["errors"] = [str(exc)]
                     continue
 
                 if not text:
@@ -153,4 +150,3 @@ class WebSearchTool(BaseTool):
             max_bytes=self._max_bytes,
         )
         return page_text.html_to_text(html)
-
