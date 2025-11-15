@@ -53,14 +53,17 @@ def get_research_answer_prompt(
     history_block = _summarize_turns(turn_history)
     evidence_block = _format_evidence(evidence_snippets)
 
-    sections: list[str] = []
+    user_sections: list[str] = []
     if context_block:
-        sections.append("Краткий контекст:\n" + context_block)
+        user_sections.append("Краткий контекст:\n" + context_block)
     if history_block:
-        sections.append("Хронология исследования:\n" + history_block)
-    sections.append("Итоговый ответ:\n" + answer_draft)
+        user_sections.append("Хронология исследования:\n" + history_block)
+    user_sections.append("Черновик ответа:\n" + answer_draft)
     if evidence_block:
-        sections.append("Источники:\n" + evidence_block)
+        user_sections.append("Источники:\n" + evidence_block)
+    user_sections.append(
+        "Сформируй окончательный ответ для пользователя на основе черновика и источников."
+    )
 
-    prompt.add_assistant("\n\n".join(sections))
+    prompt.add_user("\n\n".join(user_sections))
     return prompt
