@@ -12,6 +12,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def research_tool_call_node(state: GraphState, client: Any) -> GraphState:
+    logger.info("Entered Research tool call node")
     request = state.active_tool_request
 
     if request is None:

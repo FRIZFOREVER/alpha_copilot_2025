@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from ml.agent.graph.state import GraphState, NextAction, PlannerToolExecution
@@ -7,6 +8,8 @@ from ml.agent.prompts import (
 )
 from ml.agent.tools.registry import get_tool_registry
 from ml.api.ollama_calls import ReasoningModelClient
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _summarize_payload(payload: Any) -> str:
@@ -18,6 +21,7 @@ def _summarize_payload(payload: Any) -> str:
 
 
 def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
+    logger.info("Entered Thinking planner node")
     registry = get_tool_registry()
     prompt = get_thinking_planner_prompt(
         system_prompt=state.payload.system,
@@ -31,6 +35,9 @@ def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> Gr
         prompt,
         ThinkingPlannerStructuredOutput,
     )
+
+    logger.info("Thinking planner summary: %s", structured_plan.plan_summary)
+    logger.info("Thinking planner steps: %s", structured_plan.plan_steps)
 
     state.thinking_plan_summary = structured_plan.plan_summary
     state.thinking_plan_steps = structured_plan.plan_steps
