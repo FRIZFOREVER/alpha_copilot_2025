@@ -1,49 +1,56 @@
-from typing import Iterator, Optional
+from typing import Iterator
+
 from ml.api.ollama_calls import ReasoningModelClient
-from ollama import ChatResponse
+from ollama import ChatResponse, Message as OllamaMessage
 from pydantic import BaseModel
+
 from ml.agent.prompts import get_voice_validation_prompt, VoiceValidationResponse
-from ml.configs.message import ChatHistory, Message
+from ml.configs.message import ChatHistory, Message as ChatMessage
+
 
 class StreamChunk(BaseModel):
     model: str
-    created_at: str = None
+    created_at: str | None = None
     done: bool = False
-    done_reason: Optional[str] = None
-    total_duration: Optional[int] = None
-    load_duration: Optional[int] = None
-    prompt_eval_count: Optional[int] = None
-    prompt_eval_duration: Optional[int] = None
-    eval_count: Optional[int] = None
-    eval_duration: Optional[int] = None
-    message: Message = None
+    done_reason: str | None = None
+    total_duration: int | None = None
+    load_duration: int | None = None
+    prompt_eval_count: int | None = None
+    prompt_eval_duration: int | None = None
+    eval_count: int | None = None
+    eval_duration: int | None = None
+    message: ChatMessage | None = None
 
-def validate_voice(voice_decoding: Message, reasoning_client: ReasoningModelClient) -> bool:
+
+def validate_voice(voice_decoding: ChatMessage, reasoning_client: ReasoningModelClient) -> bool:
     prompt: ChatHistory
     schema: type[VoiceValidationResponse]
 
     prompt, schema = get_voice_validation_prompt(voice_decoding)
-    
+
     return reasoning_client.call_structured(
         prompt,
         schema,
         options={
-            "temperature": 0.0
-        }
+            "temperature": 0.0,
+        },
     ).voice_is_valid
 
-def form_final_report(reasoning_client: ReasoningModelClient) -> Iterator[ChatResponse]:
-    message: str = "Извините, мне не удалось распознать вашу просьбу\nПопробуйте ещё раз или напишите текстом"
 
-    for _, char in enumerate(message):
-        # Каждое сообщение содержит только текущий символ
-        chunk = StreamChunk(
+def form_final_report(reasoning_client: ReasoningModelClient) -> Iterator[ChatResponse]:
+    fallback_message: str = (
+        "Извините, мне не удалось распознать вашу просьбу\n"
+        "Попробуйте ещё раз или напишите текстом"
+    )
+
+    for _, char in enumerate(fallback_message):
+        response: ChatResponse = ChatResponse.model_construct(
             model=reasoning_client.settings.model,
             done=False,
-            # Возможно здесь насрано
-            message=Message(
+            message=OllamaMessage.model_construct(
                 role="assistant",
                 content=char,
             ),
         )
-        yield chunk
+        yield response
+
