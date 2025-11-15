@@ -16,21 +16,6 @@ class Message(BaseModel):
     content: str
 
 
-class ModelMode(str, Enum):
-    Fast = "fast"
-    Thiking = "thiking"
-    Research = "research"
-    Auto = "auto"
-
-
-class Tag(str, Enum):
-    General = "general"
-    Finance = "finance"
-    Law = "law"
-    Marketing = "marketing"
-    Management = "management"
-
-
 class ChatHistory(BaseModel):
     messages: List[Message] = Field(default_factory=list)
 
@@ -64,7 +49,26 @@ class ChatHistory(BaseModel):
             {"role": msg.role.value, "content": msg.content}
             for msg in self.messages
         ]
+    
+    def model_dump_string(self) -> str:
+        return "\n\n".join(
+            f"{msg.role.value}: {msg.content}"
+            for msg in self.messages
+        )
 
+class ModelMode(str, Enum):
+    Fast = "fast"
+    Thiking = "thiking"
+    Research = "research"
+    Auto = "auto"
+
+
+class Tag(str, Enum):
+    General = "general"
+    Finance = "finance"
+    Law = "law"
+    Marketing = "marketing"
+    Management = "management"
 
 class RequestPayload(BaseModel):
     messages: ChatHistory

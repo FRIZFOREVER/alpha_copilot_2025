@@ -1,27 +1,36 @@
 import logging
-from typing import Any, Dict, Iterator
+from collections.abc import Iterator
+from functools import partial
+from typing import Any
 
 from langgraph.graph import END, StateGraph
-from ollama import ChatResponse
-
 from ml.agent.graph.nodes import (
     fast_answer_node,
     flash_memories_node,
     graph_mode_node,
+    research_observer_node,
     research_react_node,
+    research_tool_call_node,
     thinking_planner_node,
 )
-from ml.agent.graph.state import GraphState
+from ml.agent.graph.state import GraphState, NextAction
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import RequestPayload, Tag
 from ml.utils.tag_validation import define_tag
 from ml.utils.voice_validation import form_final_report, validate_voice
+from ollama import ChatResponse
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _extract_pipeline_mode(state: GraphState) -> str:
     return state.payload.mode.value
+
+
+def _extract_research_route(state: GraphState) -> str:
+    if state.final_prompt is not None:
+        return NextAction.FINISH.value
+    return state.next_action.value
 
 
 def create_pipeline(client: ReasoningModelClient) -> StateGraph:
@@ -34,8 +43,10 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow.add_node("Mode Decider", graph_mode_node)
     # Not implemented yet
     workflow.add_node("Flash Memories", flash_memories_node)
-    workflow.add_node("Thinking planner", thinking_planner_node, client=client)
-    workflow.add_node("Research react", research_react_node, client=client)
+    workflow.add_node("Thinking planner", partial(thinking_planner_node, client=client))
+    workflow.add_node("Research react", partial(research_react_node, client=client))
+    workflow.add_node("Research tool call", partial(research_tool_call_node, client=client))
+    workflow.add_node("Research observer", partial(research_observer_node, client=client))
     workflow.add_node(
         "Fast answer", fast_answer_node
     )  # not passing model cuz forming a final prompt
@@ -61,6 +72,26 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow.add_edge("Flash Memories", "Fast answer")
     workflow.add_edge("Fast answer", END)
 
+    # Research
+    workflow.add_conditional_edges(
+        "Research react",
+        _extract_research_route,
+        {
+            NextAction.THINK.value: "Research react",
+            NextAction.REQUEST_TOOL.value: "Research tool call",
+            NextAction.FINISH.value: "Fast answer",
+        },
+    )
+    workflow.add_edge("Research tool call", "Research observer")
+    workflow.add_conditional_edges(
+        "Research observer",
+        _extract_research_route,
+        {
+            NextAction.THINK.value: "Research react",
+            NextAction.FINISH.value: "Fast answer",
+        },
+    )
+
     app: StateGraph = workflow.compile()
 
     return app
@@ -82,21 +113,25 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
     if not payload.tag:
         logger.info("Tag not found. Starting tag definition")
         payload.tag = define_tag(
-            last_message=payload.messages.last_message_as_history(),
-            reasoning_client=client
+            last_message=payload.messages.last_message_as_history(), reasoning_client=client
         )
         logger.info("Defined a tag: %s", payload.tag.value)
-    
+
     # Create Graph
     app: StateGraph = create_pipeline(client)
 
     # Create initial state
     state: GraphState = GraphState(payload=payload)
 
-    raw_result: Dict[str, Any] = app.invoke(state)
-    result: GraphState = GraphState.model_validate(raw_result)
+    raw_result: dict[str, Any] = app.invoke(state)
+    try:
+        result: GraphState = GraphState.model_validate(raw_result)
+    except:
+        RuntimeError("GraphState parse Failed")
+
     logging.debug(
         "Started final prompt generation with payload: \n%s",
         result.final_prompt.model_dump_json(ensure_ascii=False, indent=2),
     )
+
     return client.stream(result.final_prompt), payload.tag

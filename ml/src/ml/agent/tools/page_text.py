@@ -132,4 +132,3 @@ def build_excerpt(text: str, query: str, *, window: int) -> str:
 
 
 __all__ = ["fetch_page_html", "html_to_text", "build_excerpt"]
-
