@@ -1,6 +1,6 @@
 """Prompt builder for selecting and preparing a tool call."""
 
-from typing import Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
 
 from ml.agent.graph.state import ResearchToolRequest, ResearchTurn
 from ml.configs.message import ChatHistory, Role
@@ -23,19 +23,13 @@ def _format_turn_history(turn_history: Sequence[ResearchTurn]) -> str:
     lines: list[str] = []
     for index, turn in enumerate(turn_history, start=1):
         if turn.reasoning_summary:
-            lines.append(
-                f"Turn {index} reasoning: {turn.reasoning_summary}"
-            )
+            lines.append(f"Turn {index} reasoning: {turn.reasoning_summary}")
         if turn.request:
             request = turn.request
-            lines.append(
-                f"Turn {index} tool request: {request.tool_name} -> {request.input_text}"
-            )
+            lines.append(f"Turn {index} tool request: {request.tool_name} -> {request.input_text}")
         if turn.observation:
             observation = turn.observation
-            lines.append(
-                f"Turn {index} observation: {observation.content}"
-            )
+            lines.append(f"Turn {index} observation: {observation.content}")
     return "\n".join(lines)
 
 
@@ -50,17 +44,15 @@ def get_research_tool_prompt(
     conversation: ChatHistory,
     turn_history: Sequence[ResearchTurn],
     pending_request: ResearchToolRequest,
-    comparison_note: Optional[str] = None,
+    comparison_note: str | None = None,
 ) -> ChatHistory:
     """Build a prompt for validating and finalizing the next tool request."""
 
     prompt = ChatHistory()
     prompt.add_or_change_system(
-        (
-            "You are responsible for crafting the exact tool call for the research agent.\n"
-            "Use the conversation and research history to justify the request.\n"
-            "Confirm the best tool, refine the input, and explain why this call moves the investigation forward."
-        )
+        "You are responsible for crafting the exact tool call for the research agent.\n"
+        "Use the conversation and research history to justify the request.\n"
+        "Confirm the best tool, refine the input, and explain why this call moves the investigation forward."
     )
 
     conversation_block = _format_conversation(conversation)
@@ -76,7 +68,9 @@ def get_research_tool_prompt(
     if history_block:
         user_sections.append("Completed research turns:\n" + history_block)
     else:
-        user_sections.append("Completed research turns:\nNone. This is the first tool call under consideration.")
+        user_sections.append(
+            "Completed research turns:\nNone. This is the first tool call under consideration."
+        )
 
     request_lines: list[str] = [
         "Pending tool request:",
@@ -92,10 +86,8 @@ def get_research_tool_prompt(
         user_sections.append("Comparison notes:\n" + comparison_note)
 
     user_sections.append(
-        (
-            "Decide how to execute the tool call.\n"
-            "Respond with a structured summary that includes the final tool name, the refined input, and a short justification referencing the context."
-        )
+        "Decide how to execute the tool call.\n"
+        "Respond with a structured summary that includes the final tool name, the refined input, and a short justification referencing the context."
     )
 
     prompt.add_user("\n\n".join(user_sections))

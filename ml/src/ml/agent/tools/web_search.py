@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections.abc import Iterable
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from typing import Any
 
 from ddgs import DDGS
@@ -12,6 +13,9 @@ DEFAULT_MAX_BYTES = 500_000
 DEFAULT_EXCERPT_WINDOW = 160
 DEFAULT_CONTENT_PREVIEW = 2_000
 MAX_FETCH_WORKERS = 5
+
+
+SearchResult = dict[str, Any]
 
 
 class WebSearchTool(BaseTool):
@@ -61,7 +65,7 @@ class WebSearchTool(BaseTool):
             ToolResult with search results
         """
         try:
-            with DDGS() as ddgs:
+            with DDGS() as ddgs:  # type: ignore
                 results = list(ddgs.text(query, max_results=self._max_results))
 
             formatted_results = self._format_results(results)
@@ -78,8 +82,8 @@ class WebSearchTool(BaseTool):
         except Exception as e:
             return ToolResult(success=False, data=None, error=str(e))
 
-    def _format_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        formatted = []
+    def _format_results(self, results: Iterable[dict[str, Any]]) -> list[SearchResult]:
+        formatted: list[SearchResult] = []
         for result in results:
             snippet = result.get("body", "")
             formatted.append(
@@ -92,7 +96,7 @@ class WebSearchTool(BaseTool):
             )
         return formatted
 
-    def _enrich_results(self, results: list[dict[str, Any]], query: str) -> None:
+    def _enrich_results(self, results: list[SearchResult], query: str) -> None:
         if not results:
             return
 
@@ -100,7 +104,7 @@ class WebSearchTool(BaseTool):
         if max_workers <= 0:
             return
 
-        futures = {}
+        futures: dict[Future[str], SearchResult] = {}
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             for result in results:
                 url = result.get("url")
@@ -113,7 +117,11 @@ class WebSearchTool(BaseTool):
                 try:
                     text = future.result()
                 except Exception as exc:  # pragma: no cover - defensive fallback
-                    result.setdefault("errors", []).append(str(exc))
+                    errors = result.setdefault("errors", [])
+                    if isinstance(errors, list):
+                        errors.append(str(exc))
+                    else:
+                        result["errors"] = [str(exc)]
                     continue
 
                 if not text:

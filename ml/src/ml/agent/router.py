@@ -19,6 +19,8 @@ def workflow_collected(payload: RequestPayload) -> tuple[str, Tag]:
     buffer_string: str = ""
 
     for chunk in stream:
-        buffer_string += chunk.message.content
+        content: str | None = chunk.message.content
+        if content:
+            buffer_string += content
 
     return buffer_string, tag

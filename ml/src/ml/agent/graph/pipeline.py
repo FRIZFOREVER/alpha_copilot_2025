@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Iterator
+from functools import partial
 from typing import Any
 
 from langgraph.graph import END, StateGraph
@@ -42,10 +43,10 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow.add_node("Mode Decider", graph_mode_node)
     # Not implemented yet
     workflow.add_node("Flash Memories", flash_memories_node)
-    workflow.add_node("Thinking planner", thinking_planner_node, client=client)
-    workflow.add_node("Research react", research_react_node, client=client)
-    workflow.add_node("Research tool call", research_tool_call_node, client=client)
-    workflow.add_node("Research observer", research_observer_node, client=client)
+    workflow.add_node("Thinking planner", partial(thinking_planner_node, client=client))
+    workflow.add_node("Research react", partial(research_react_node, client=client))
+    workflow.add_node("Research tool call", partial(research_tool_call_node, client=client))
+    workflow.add_node("Research observer", partial(research_observer_node, client=client))
     workflow.add_node(
         "Fast answer", fast_answer_node
     )  # not passing model cuz forming a final prompt
