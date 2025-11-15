@@ -117,7 +117,6 @@ async def message_stream(request: Request) -> StreamingResponse:
     )
 
 
-# Telegram endpoints
 @app.post("/telegram/user/auth/start")
 async def start_telegram_user_auth(request: TelegramAuthStartRequest):
     return await telegram_handlers.start_telegram_user_auth(
