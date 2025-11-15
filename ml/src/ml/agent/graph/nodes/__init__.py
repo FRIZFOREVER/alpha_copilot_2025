@@ -6,7 +6,7 @@ from .research_react import research_react_node
 from .research_tool_call import research_tool_call_node
 from .thinking_planner import thinking_planner_node
 
-__all__ = [
+__all__: list[str] = [
     "fast_answer_node",
     "flash_memories_node",
     "graph_mode_node",

@@ -8,7 +8,7 @@ from .voice_validation_prompt import (
     get_voice_validation_prompt,
 )
 
-__all__ = [
+__all__: list[str] = [
     "get_voice_validation_prompt",
     "VoiceValidationResponse",  # Voice validation
     "get_fast_answer_prompt",  # Fast answer prompting
@@ -17,4 +17,3 @@ __all__ = [
     "get_research_observation_prompt",  # Research observation synthesis
     "get_tag_define_prompt",
 ]
-

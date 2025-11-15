@@ -1,6 +1,6 @@
 """Prompt builder for synthesizing tool observations."""
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from ml.agent.graph.state import ResearchTurn
 from ml.configs.message import ChatHistory, Role
@@ -8,13 +8,13 @@ from ml.configs.message import ChatHistory, Role
 
 def _format_conversation(conversation: ChatHistory) -> str:
     lines: list[str] = []
-    role_labels = {
+    role_labels: dict[Role, str] = {
         Role.system: "System",
         Role.user: "User",
         Role.assistant: "Assistant",
     }
     for message in conversation.messages:
-        role_label = role_labels.get(message.role, message.role.value)
+        role_label: str | None = role_labels.get(message.role, message.role.value)
         lines.append(f"{role_label}: {message.content}")
     return "\n".join(lines)
 
@@ -23,19 +23,13 @@ def _format_turn_history(turn_history: Sequence[ResearchTurn]) -> str:
     lines: list[str] = []
     for index, turn in enumerate(turn_history, start=1):
         if turn.reasoning_summary:
-            lines.append(
-                f"Turn {index} reasoning: {turn.reasoning_summary}"
-            )
+            lines.append(f"Turn {index} reasoning: {turn.reasoning_summary}")
         if turn.request:
             request = turn.request
-            lines.append(
-                f"Turn {index} tool request: {request.tool_name} -> {request.input_text}"
-            )
+            lines.append(f"Turn {index} tool request: {request.tool_name} -> {request.input_text}")
         if turn.observation:
             observation = turn.observation
-            lines.append(
-                f"Turn {index} observation: {observation.content}"
-            )
+            lines.append(f"Turn {index} observation: {observation.content}")
     return "\n".join(lines)
 
 
@@ -58,10 +52,8 @@ def get_research_observation_prompt(
 
     prompt = ChatHistory()
     prompt.add_or_change_system(
-        (
-            "You are an analytical researcher reviewing newly fetched evidence.\n"
-            "Combine the tool output with the existing research plan and explain how it influences the next steps."
-        )
+        "You are an analytical researcher reviewing newly fetched evidence.\n"
+        "Combine the tool output with the existing research plan and explain how it influences the next steps."
     )
 
     conversation_block = _format_conversation(conversation)
@@ -82,10 +74,8 @@ def get_research_observation_prompt(
     user_sections.append("Latest tool evidence:\n" + documents_block)
 
     user_sections.append(
-        (
-            "Summarize the key insights from the evidence.\n"
-            "Highlight contradictions or confirmations relative to earlier turns and propose the next action."
-        )
+        "Summarize the key insights from the evidence.\n"
+        "Highlight contradictions or confirmations relative to earlier turns and propose the next action."
     )
 
     prompt.add_user("\n\n".join(user_sections))

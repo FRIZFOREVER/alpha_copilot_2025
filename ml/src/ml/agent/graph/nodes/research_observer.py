@@ -11,7 +11,7 @@ MAX_RESEARCH_ITERATIONS = 6
 
 def _extract_result_documents(payload: dict[str, Any]) -> list[str]:
     documents: list[str] = []
-    results = payload.get("results") if payload else None
+    results: Any | None = payload.get("results") if payload else None
     if results:
         for index, item in enumerate(results, start=1):
             lines: list[str] = []
@@ -68,7 +68,7 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
         documents=documents,
     )
 
-    summary = client.call(messages=prompt)
+    summary: str = client.call(messages=prompt)
 
     current_turn: ResearchTurn
     if state.turn_history:
