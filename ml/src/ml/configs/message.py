@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from enum import Enum
 
 from pydantic import BaseModel, Field, field_validator
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Role(str, Enum):
@@ -17,8 +20,12 @@ class Message(BaseModel):
     content: str
 
 
+def _empty_messages() -> list[Message]:
+    return []
+
+
 class ChatHistory(BaseModel):
-    messages: list[Message] = Field(default_factory=list)
+    messages: list[Message] = Field(default_factory=_empty_messages)
 
     # TODO: Implement overrides for add functions when input is Message class
     # instead of content. Validate it on role as well
@@ -65,7 +72,7 @@ class Tag(str, Enum):
     Management = "management"
 
 
-class Profile(BaseModel):
+class UserProfile(BaseModel):
     id: int
     login: str
     username: str
@@ -79,19 +86,30 @@ class RequestPayload(BaseModel):
     chat_id: str
     tag: Tag | None = None
     mode: ModelMode
-    system: str
     file_url: str
     is_voice: bool
-    profile: Profile
+    profile: UserProfile
 
     @field_validator("messages", mode="before")
     @classmethod
-    def normalize_messages(cls, message_list):
-        return {"messages": message_list}
+    def normalize_messages(cls, message_list: list[Message]) -> dict[str, list[Message]]:
+        if message_list:
+            return {"messages": message_list}
+        else:
+            logger.exception("Found no messages inside payload")
+            raise RuntimeError("Expected messages inside payload, got none")
 
     @field_validator("tag", mode="before")
     @classmethod
-    def replace_tag(cls, v):
+    def replace_tag(cls, v: str | None) -> Tag | None:
+        if v is None:
+            return None
+
         if v == "":
             return None
-        return v
+
+        if isinstance(v, Tag):
+            return v
+
+        logger.exception("Found invalid tag inside payload: %s", v)
+        raise RuntimeError("Expected a valid Tag value")

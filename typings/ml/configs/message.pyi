@@ -55,23 +55,30 @@ class Tag(str, Enum):
     Management = ...
 
 
+class UserProfile(BaseModel):
+    id: int
+    login: str
+    username: str
+    user_info: str
+    business_info: str
+    additional_instructions: str
+
+
 class RequestPayload(BaseModel):
     messages: ChatHistory
     chat_id: str
     tag: Optional[Tag] = ...
     mode: ModelMode
-    system: str
     file_url: str
     is_voice: bool
+    profile: UserProfile
     @field_validator("messages", mode="before")
     @classmethod
-    def normalize_messages(cls, message_list): # -> dict[str, Any]:
+    def normalize_messages(cls, message_list: List[Message]) -> Dict[str, List[Message]]:
         ...
     
     @field_validator("tag", mode="before")
     @classmethod
-    def replace_tag(cls, v): # -> None:
+    def replace_tag(cls, v: Tag | str | None) -> Optional[Tag]:
         ...
     
-
-
