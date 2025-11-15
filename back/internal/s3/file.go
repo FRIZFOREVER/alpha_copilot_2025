@@ -11,8 +11,20 @@ import (
 // MaxFileSize определяет максимальный размер файла (100 МБ в байтах).
 const MaxFileSize = 100 * 1024 * 1024 // 100 МБ
 
-// UploadFileToMinIO загружает любой файл в MinIO с проверкой размера.
-func UploadFileToMinIO(s3 *minio.Client, bucketName, uuid, fileExtension string, fileData []byte, contentType string) (string, error) {
+// S3Client обертка для работы с MinIO.
+type S3Client struct {
+	client *minio.Client
+}
+
+// NewMinIOFileManager создает новый экземпляр S3Client.
+func NewMinIOFileManager(client *minio.Client) *S3Client {
+	return &S3Client{
+		client: client,
+	}
+}
+
+// UploadFile загружает любой файл в MinIO с проверкой размера.
+func (s *S3Client) UploadFile(bucketName, uuid, fileExtension string, fileData []byte, contentType string) (string, error) {
 	// Проверяем размер файла
 	fileSize := int64(len(fileData))
 	if fileSize > MaxFileSize {
@@ -30,10 +42,10 @@ func UploadFileToMinIO(s3 *minio.Client, bucketName, uuid, fileExtension string,
 
 	// Если ContentType не указан, определяем по расширению или используем общий тип
 	if contentType == "" {
-		contentType = getContentTypeByExtension(fileExtension)
+		contentType = s.getContentTypeByExtension(fileExtension)
 	}
 
-	info, err := s3.PutObject(bucketName, fileName, reader, fileSize, minio.PutObjectOptions{
+	info, err := s.client.PutObject(bucketName, fileName, reader, fileSize, minio.PutObjectOptions{
 		ContentType: contentType,
 	})
 	if err != nil {
@@ -48,13 +60,13 @@ func UploadFileToMinIO(s3 *minio.Client, bucketName, uuid, fileExtension string,
 }
 
 // GetFile получает любой файл из MinIO.
-func GetFile(s3 *minio.Client, bucket, fileName string) (*minio.Object, error) {
+func (s *S3Client) GetFile(bucket, fileName string) (*minio.Object, error) {
 	if fileName == "" {
 		return nil, ErrFilenameIsRequired
 	}
 
 	// Проверяем существование бакета
-	exists, err := s3.BucketExists(bucket)
+	exists, err := s.client.BucketExists(bucket)
 	if err != nil {
 		return nil, ErrFailedToCheckBucketExistence
 	}
@@ -63,7 +75,7 @@ func GetFile(s3 *minio.Client, bucket, fileName string) (*minio.Object, error) {
 	}
 
 	// Получаем объект из MinIO
-	object, err := s3.GetObject(bucket, fileName, minio.GetObjectOptions{})
+	object, err := s.client.GetObject(bucket, fileName, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, ErrFileNotFound
 	}
@@ -83,7 +95,7 @@ func GetFile(s3 *minio.Client, bucket, fileName string) (*minio.Object, error) {
 }
 
 // ValidateFileSize проверяет размер файла перед загрузкой.
-func ValidateFileSize(fileData []byte) error {
+func (s *S3Client) ValidateFileSize(fileData []byte) error {
 	fileSize := int64(len(fileData))
 	if fileSize > MaxFileSize {
 		return fmt.Errorf("размер файла превышает максимально допустимый: %d байт > %d байт", fileSize, MaxFileSize)
@@ -95,12 +107,12 @@ func ValidateFileSize(fileData []byte) error {
 }
 
 // GetMaxFileSize возвращает максимальный разрешенный размер файла.
-func GetMaxFileSize() int64 {
+func (s *S3Client) GetMaxFileSize() int64 {
 	return MaxFileSize
 }
 
 // getContentTypeByExtension определяет Content-Type по расширению файла.
-func getContentTypeByExtension(ext string) string {
+func (s *S3Client) getContentTypeByExtension(ext string) string {
 	switch ext {
 	case ".pdf":
 		return "application/pdf"

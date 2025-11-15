@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"jabki/internal/web/middlewares"
 	"jabki/internal/web/ws"
 
@@ -11,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func GraphLogHandler(db *sql.DB, secret string, logger *logrus.Logger) fiber.Handler {
+func GraphLogHandler(secret string, logger *logrus.Logger) fiber.Handler {
 	return websocket.New(func(c *websocket.Conn) {
 		var uuid uuid.UUID
 		var err error

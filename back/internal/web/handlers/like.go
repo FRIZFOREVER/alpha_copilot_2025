@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"jabki/internal/database"
 	"strconv"
@@ -12,13 +11,13 @@ import (
 )
 
 type Like struct {
-	db     *sql.DB
+	repo   database.LikeManager
 	logger *logrus.Logger
 }
 
-func NewLike(db *sql.DB, logger *logrus.Logger) *Like {
+func NewLike(repo database.LikeManager, logger *logrus.Logger) *Like {
 	return &Like{
-		db:     db,
+		repo:   repo,
 		logger: logger,
 	}
 }
@@ -41,7 +40,7 @@ func (lh *Like) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	isCorresponds, err := database.CheckChat(lh.db, uuid.String(), chatID, lh.logger)
+	isCorresponds, err := lh.repo.CheckChat(uuid.String(), chatID)
 	if err != nil || !isCorresponds {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Chat ID is not corresponds to user uuid",
@@ -55,7 +54,7 @@ func (lh *Like) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	if err = database.SetLike(lh.db, chatID, likeIn.AnswerID, likeIn.Rating, lh.logger); err != nil {
+	if err = lh.repo.SetLike(chatID, likeIn.AnswerID, likeIn.Rating); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error in database",
 			"details": err.Error(),

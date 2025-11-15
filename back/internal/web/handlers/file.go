@@ -8,19 +8,18 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/minio/minio-go"
 	"github.com/sirupsen/logrus"
 )
 
 type File struct {
-	s3     *minio.Client
-	logger *logrus.Logger
+	storage s3.FileManager
+	logger  *logrus.Logger
 }
 
-func NewFile(s3 *minio.Client, logger *logrus.Logger) *File {
+func NewFile(storage s3.FileManager, logger *logrus.Logger) *File {
 	return &File{
-		s3:     s3,
-		logger: logger,
+		storage: storage,
+		logger:  logger,
 	}
 }
 
@@ -65,7 +64,7 @@ func (fh *File) Handler(c *fiber.Ctx) error {
 	}
 
 	// Загружаем файл в S3
-	url, err := s3.UploadFileToMinIO(fh.s3, "files", uuid.String(), fileExt, fileBytes, file.Header.Get("Content-Type"))
+	url, err := fh.storage.UploadFile("files", uuid.String(), fileExt, fileBytes, file.Header.Get("Content-Type"))
 	if err != nil {
 		fh.logger.WithError(err).Error("Failed to upload file to S3")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

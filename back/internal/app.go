@@ -55,8 +55,6 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 	// }
 	// logger.Info("Есть подключение к recognizer! 🔊")
 
-	modelClient := client.NewModelClient("POST", config.Model, "/message", logger)
-
 	// Проверка и логирование API ключа AssemblyAI
 	if config.RecognizerAPIKey == "" {
 		logger.Warn("⚠️  ASSEMBLYAI_API_KEY не установлен! Запросы к AssemblyAI будут возвращать ошибку 401")
@@ -75,7 +73,7 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 	web.InitServiceRoutes(server, db, config.SecretSerice, logger)
 	web.InitPublicRoutes(server, db, config.SecretUser, config.FrontOrigin, logger)
 	web.InitJWTMiddleware(server, config.SecretUser, config.FrontOrigin, logger)
-	web.InitPrivateRoutes(server, db, s3client, modelClient, recognizerClient, streamClient, logger)
+	web.InitPrivateRoutes(server, db, s3client, recognizerClient, streamClient, logger)
 
 	return newApp(config, server, db, s3client, logger), nil
 }
