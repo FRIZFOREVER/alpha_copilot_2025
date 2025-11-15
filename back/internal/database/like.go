@@ -63,8 +63,8 @@ func (s *LikeService) SetLike(chatID int, answerID int, rating *int) error {
 	return nil
 }
 
-// LikeManager - интерфейс для управления лайками.
-type LikeManager interface {
+// LikeRepository - интерфейс для управления лайками.
+type LikeRepository interface {
 	CheckChat(userUUID string, chatID int) (bool, error)
 	SetLike(chatID int, answerID int, rating *int) error
 }

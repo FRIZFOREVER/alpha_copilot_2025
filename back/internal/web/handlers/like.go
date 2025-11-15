@@ -11,11 +11,11 @@ import (
 )
 
 type Like struct {
-	repo   database.LikeManager
+	repo   database.LikeRepository
 	logger *logrus.Logger
 }
 
-func NewLike(repo database.LikeManager, logger *logrus.Logger) *Like {
+func NewLike(repo database.LikeRepository, logger *logrus.Logger) *Like {
 	return &Like{
 		repo:   repo,
 		logger: logger,
