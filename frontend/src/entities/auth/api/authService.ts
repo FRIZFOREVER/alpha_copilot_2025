@@ -19,6 +19,12 @@ import {
   TelegramContactsResponse,
   TelegramSendMessageRequest,
   TelegramSendMessageResponse,
+  TodoistAuthSaveRequest,
+  TodoistAuthSaveResponse,
+  TodoistStatusRequest,
+  TodoistStatusResponse,
+  TodoistCreateTaskRequest,
+  TodoistCreateTaskResponse,
 } from "../types/types";
 
 class AuthService {
@@ -106,6 +112,36 @@ class AuthService {
     );
     return data;
   }
+
+  public async saveTodoistToken(
+    request: TodoistAuthSaveRequest
+  ): Promise<TodoistAuthSaveResponse> {
+    const { data } = await axiosMockML.post<TodoistAuthSaveResponse>(
+      "/todoist/auth/save",
+      { ...request }
+    );
+    return data;
+  }
+
+  public async getTodoistStatus(
+    request: TodoistStatusRequest
+  ): Promise<TodoistStatusResponse> {
+    const { data } = await axiosMockML.post<TodoistStatusResponse>(
+      "/todoist/status",
+      { ...request }
+    );
+    return data;
+  }
+
+  public async createTodoistTask(
+    request: TodoistCreateTaskRequest
+  ): Promise<TodoistCreateTaskResponse> {
+    const { data } = await axiosMockML.post<TodoistCreateTaskResponse>(
+      "/todoist/create/task",
+      { ...request }
+    );
+    return data;
+  }
 }
 
 const authService = new AuthService();
@@ -121,4 +157,7 @@ export const {
   verifyTelegramAuth,
   sendTelegramMessage,
   getTelegramContacts,
+  saveTodoistToken,
+  getTodoistStatus,
+  createTodoistTask,
 } = authService;

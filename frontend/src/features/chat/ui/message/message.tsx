@@ -1,5 +1,12 @@
 import { cn } from "@/shared/lib/mergeClass";
-import { Copy, ThumbsUp, RefreshCw, Check, Send } from "lucide-react";
+import {
+  Copy,
+  ThumbsUp,
+  RefreshCw,
+  Check,
+  Send,
+  CheckSquare,
+} from "lucide-react";
 import { useModal } from "@/shared/lib/modal/context";
 import { EModalVariables } from "@/shared/lib/modal/constants";
 import { MarkdownContent } from "./markdownContent";
@@ -11,6 +18,8 @@ import { FileMessage } from "./fileMessage";
 import { TAG_COLORS } from "../tagSelector/tagSelector";
 import { useState } from "react";
 import { useTelegramStatusQuery } from "@/entities/auth/hooks/useTelegramStatus";
+import { useTodoistStatusQuery } from "@/entities/auth/hooks/useTodoistStatus";
+import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
 import { sendTelegramMessage } from "@/entities/auth/api/authService";
 import { TelegramContact } from "@/entities/auth/types/types";
 
@@ -54,6 +63,10 @@ export const Message = ({
 
   const phone_number = getStoredPhoneNumber();
   const { data: telegramStatus } = useTelegramStatusQuery(phone_number);
+
+  const { data: profileData } = useGetProfileQuery();
+  const user_id = profileData?.id?.toString();
+  const { data: todoistStatus } = useTodoistStatusQuery(user_id);
 
   const handleSendToTelegram = () => {
     if (!phone_number || !telegramStatus?.authorized) {
@@ -103,6 +116,19 @@ export const Message = ({
         chatId: Number(chatId),
       });
     }
+  };
+
+  const handleCreateTodoistTask = () => {
+    if (!user_id || !content.trim()) {
+      console.warn("No user_id or content available");
+      return;
+    }
+
+    openModal(EModalVariables.TODOIST_CREATE_TASK_MODAL, {
+      user_id,
+      content: content.trim(),
+      labels: tag ? [tag] : undefined,
+    });
   };
 
   return (
@@ -207,6 +233,20 @@ export const Message = ({
                 title="Отправить в Telegram"
               >
                 <Send className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </button>
+            )}
+            {todoistStatus?.authorized && (
+              <button
+                disabled={!content.trim()}
+                className={cn(
+                  "p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer",
+                  !content.trim() && "opacity-50 cursor-not-allowed"
+                )}
+                aria-label="Создать задачу в Todoist"
+                onClick={handleCreateTodoistTask}
+                title="Создать задачу в Todoist"
+              >
+                <CheckSquare className="h-4 w-4 text-purple-600 dark:text-purple-400" />
               </button>
             )}
             <button
