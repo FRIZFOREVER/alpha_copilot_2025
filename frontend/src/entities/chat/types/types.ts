@@ -67,6 +67,9 @@ export interface SendMessageStreamDto {
   file_url?: string;
   tag?: string;
   mode?: "fast";
+  send_to_telegram?: boolean;
+  phone_number?: string;
+  recipient_id?: string | number;
 }
 
 export interface StreamInitialResponse {

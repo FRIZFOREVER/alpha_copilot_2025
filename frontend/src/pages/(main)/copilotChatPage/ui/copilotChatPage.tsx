@@ -8,6 +8,9 @@ const CopilotChatPage = () => {
     handleSendVoice,
     isLoading,
     suggestions,
+    selectedTelegramContact,
+    handleSelectTelegramContact,
+    isTelegramAuthorized,
   } = useChatMessages();
 
   return (
@@ -17,6 +20,10 @@ const CopilotChatPage = () => {
       onSendVoice={handleSendVoice}
       isLoading={isLoading}
       suggestions={suggestions}
+      selectedTelegramContact={selectedTelegramContact}
+      onTelegramContactClick={
+        isTelegramAuthorized ? handleSelectTelegramContact : undefined
+      }
     />
   );
 };

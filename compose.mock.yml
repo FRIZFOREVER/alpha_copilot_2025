@@ -26,6 +26,11 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - OLLAMA_HOST=http://ollama:11434
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID:-0}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH:-}
+      - TELEGRAM_DATA_DIR=/app/data
+    volumes:
+      - telegram_data:/app/data
     depends_on:
       ollama:
         condition: service_healthy
@@ -39,3 +44,4 @@ services:
 
 volumes:
   ollama:
+  telegram_data:

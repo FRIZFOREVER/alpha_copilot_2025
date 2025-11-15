@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/shared/ui/button";
-import { Mic, ChevronUp, X, Check, Paperclip } from "lucide-react";
+import { Mic, ChevronUp, X, Check, Paperclip, Send } from "lucide-react";
 import { cn } from "@/shared/lib/mergeClass";
 import { useComputerVoiceRecorder } from "@/entities/chat/hooks/useComputerVoiceRecorder";
 import { formatTime } from "@/shared/lib/utils/timeHelpers";
@@ -10,6 +10,7 @@ import { FileBadge } from "../fileBadge";
 import { uploadFile } from "@/entities/chat/api/chatService";
 import { TagSelector, type TagId } from "../tagSelector/tagSelector";
 import { TagBadge } from "../tagBadge/tagBadge";
+import { TelegramContact } from "@/entities/auth/types/types";
 
 export interface ChatInputProps {
   onSend?: (data: { message: string; file_url?: string; tag?: TagId }) => void;
@@ -18,6 +19,8 @@ export interface ChatInputProps {
   disabled?: boolean;
   suggestions?: Suggestion[];
   isCompact?: boolean;
+  selectedTelegramContact?: TelegramContact | null;
+  onTelegramContactClick?: () => void;
 }
 
 const MIN_HEIGHT = 52;
@@ -29,6 +32,8 @@ export const ChatInput = ({
   disabled = false,
   suggestions,
   isCompact = false,
+  selectedTelegramContact,
+  onTelegramContactClick,
 }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -368,7 +373,7 @@ export const ChatInput = ({
                 "flex flex-col",
               )}
             >
-              {(hasFile || selectedTag) && (
+              {(hasFile || selectedTag || selectedTelegramContact) && (
                 <div className="px-3 pt-3 pb-2 flex flex-col gap-2">
                   {selectedTag && (
                     <div className="flex items-center">
@@ -386,6 +391,33 @@ export const ChatInput = ({
                         onRemove={removeFile}
                         disabled={disabled}
                       />
+                    </div>
+                  )}
+                  {selectedTelegramContact && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200">
+                      <Send className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm text-blue-900 font-medium">
+                        {selectedTelegramContact.first_name}{" "}
+                        {selectedTelegramContact.last_name}
+                      </span>
+                      {selectedTelegramContact.username && (
+                        <span className="text-xs text-blue-600">
+                          @{selectedTelegramContact.username}
+                        </span>
+                      )}
+                      {onTelegramContactClick && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onTelegramContactClick();
+                          }}
+                          className="ml-auto text-blue-600 hover:text-blue-800"
+                          disabled={disabled}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -425,6 +457,28 @@ export const ChatInput = ({
                 >
                   <Paperclip className="h-5 w-5" />
                 </button>
+
+                {onTelegramContactClick && (
+                  <button
+                    type="button"
+                    className={cn(
+                      "absolute left-12 h-6 w-6 flex items-center cursor-pointer justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
+                      isMultiLine ? "bottom-3" : "top-[50%] -translate-y-1/2",
+                      selectedTelegramContact
+                        ? "text-blue-600 hover:text-blue-800"
+                        : "text-gray-700 hover:text-gray-900",
+                    )}
+                    disabled={disabled}
+                    onClick={onTelegramContactClick}
+                    title={
+                      selectedTelegramContact
+                        ? "Изменить контакт Telegram"
+                        : "Выбрать контакт Telegram"
+                    }
+                  >
+                    <Send className="h-5 w-5" />
+                  </button>
+                )}
 
                 <button
                   type="button"

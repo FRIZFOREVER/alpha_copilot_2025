@@ -5,10 +5,7 @@ import { Badge } from "@/shared/ui/badge/badge";
 import { Progress } from "@/shared/ui/progress/progress";
 import { useNavigate } from "react-router-dom";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
-import {
-  getUserInitials,
-  getDisplayName,
-} from "@/shared/lib/utils/userHelpers";
+import { getDisplayName } from "@/shared/lib/utils/userHelpers";
 import { mockData } from "../lib/constants";
 import { deleteAccessToken } from "@/entities/token";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,13 +13,32 @@ import { ERouteNames } from "@/shared/lib/routeVariables";
 import { useChatCollapse } from "@/shared/lib/chatCollapse";
 import { Header } from "@/widgets/header";
 import { IntegrationCard } from "./components/integrationCard";
+import { useTelegramStatusQuery } from "@/entities/auth/hooks/useTelegramStatus";
+import { useModal } from "@/shared/lib/modal/context";
+import { EModalVariables } from "@/shared/lib/modal/constants";
 
 const ProfilePage = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { resetChatState } = useChatCollapse();
+  const { openModal } = useModal();
   const { data: profileData, isLoading: isLoadingProfile } =
     useGetProfileQuery();
+
+  const user_id = profileData?.id?.toString();
+
+  const getStoredPhoneNumber = (): string | undefined => {
+    try {
+      const stored = localStorage.getItem("telegram_phone_number");
+      return stored || undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const phone_number = getStoredPhoneNumber();
+
+  const { data: telegramStatus } = useTelegramStatusQuery(phone_number);
 
   if (isLoadingProfile) {
     return (
@@ -131,19 +147,32 @@ const ProfilePage = () => {
                 </h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {mockData.integrations.map((integration, i) => (
-                  <IntegrationCard
-                    key={i}
-                    name={integration.name}
-                    connected={integration.connected}
-                    imageSrc={integration.imageSrc}
-                    description={integration.description}
-                    category={integration.category}
-                    onClick={() => {
-                      console.log(`Click on ${integration.name}`);
-                    }}
-                  />
-                ))}
+                {mockData.integrations.map((integration, i) => {
+                  const isTelegram = integration.name === "Telegram";
+                  const isConnected = isTelegram
+                    ? telegramStatus?.authorized ?? false
+                    : integration.connected;
+
+                  return (
+                    <IntegrationCard
+                      key={i}
+                      name={integration.name}
+                      connected={isConnected}
+                      imageSrc={integration.imageSrc}
+                      description={integration.description}
+                      category={integration.category}
+                      onClick={() => {
+                        if (isTelegram && !isConnected && user_id) {
+                          openModal(EModalVariables.TELEGRAM_AUTH_MODAL, {
+                            user_id,
+                          });
+                        } else {
+                          console.log(`Click on ${integration.name}`);
+                        }
+                      }}
+                    />
+                  );
+                })}
               </div>
             </div>
 
