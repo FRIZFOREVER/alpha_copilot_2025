@@ -1,10 +1,13 @@
 """Finalization node for research workflow responses."""
 
 from collections.abc import Sequence
+import logging
 
 from ml.agent.graph.state import GraphState, NextAction, ResearchObservation, ResearchTurn
 from ml.agent.prompts import get_research_answer_prompt
 from ml.configs.message import ChatHistory
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _extract_payload_documents(observation: ResearchObservation) -> list[str]:
@@ -64,6 +67,7 @@ def _gather_turn_evidence(turn_history: Sequence[ResearchTurn]) -> list[str]:
 
 
 def research_answer_node(state: GraphState) -> GraphState:
+    logger.info("Entered Research answer node")
     draft = state.final_answer_draft
     if draft is None:
         draft = state.latest_reasoning or ""

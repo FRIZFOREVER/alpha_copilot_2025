@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 
 from ml.agent.graph.state import (
@@ -10,6 +11,8 @@ from ml.agent.prompts import get_research_reason_prompt
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory
 from pydantic import BaseModel, Field
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ResearchReactAction(str, Enum):
@@ -42,6 +45,7 @@ class ResearchReactResponse(BaseModel):
 
 
 def research_react_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
+    logger.info("Entered Research react node")
     prompt: ChatHistory = get_research_reason_prompt(
         conversation=state.payload.messages,
         turn_history=state.turn_history,
@@ -52,6 +56,8 @@ def research_react_node(state: GraphState, client: ReasoningModelClient) -> Grap
         messages=prompt,
         output_schema=ResearchReactResponse,
     )
+
+    logger.info("Research react reasoning: %s", response.thought)
 
     state.loop_counter = state.loop_counter + 1
     state.latest_reasoning = response.thought

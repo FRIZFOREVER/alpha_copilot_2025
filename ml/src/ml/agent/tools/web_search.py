@@ -196,6 +196,12 @@ class WebSearchTool(BaseTool):
             else:
                 summary = summary_response.summarization
                 is_viable = summary_response.is_information_viable
+                logger.info(
+                    "Page summary for %s (viable=%s): %s",
+                    url,
+                    is_viable,
+                    summary,
+                )
 
         return FetchedPage(text=text, summary=summary, is_viable=is_viable)
 
@@ -220,7 +226,15 @@ class WebSearchTool(BaseTool):
             )
         )
 
-        return self._reasoning_client.call_structured(
+        logger.info("Summarizing page content for query: %s", query)
+
+        summary_response: PageSummaryResponse = self._reasoning_client.call_structured(
             messages=prompt,
             output_schema=PageSummaryResponse,
         )
+        logger.info(
+            "Summarization response (viable=%s): %s",
+            summary_response.is_information_viable,
+            summary_response.summarization,
+        )
+        return summary_response
