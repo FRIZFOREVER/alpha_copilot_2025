@@ -499,11 +499,10 @@ async def message_stream(request: Request) -> StreamingResponse:
             logger.info("Got item: %s", item)
 
     # Нормализуем send_to_telegram - может прийти как строка "true"/"false" или булево значение
-    send_to_telegram_raw = payload.get("send_to_telegram", False)
-    if isinstance(send_to_telegram_raw, str):
-        send_to_telegram = send_to_telegram_raw.lower() in ("true", "1", "yes")
-    else:
-        send_to_telegram = bool(send_to_telegram_raw)
+    try:
+        send_to_telegram_raw = payload.get("send_to_telegram")
+    except:
+        raise HTTPException(status_code=500, detail="Expexted send_to_telegram field in payload")
 
     logger.info(
         f"Parsed send_to_telegram: raw={send_to_telegram_raw}, type={type(send_to_telegram_raw).__name__}, normalized={send_to_telegram}"
