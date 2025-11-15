@@ -30,7 +30,7 @@ func (m *MockLikeRepository) SetLike(chatID int, answerID int, rating *int) erro
 	return args.Error(0)
 }
 
-func TestConfig_Change(t *testing.T) {
+func Test_Like(t *testing.T) {
 	logger := logrus.New()
 	settings := settings.InitSettings(logger)
 	tests := []struct {
@@ -54,6 +54,55 @@ func TestConfig_Change(t *testing.T) {
 			},
 			expectedStatus:   fiber.StatusOK,
 			expectedResponse: "",
+		},
+		{
+			name:             "2) Неверный HTTP метод",
+			chatID:           "1",
+			httpMethod:       fiber.MethodGet,
+			body:             []byte(`{"answer_id": 2,"rating": 5}`),
+			setupMocks:       func(mr *MockLikeRepository) {},
+			expectedStatus:   fiber.StatusMethodNotAllowed,
+			expectedResponse: "Method Not Allowed",
+		},
+		{
+			name:             "3) Невалидный chat_id (не число)",
+			chatID:           "invalid",
+			httpMethod:       fiber.MethodPut,
+			body:             []byte(`{"answer_id": 2,"rating": 5}`),
+			setupMocks:       func(mr *MockLikeRepository) {},
+			expectedStatus:   fiber.StatusBadRequest,
+			expectedResponse: `{"error":"Invalid chat ID format"}`,
+		},
+		{
+			name:             "4) Отрицательный chat_id",
+			chatID:           "-1",
+			httpMethod:       fiber.MethodPut,
+			body:             []byte(`{"answer_id": 2,"rating": 5}`),
+			setupMocks:       func(mr *MockLikeRepository) {
+				mr.On("CheckChat", "00000000-0000-0000-0000-000000000000", -1).Return(false, nil)
+			},
+			expectedStatus:   fiber.StatusBadRequest,
+			expectedResponse: `{"error":"Chat ID is not corresponds to user uuid"}`,
+		},
+		{
+			name:             "5) Пустой chat_id",
+			chatID:           "",
+			httpMethod:       fiber.MethodPut,
+			body:             []byte(`{"answer_id": 2,"rating": 5}`),
+			setupMocks:       func(mr *MockLikeRepository) {},
+			expectedStatus:   fiber.StatusNotFound,
+			expectedResponse: "Cannot PUT /like/",
+		},
+		{
+			name:             "6) Невалидный JSON в теле запроса",
+			chatID:           "1",
+			httpMethod:       fiber.MethodPut,
+			body:             []byte(`{"answer_id": "invalid","rating": 5}`),
+			setupMocks:       func(mr *MockLikeRepository) {
+				mr.On("CheckChat", "00000000-0000-0000-0000-000000000000", 1).Return(true, nil)
+			},
+			expectedStatus:   fiber.StatusBadRequest,
+			expectedResponse: `{"details":"json: cannot unmarshal string into Go struct field likeIn.answer_id of type int","error":"Invalid JSON format"}`,
 		},
 	}
 
