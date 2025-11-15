@@ -39,6 +39,7 @@ export const mockData = {
       imageSrc: "/images/D03_CardPromo1_210325.webp",
       description: "Управление задачами, проектами, списками и многое другое",
       category: "ДЛЯ ЛЮБЫХ СОТРУДНИКОВ",
+      isDevelopment: false,
     },
     {
       name: "Telegram",
@@ -48,6 +49,7 @@ export const mockData = {
       description:
         "Обмен сообщениями, уведомления, быстрая связь с командой и клиентами",
       category: "КОММУНИКАЦИИ",
+      isDevelopment: false,
     },
     {
       name: "Email",
@@ -57,6 +59,7 @@ export const mockData = {
       description:
         "Отправка и получение писем, автоматизация рассылок, управление корреспонденцией",
       category: "КОРРЕСПОНДЕНЦИЯ",
+      isDevelopment: true,
     },
     {
       name: "CRM",
@@ -66,6 +69,7 @@ export const mockData = {
       description:
         "Управление клиентами, аналитика продаж, автоматизация бизнес-процессов",
       category: "УПРАВЛЕНИЕ",
+      isDevelopment: true,
     },
   ],
   topFeatures: [

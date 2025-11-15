@@ -161,6 +161,7 @@ const ProfilePage = () => {
                   return (
                     <IntegrationCard
                       key={i}
+                      isDevelopment={integration.isDevelopment}
                       name={integration.name}
                       connected={isConnected}
                       imageSrc={integration.imageSrc}
