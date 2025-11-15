@@ -18,6 +18,16 @@ type Message struct {
 	Content string `json:"content"`
 }
 
+// Profile представляет структуру профиля пользователя.
+type Profile struct {
+	ID                     int     `json:"id"`
+	Login                  string  `json:"login"`
+	FIO                    string  `json:"username"`
+	UserInfo               *string `json:"user_info"`
+	BusinessInfo           *string `json:"business_info"`
+	AdditionalInstructions *string `json:"additional_instructions"`
+}
+
 // PayloadStream структура для входных данных.
 type PayloadStream struct {
 	Messages []Message `json:"messages"`
@@ -27,6 +37,7 @@ type PayloadStream struct {
 	System   string    `json:"system"`
 	FileURL  string    `json:"file_url"`
 	IsVoice  bool      `json:"is_voice"`
+	Profile  Profile   `json:"profile"`
 }
 
 // StreamMessage представляет структуру сообщения из стрима.

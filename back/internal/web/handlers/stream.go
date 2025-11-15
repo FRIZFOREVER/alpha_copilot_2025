@@ -32,11 +32,12 @@ func NewStream(client client.StreamMessageProcessor, repo database.MessageManage
 }
 
 type streamIn struct {
-	Question string `json:"question"`
-	VoiceURL string `json:"voice_url"`
-	FileURL  string `json:"file_url"`
-	Tag      string `json:"tag"`
-	Mode     string `json:"mode"`
+	Question string  `json:"question"`
+	VoiceURL string  `json:"voice_url"`
+	FileURL  string  `json:"file_url"`
+	Tag      string  `json:"tag"`
+	Mode     string  `json:"mode"`
+	Profile  Profile `json:"profile"`
 }
 
 func (sh *Stream) Handler(c *fiber.Ctx) error {
