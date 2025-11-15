@@ -1,4 +1,8 @@
-from ml.configs.message import UserProfile
+import logging
+
+from ml.configs.message import ChatHistory, Role, UserProfile
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def get_system_prompt(profile: UserProfile) -> str:
@@ -72,3 +76,15 @@ def get_system_prompt(profile: UserProfile) -> str:
 
     system_prompt: str = "\n\n".join(sections)
     return system_prompt
+
+
+def extract_system_prompt(history: ChatHistory) -> str:
+    """Return the compiled system prompt from the chat history."""
+
+    try:
+        system_message = next(message for message in history.messages if message.role == Role.system)
+    except StopIteration as error:
+        logger.exception("System message was not found inside the chat history")
+        raise RuntimeError("Expected chat history to contain a system message") from error
+
+    return system_message.content

@@ -2,6 +2,7 @@
 
 from pydantic import BaseModel, Field, field_validator
 
+from ml.agent.prompts.system_prompt import extract_system_prompt
 from ml.configs.message import ChatHistory, ModelMode, RequestPayload
 
 
@@ -29,8 +30,7 @@ def get_mode_decision_prompt(payload: RequestPayload) -> ChatHistory:
     prompt: ChatHistory = ChatHistory()
 
     system_sections: list[str] = []
-    if payload.system:
-        system_sections.append(payload.system)
+    system_sections.append(extract_system_prompt(payload.messages))
     system_sections.append(
         "Ты выступаешь в роли диспетчера, который выбирает стратегию ответа для ассистента."
     )
