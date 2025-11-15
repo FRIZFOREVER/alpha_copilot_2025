@@ -8,8 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//go:embed queries/update_graph_log.sql
-var upgradeGraphLogQuery string
+//go:embed queries/graph_log.sql
+var insertGraphLogQuery string
 
 //go:embed queries/get_graph_log.sql
 var getGraphLogQuery string
@@ -20,7 +20,6 @@ type GraphLog struct {
 	Tag      string    `json:"tag"`
 	Message  string    `json:"message"`
 	TimeUTC  time.Time `json:"log_time"`
-	AnswerID int       `json:"answer_id"`
 }
 
 // GraphLogService - структура для работы с логами графов.
@@ -39,7 +38,7 @@ func NewGraphLogRepository(db *sql.DB, logger *logrus.Logger) *GraphLogService {
 
 // UpdateGraphLog - метод для обновления лога графа.
 func (s *GraphLogService) UpdateGraphLog(message string, tag string, answerID int) error {
-	_, err := s.db.Exec(upgradeGraphLogQuery, message, tag, answerID)
+	_, err := s.db.Exec(insertGraphLogQuery, message, tag, answerID)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to update graph log")
 		return err

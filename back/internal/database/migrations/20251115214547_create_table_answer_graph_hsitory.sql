@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS answer_graph_hsitory (
     tag VARCHAR(63),
     message VARCHAR(255),
     time_utc TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (answer_id) REFERENCES answers(answer_id) ON DELETE CASCADE,
+    FOREIGN KEY (answer_id) REFERENCES answers(answer_id) ON DELETE CASCADE
 )
 -- +goose StatementEnd
 
