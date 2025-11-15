@@ -34,7 +34,6 @@ type PayloadStream struct {
 	ChatID   string    `json:"chat_id"`
 	Tag      string    `json:"tag"`
 	Mode     string    `json:"mode"`
-	System   string    `json:"system"`
 	FileURL  string    `json:"file_url"`
 	IsVoice  bool      `json:"is_voice"`
 	Profile  Profile   `json:"profile"`
