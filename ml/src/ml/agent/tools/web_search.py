@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
 from collections.abc import Iterable
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
 from typing import Any
 
 from ddgs import DDGS
@@ -51,7 +51,7 @@ class WebSearchTool(BaseTool):
 
     def __init__(
         self,
-        max_results: int = 10,
+        max_results: int = 6,
         *,
         fetch_timeout: float = DEFAULT_FETCH_TIMEOUT,
         max_bytes: int = DEFAULT_MAX_BYTES,
@@ -208,23 +208,14 @@ class WebSearchTool(BaseTool):
     def _summarize_text(self, text: str, query: str) -> PageSummaryResponse:
         prompt = ChatHistory()
         prompt.add_or_change_system(
-            (
-                "You are a diligent research assistant. Evaluate the provided web page and determine "
-                "whether it contains information that directly helps address the user's request. "
-                "When it does, summarise every relevant fact without omitting details. You may use "
-                "bullet lists, tables, or other structured formats to make the summary easy to parse. "
-                "If the page lacks useful information, clearly mark it as not viable while keeping the "
-                "summary concise. Behave simultaneously as a precise filter and an exhaustive summarizer."
-            )
+            "You are a diligent research assistant. Evaluate the provided web page and determine "
+            "whether it contains information that directly helps address the user's request. "
+            "When it does, summarise every relevant fact without omitting details. You may use "
+            "bullet lists, tables, or other structured formats to make the summary easy to parse. "
+            "If the page lacks useful information, clearly mark it as not viable while keeping the "
+            "summary concise. Behave simultaneously as a precise filter and an exhaustive summarizer."
         )
-        prompt.add_user(
-            (
-                "User request:\n"
-                f"{query}\n\n"
-                "Web page content:\n"
-                f"{text}"
-            )
-        )
+        prompt.add_user(f"User request:\n{query}\n\nWeb page content:\n{text}")
 
         logger.info("Summarizing page content for query: %s", query)
 

@@ -65,6 +65,15 @@ class Tag(str, Enum):
     Management = "management"
 
 
+class Profile(BaseModel):
+    id: int
+    login: str
+    username: str
+    user_info: str
+    business_info: str
+    additional_instructions: str
+
+
 class RequestPayload(BaseModel):
     messages: ChatHistory
     chat_id: str
@@ -73,6 +82,7 @@ class RequestPayload(BaseModel):
     system: str
     file_url: str
     is_voice: bool
+    profile: Profile
 
     @field_validator("messages", mode="before")
     @classmethod
