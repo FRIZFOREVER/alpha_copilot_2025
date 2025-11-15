@@ -14,6 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py .
 COPY telegram_service.py .
 COPY telegram_user_service.py .
+COPY email_service.py .
 
 # Открываем порт
 EXPOSE 8000
