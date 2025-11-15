@@ -65,7 +65,7 @@ export const Message = ({
       )}
       <div
         className={cn(
-          "flex flex-col max-w-[85%] md:max-w-[80%]",
+          "flex flex-col max-w-[85%] md:max-w-[80%] min-w-0",
           isUser ? "items-end" : "items-start",
           isCompact && "max-w-[85%] md:max-w-[85%]"
         )}
@@ -99,10 +99,11 @@ export const Message = ({
         {!file_url && (
           <div
             className={cn(
-              "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed",
+              "rounded-2xl text-sm md:text-base leading-relaxed",
+              "break-words overflow-wrap-anywhere w-full",
               isUser
-                ? "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
-                : "text-foreground rounded-xl py-0 px-0 dark:border-gray-700",
+                ? "px-4 py-3 bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
+                : "text-foreground rounded-xl dark:border-gray-700",
               isCompact && "text-sm md:text-sm"
             )}
           >
