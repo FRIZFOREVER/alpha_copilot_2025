@@ -12,6 +12,7 @@ from ml.agent.graph.nodes import (
     research_observer_node,
     research_react_node,
     research_tool_call_node,
+    thinking_answer_node,
     thinking_planner_node,
 )
 from ml.agent.graph.state import GraphState, NextAction
@@ -45,6 +46,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     # Not implemented yet
     workflow.add_node("Flash Memories", flash_memories_node)
     workflow.add_node("Thinking planner", partial(thinking_planner_node, client=client))
+    workflow.add_node("Thinking answer", thinking_answer_node)
     workflow.add_node("Research react", partial(research_react_node, client=client))
     workflow.add_node("Research tool call", partial(research_tool_call_node, client=client))
     workflow.add_node("Research observer", partial(research_observer_node, client=client))
@@ -73,6 +75,10 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     # Fast
     workflow.add_edge("Flash Memories", "Fast answer")
     workflow.add_edge("Fast answer", END)
+
+    # Thinking
+    workflow.add_edge("Thinking planner", "Thinking answer")
+    workflow.add_edge("Thinking answer", END)
 
     # Research
     workflow.add_conditional_edges(
