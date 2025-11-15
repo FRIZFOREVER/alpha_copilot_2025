@@ -4,10 +4,7 @@ import { Icon, IconTypes } from "@/shared/ui/icon";
 import { ERouteNames } from "@/shared/lib/routeVariables";
 import { Avatar, AvatarImage } from "@/shared/ui/avatar";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
-import {
-  getUserInitials,
-  getDisplayName,
-} from "@/shared/lib/utils/userHelpers";
+import { getDisplayName } from "@/shared/lib/utils/userHelpers";
 
 interface HeaderProps {
   className?: string;
@@ -25,10 +22,6 @@ export const Header = ({ className }: HeaderProps) => {
   const displayName = profileData?.username
     ? getDisplayName(profileData.username)
     : "Пользователь";
-
-  const userInitials = profileData?.username
-    ? getUserInitials(profileData.username)
-    : "П";
 
   const handleProfileClick = () => {
     navigate(`/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.PROFILE_ROUTE}`);

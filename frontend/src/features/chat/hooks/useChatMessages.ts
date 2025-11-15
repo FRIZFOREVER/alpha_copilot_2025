@@ -3,7 +3,7 @@ import { useGetHistoryQuery } from "@/entities/chat/hooks/useGetHistory";
 import { useSendMessageMutation } from "@/entities/chat/hooks/useSendMessage";
 import { useSendVoiceMutation } from "@/entities/chat/hooks/useSendVoice";
 import { useCreateChatMutation } from "@/entities/chat/hooks/useCreateChat";
-import { useMemo, useRef, useEffect, useState } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import type { MessageData } from "../ui/messageList/messageList";
 import { ERouteNames } from "@/shared/lib/routeVariables";
 import { capitalizeFirst } from "@/shared/lib/utils/userHelpers";
@@ -71,7 +71,6 @@ export const useChatMessages = () => {
       },
     ];
   }, [messages, isSendingMessage, isSendingVoice, chatId]);
-
 
   const handleSendMessage = (data: {
     message: string;

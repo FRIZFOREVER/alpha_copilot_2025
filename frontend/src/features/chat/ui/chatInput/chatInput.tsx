@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/shared/ui/button";
-import { Mic, ChevronUp, X, Check, Paperclip, Send } from "lucide-react";
+import { Mic, ChevronUp, X, Check, Paperclip } from "lucide-react";
 import { cn } from "@/shared/lib/mergeClass";
 import { useComputerVoiceRecorder } from "@/entities/chat/hooks/useComputerVoiceRecorder";
 import { formatTime } from "@/shared/lib/utils/timeHelpers";
