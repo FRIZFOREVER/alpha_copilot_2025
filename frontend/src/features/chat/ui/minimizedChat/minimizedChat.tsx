@@ -8,6 +8,7 @@ import { ERouteNames } from "@/shared/lib/routeVariables";
 import { Icon, IconTypes } from "@/shared/ui/icon";
 import { useChatMessages } from "../../hooks/useChatMessages";
 
+//Абстрактный компонент для свернутого чата
 export const MinimizedChat = ({
   isCompact = false,
 }: {
@@ -59,7 +60,7 @@ export const MinimizedChat = ({
         "bg-white rounded-4xl",
         "flex flex-col",
         "transition-all duration-300 ease-in-out",
-        "shrink-0",
+        "shrink-0"
       )}
     >
       <div className="flex items-center justify-between px-4 py-4 bg-white rounded-4xl">

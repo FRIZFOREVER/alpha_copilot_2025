@@ -1,11 +1,15 @@
 import LogoIconV2 from "../assets/logo-icon-v2.svg";
 import LogoIcon from "../assets/logo-icon.svg";
 import MenuIcon from "../assets/menu.svg";
+import TodoistIcon from "../assets/todoist.svg";
+import TelegramIcon from "../assets/telegram.svg";
 
 export const enum IconTypes {
   LOGO_OUTLINED,
   MENU_OUTLINED,
   LOGO_OUTLINED_V2,
+  TODOIST_OUTLINED,
+  TELEGRAM_OUTLINED,
 }
 
 export type IconDictionaryType = {
@@ -23,6 +27,14 @@ export const IconDictionary: IconDictionaryType = {
   [IconTypes.MENU_OUTLINED]: MenuIcon as unknown as React.FunctionComponent<
     React.SVGAttributes<SVGElement>
   >,
+  [IconTypes.TODOIST_OUTLINED]:
+    TodoistIcon as unknown as React.FunctionComponent<
+      React.SVGAttributes<SVGElement>
+    >,
+  [IconTypes.TELEGRAM_OUTLINED]:
+    TelegramIcon as unknown as React.FunctionComponent<
+      React.SVGAttributes<SVGElement>
+    >,
 };
 export const enum IconSizes {
   SMALL,
