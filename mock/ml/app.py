@@ -1,16 +1,16 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
-import json
 import asyncio
+import json
 import logging
 import os
-from typing import Dict, Any, Optional, List
 import time
-import uuid
 from datetime import datetime
-from ollama import Client
+from typing import Any
+
 import httpx
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import StreamingResponse
+from ollama import Client
+from pydantic import BaseModel
 from telegram_user_service import TelegramUserService
 
 logging.basicConfig(level=logging.INFO)
@@ -51,11 +51,7 @@ def get_ollama_client():
             try:
                 if ":" in host_for_client:
                     host_only = host_for_client.split(":")[0]
-                    port = (
-                        host_for_client.split(":")[1]
-                        if ":" in host_for_client
-                        else "11434"
-                    )
+                    port = host_for_client.split(":")[1] if ":" in host_for_client else "11434"
                     ollama_client = Client(host=f"{host_only}:{port}")
                     logger.info(f"Ollama client created with host: {host_only}:{port}")
                 else:
@@ -68,7 +64,6 @@ def get_ollama_client():
 
 def check_ollama_available(max_retries=5, retry_delay=2):
     """Проверяет доступность Ollama с повторными попытками"""
-    import time
 
     for attempt in range(max_retries):
         try:
@@ -84,20 +79,16 @@ def check_ollama_available(max_retries=5, retry_delay=2):
             )
 
             if "401" in error_str or "unauthorized" in error_str.lower():
-                logger.error(f"401 Unauthorized error detected. This might indicate:")
-                logger.error(
-                    f"  1. Ollama requires authentication (check OLLAMA_API_KEY)"
-                )
+                logger.error("401 Unauthorized error detected. This might indicate:")
+                logger.error("  1. Ollama requires authentication (check OLLAMA_API_KEY)")
                 logger.error(f"  2. Incorrect host format (current: {OLLAMA_HOST})")
-                logger.error(f"  3. Network connectivity issue")
+                logger.error("  3. Network connectivity issue")
 
             if attempt < max_retries - 1:
                 logger.warning(f"Retrying in {retry_delay}s...")
                 time.sleep(retry_delay)
             else:
-                logger.error(
-                    f"Ollama is not available after {max_retries} attempts: {error_str}"
-                )
+                logger.error(f"Ollama is not available after {max_retries} attempts: {error_str}")
                 return False
     return False
 
@@ -112,9 +103,7 @@ app.state.telegram_user_service = TelegramUserService()
 async def startup_event():
     """Проверяем доступность Ollama при старте приложения"""
     logger.info("Starting up Mock ML Service...")
-    logger.info(
-        f"OLLAMA_HOST environment variable: {os.getenv('OLLAMA_HOST', 'not set')}"
-    )
+    logger.info(f"OLLAMA_HOST environment variable: {os.getenv('OLLAMA_HOST', 'not set')}")
     logger.info(f"Using OLLAMA_HOST: {OLLAMA_HOST}")
 
     await asyncio.sleep(5)
@@ -123,32 +112,30 @@ async def startup_event():
         app.state.models_ready.set()
         logger.info("Mock ML Service is ready and Ollama is available")
     else:
-        logger.warning(
-            "Ollama is not available, but service will continue. Requests may fail."
-        )
+        logger.warning("Ollama is not available, but service will continue. Requests may fail.")
         app.state.models_ready.set()
 
 
 class Message(BaseModel):
     role: str = "assistant"
     content: str = ""
-    thinking: Optional[str] = None
-    images: Optional[str] = None
-    tool_name: Optional[str] = None
-    tool_calls: Optional[str] = None
+    thinking: str | None = None
+    images: str | None = None
+    tool_name: str | None = None
+    tool_calls: str | None = None
 
 
 class StreamChunk(BaseModel):
     model: str = "qwen3:0.6b"
     created_at: str = None
     done: bool = False
-    done_reason: Optional[str] = None
-    total_duration: Optional[int] = None
-    load_duration: Optional[int] = None
-    prompt_eval_count: Optional[int] = None
-    prompt_eval_duration: Optional[int] = None
-    eval_count: Optional[int] = None
-    eval_duration: Optional[int] = None
+    done_reason: str | None = None
+    total_duration: int | None = None
+    load_duration: int | None = None
+    prompt_eval_count: int | None = None
+    prompt_eval_duration: int | None = None
+    eval_count: int | None = None
+    eval_duration: int | None = None
     message: Message = None
 
 
@@ -160,7 +147,7 @@ class TelegramAuthStartRequest(BaseModel):
 class TelegramAuthVerifyRequest(BaseModel):
     user_id: str
     phone_code: str
-    password: Optional[str] = None
+    password: str | None = None
 
 
 class TelegramUserSendRequest(BaseModel):
@@ -179,21 +166,16 @@ def ensure_model_available(client: Client, model_name: str):
             available_models = [m.get("name", "") for m in models_response["models"]]
         elif isinstance(models_response, list):
             available_models = [
-                m.get("name", "") if isinstance(m, dict) else str(m)
-                for m in models_response
+                m.get("name", "") if isinstance(m, dict) else str(m) for m in models_response
             ]
 
         model_found = any(
-            model_name in model
-            or model == model_name
-            or model.startswith(model_name.split(":")[0])
+            model_name in model or model == model_name or model.startswith(model_name.split(":")[0])
             for model in available_models
         )
 
         if not model_found:
-            logger.info(
-                f"Model '{model_name}' not found. Available models: {available_models}"
-            )
+            logger.info(f"Model '{model_name}' not found. Available models: {available_models}")
             logger.info(f"Attempting to pull model '{model_name}'...")
             try:
                 client.pull(model=model_name)
@@ -201,9 +183,7 @@ def ensure_model_available(client: Client, model_name: str):
             except Exception as pull_error:
                 logger.error(f"Failed to pull model '{model_name}': {pull_error}")
                 if available_models:
-                    logger.warning(
-                        f"Using first available model instead: {available_models[0]}"
-                    )
+                    logger.warning(f"Using first available model instead: {available_models[0]}")
                     return available_models[0]
                 else:
                     raise Exception(
@@ -218,7 +198,7 @@ def ensure_model_available(client: Client, model_name: str):
         raise
 
 
-def mock_workflow(payload: Dict[str, Any], streaming: bool = True):
+def mock_workflow(payload: dict[str, Any], streaming: bool = True):
     """Функция workflow, которая обращается к локальной Ollama и использует модель gpt-oss:120b-cloud"""
     default_model = "gpt-oss:120b-cloud"
     model = payload.get("model", default_model)
@@ -276,7 +256,9 @@ def mock_workflow(payload: Dict[str, Any], streaming: bool = True):
                         if error_lines:
                             error_text = " ".join(error_lines)[:500]
                     except Exception as e:
-                        error_text = f"Status {response.status_code}, could not read error: {str(e)}"
+                        error_text = (
+                            f"Status {response.status_code}, could not read error: {str(e)}"
+                        )
                     logger.error(f"Chat request failed: {error_text}")
                     raise Exception(
                         f"Ollama API returned status {response.status_code}: {error_text}"
@@ -299,9 +281,7 @@ def mock_workflow(payload: Dict[str, Any], streaming: bool = True):
                         json_data = json.loads(line)
 
                         message_data = json_data.get("message", {})
-                        chunk_content = (
-                            message_data.get("content", "") if message_data else ""
-                        )
+                        chunk_content = message_data.get("content", "") if message_data else ""
                         done = json_data.get("done", False)
                         done_reason = json_data.get("done_reason")
 
@@ -324,9 +304,7 @@ def mock_workflow(payload: Dict[str, Any], streaming: bool = True):
                                     len(messages) if messages else 1,
                                 ),
                                 total_duration=json_data.get("total_duration"),
-                                prompt_eval_duration=json_data.get(
-                                    "prompt_eval_duration"
-                                ),
+                                prompt_eval_duration=json_data.get("prompt_eval_duration"),
                                 eval_duration=json_data.get("eval_duration"),
                                 load_duration=json_data.get("load_duration"),
                             )
@@ -349,9 +327,7 @@ def mock_workflow(payload: Dict[str, Any], streaming: bool = True):
                                         len(messages) if messages else 1,
                                     ),
                                     total_duration=json_data.get("total_duration"),
-                                    prompt_eval_duration=json_data.get(
-                                        "prompt_eval_duration"
-                                    ),
+                                    prompt_eval_duration=json_data.get("prompt_eval_duration"),
                                     eval_duration=json_data.get("eval_duration"),
                                     load_duration=json_data.get("load_duration"),
                                 )
@@ -422,9 +398,7 @@ async def check_ollama():
 
         models_list = []
         if isinstance(models_response, dict) and "models" in models_response:
-            models_list = [
-                model.get("name", "unknown") for model in models_response["models"]
-            ]
+            models_list = [model.get("name", "unknown") for model in models_response["models"]]
         elif isinstance(models_response, list):
             models_list = [
                 model.get("name", "unknown") if isinstance(model, dict) else str(model)
@@ -464,7 +438,7 @@ async def check_ollama():
 async def pull_model(request: Request):
     """Эндпоинт для загрузки модели в Ollama"""
     try:
-        payload: Dict[str, Any] = await request.json()
+        payload: dict[str, Any] = await request.json()
         model_name = payload.get("model", "gpt-oss:120b-cloud")
 
         logger.info(f"Pulling model '{model_name}'...")
@@ -492,7 +466,7 @@ async def message_stream(request: Request) -> StreamingResponse:
     if not models_ready.is_set():
         raise HTTPException(status_code=503, detail="Models are still initialising")
 
-    payload: Dict[str, Any] = await request.json()
+    payload: dict[str, Any] = await request.json()
     logger.info(f"Handling /message_stream request with payload: {payload}")
 
     # Нормализуем send_to_telegram - может прийти как строка "true"/"false" или булево значение
@@ -544,12 +518,8 @@ async def message_stream(request: Request) -> StreamingResponse:
                     f"Starting Telegram send process. send_to_telegram={send_to_telegram}, content_length={len(accumulated_content)}"
                 )
                 target_recipient = recipient_id or tg_user_id
-                phone_number = payload.get(
-                    "phone_number"
-                )  # Номер телефона для поиска user_id
-                telegram_user_service: TelegramUserService = (
-                    app.state.telegram_user_service
-                )
+                phone_number = payload.get("phone_number")  # Номер телефона для поиска user_id
+                telegram_user_service: TelegramUserService = app.state.telegram_user_service
 
                 logger.info(
                     f"Attempting to send Telegram message. "
@@ -571,16 +541,10 @@ async def message_stream(request: Request) -> StreamingResponse:
                     logger.warning(f"phone_number={phone_number}")
                 else:
                     # Находим user_id по номеру телефона
-                    found_user_id = telegram_user_service.find_user_by_phone(
-                        phone_number
-                    )
-                    logger.info(
-                        f"Found user_id={found_user_id} for phone_number={phone_number}"
-                    )
+                    found_user_id = telegram_user_service.find_user_by_phone(phone_number)
+                    logger.info(f"Found user_id={found_user_id} for phone_number={phone_number}")
                     if not found_user_id:
-                        logger.warning(
-                            f"User not found by phone number: {phone_number}"
-                        )
+                        logger.warning(f"User not found by phone number: {phone_number}")
                     else:
                         try:
                             loop = asyncio.get_event_loop()
@@ -638,9 +602,7 @@ async def message_stream(request: Request) -> StreamingResponse:
                                     f"Failed to send Telegram message: {result.get('error')}"
                                 )
             except Exception as tg_error:
-                logger.error(
-                    f"Failed to send Telegram message: {tg_error}", exc_info=True
-                )
+                logger.error(f"Failed to send Telegram message: {tg_error}", exc_info=True)
         else:
             if not send_to_telegram:
                 logger.info("send_to_telegram is False, skipping Telegram send")
@@ -666,7 +628,7 @@ async def message_stream(request: Request) -> StreamingResponse:
 @app.post("/generate")
 async def generate_message(request: Request):
     """Альтернативный endpoint для не-потокового ответа"""
-    payload: Dict[str, Any] = await request.json()
+    payload: dict[str, Any] = await request.json()
     logger.info(f"Handling /generate request with payload: {payload}")
 
     await asyncio.sleep(0.1)
@@ -748,7 +710,7 @@ async def verify_telegram_user_auth(request: TelegramAuthVerifyRequest):
 async def get_telegram_user_status(request: Request):
     """Получает статус авторизации Telegram пользователя по номеру телефона"""
     try:
-        payload: Dict[str, Any] = await request.json()
+        payload: dict[str, Any] = await request.json()
         phone_number = payload.get("phone_number")
 
         if not phone_number:
@@ -779,7 +741,7 @@ async def get_telegram_user_status(request: Request):
 async def get_telegram_user_contacts(request: Request):
     """Получает список контактов Telegram пользователя по номеру телефона или Telegram user ID"""
     try:
-        payload: Dict[str, Any] = await request.json()
+        payload: dict[str, Any] = await request.json()
         phone_number = payload.get("phone_number")
         tg_user_id = payload.get("tg_user_id")
 
@@ -797,9 +759,7 @@ async def get_telegram_user_contacts(request: Request):
                 tg_id = int(tg_user_id)
                 result = await telegram_user_service.get_contacts_by_tg_id(tg_id)
             except (ValueError, TypeError):
-                raise HTTPException(
-                    status_code=400, detail="tg_user_id must be a valid integer"
-                )
+                raise HTTPException(status_code=400, detail="tg_user_id must be a valid integer")
         else:
             result = await telegram_user_service.get_contacts_by_phone(phone_number)
 
@@ -842,7 +802,7 @@ async def send_telegram_user_message(request: TelegramUserSendRequest):
 async def disconnect_telegram_user(request: Request):
     """Отключает Telegram пользователя"""
     try:
-        payload: Dict[str, Any] = await request.json()
+        payload: dict[str, Any] = await request.json()
         user_id = payload.get("user_id")
 
         if not user_id:
@@ -854,9 +814,7 @@ async def disconnect_telegram_user(request: Request):
         if success:
             return {"status": "ok", "message": "Telegram user disconnected"}
         else:
-            raise HTTPException(
-                status_code=404, detail="Telegram user connection not found"
-            )
+            raise HTTPException(status_code=404, detail="Telegram user connection not found")
     except HTTPException:
         raise
     except Exception as e:
