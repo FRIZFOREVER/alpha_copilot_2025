@@ -232,16 +232,15 @@ func Test_Stream(t *testing.T) {
 	}
 }
 
-// Вспомогательная функция для создания указателей на int64
+// Вспомогательная функция для создания указателей на int64.
 func int64Ptr(i int64) *int64 {
 	return &i
 }
 
-
 func replaceTimeWithMockRegex(input string) string {
-    // Регулярное выражение для поиска временных меток в формате ISO 8601
-    timeRegex := regexp.MustCompile(`\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z`)
-    
-    // Заменяем все временные метки на фиксированное мок-значение
-    return timeRegex.ReplaceAllString(input, "2024-01-01T12:00:00.0000000Z")
+	// Регулярное выражение для поиска временных меток в формате ISO 8601
+	timeRegex := regexp.MustCompile(`\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z`)
+
+	// Заменяем все временные метки на фиксированное мок-значение
+	return timeRegex.ReplaceAllString(input, "2024-01-01T12:00:00.0000000Z")
 }

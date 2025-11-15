@@ -74,11 +74,11 @@ func Test_Like(t *testing.T) {
 			expectedResponse: `{"error":"Invalid chat ID format"}`,
 		},
 		{
-			name:             "4) Отрицательный chat_id",
-			chatID:           "-1",
-			httpMethod:       fiber.MethodPut,
-			body:             []byte(`{"answer_id": 2,"rating": 5}`),
-			setupMocks:       func(mr *MockLikeRepository) {
+			name:       "4) Отрицательный chat_id",
+			chatID:     "-1",
+			httpMethod: fiber.MethodPut,
+			body:       []byte(`{"answer_id": 2,"rating": 5}`),
+			setupMocks: func(mr *MockLikeRepository) {
 				mr.On("CheckChat", "00000000-0000-0000-0000-000000000000", -1).Return(false, nil)
 			},
 			expectedStatus:   fiber.StatusBadRequest,
@@ -94,11 +94,11 @@ func Test_Like(t *testing.T) {
 			expectedResponse: "Cannot PUT /like/",
 		},
 		{
-			name:             "6) Невалидный JSON в теле запроса",
-			chatID:           "1",
-			httpMethod:       fiber.MethodPut,
-			body:             []byte(`{"answer_id": "invalid","rating": 5}`),
-			setupMocks:       func(mr *MockLikeRepository) {
+			name:       "6) Невалидный JSON в теле запроса",
+			chatID:     "1",
+			httpMethod: fiber.MethodPut,
+			body:       []byte(`{"answer_id": "invalid","rating": 5}`),
+			setupMocks: func(mr *MockLikeRepository) {
 				mr.On("CheckChat", "00000000-0000-0000-0000-000000000000", 1).Return(true, nil)
 			},
 			expectedStatus:   fiber.StatusBadRequest,
