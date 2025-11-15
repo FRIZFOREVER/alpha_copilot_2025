@@ -1,12 +1,10 @@
 """Prompt builder and structured schema for the thinking planner stage."""
 
 from collections.abc import Sequence
-from typing import Dict, List
-
-from pydantic import BaseModel, Field, model_validator
 
 from ml.agent.tools.base import BaseTool
 from ml.configs.message import ChatHistory
+from pydantic import BaseModel, Field, model_validator
 
 
 class PlannerToolCall(BaseModel):
@@ -15,7 +13,7 @@ class PlannerToolCall(BaseModel):
     tool_name: str = Field(
         description="Exact registry name of the tool to execute",
     )
-    arguments: Dict[str, str] = Field(
+    arguments: dict[str, str] = Field(
         default_factory=dict,
         description="Keyword arguments that should be passed to the tool",
     )
@@ -35,11 +33,11 @@ class ThinkingPlannerStructuredOutput(BaseModel):
     plan_summary: str = Field(
         description="One paragraph recap of the overall solution strategy",
     )
-    plan_steps: List[str] = Field(
+    plan_steps: list[str] = Field(
         default_factory=list,
         description="Ordered bullet list explaining the upcoming steps",
     )
-    tool_calls: List[PlannerToolCall] = Field(
+    tool_calls: list[PlannerToolCall] = Field(
         default_factory=list,
         description="Tool invocations that should be executed sequentially",
     )
@@ -93,12 +91,8 @@ def _format_plan_guidelines(max_actions: int) -> str:
         "Можно запланировать максимум " + str(max_actions) + " действия с инструментами, "
         "и каждый инструмент можно использовать не более одного раза."
     )
-    points.append(
-        "Если инструменты не нужны, оставь список вызовов пустым и объясни почему."
-    )
-    points.append(
-        "В финальном черновике дай развернутый ответ, ссылаясь на собранные факты."
-    )
+    points.append("Если инструменты не нужны, оставь список вызовов пустым и объясни почему.")
+    points.append("В финальном черновике дай развернутый ответ, ссылаясь на собранные факты.")
     return "\n".join(points)
 
 
