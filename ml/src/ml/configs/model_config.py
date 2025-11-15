@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Literal, Union
 from pydantic import BaseModel, Field, model_validator
@@ -10,15 +11,25 @@ _MODEL_ENV_VARS = {
     "embeddings": "OLLAMA_EMBEDDING_MODEL",
 }
 
+_LOGGER = logging.getLogger(__name__)
+
+
 def _get_model_name_from_env(kind: Literal["chat", "embeddings"]) -> str:
-    return os.getenv(_MODEL_ENV_VARS[kind])
+    env_var = _MODEL_ENV_VARS[kind]
+    model_name = os.getenv(env_var)
+    if model_name:
+        return model_name
+
+    message = f"Environment variable '{env_var}' is required to configure the {kind} model."
+    _LOGGER.error(message)
+    raise RuntimeError(message)
 
 class ClientSettings(BaseModel):
 
-    model: str = Field(
+    model: str | None = Field(
         default=None,
         description="Model name"
-        )
+    )
 
     base_url: str = Field(
         default=_DEFAULT_BASE_URL,
@@ -65,6 +76,7 @@ class ReasoningClientSettings(ClientSettings):
     def define_chat_model_name(self):
         if not self.model:
             self.model = _get_model_name_from_env("chat")
+        return self
 
 class EmbeddingModelOptions(BaseModel):
 
@@ -84,3 +96,4 @@ class EmbeddingClientSettings(ClientSettings):
     def define_chat_model_name(self):
         if not self.model:
             self.model = _get_model_name_from_env("embeddings")
+        return self
