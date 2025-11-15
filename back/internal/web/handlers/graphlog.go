@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"jabki/internal/database"
 	"jabki/internal/web/middlewares"
 	"jabki/internal/web/ws"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
@@ -10,7 +12,45 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func GraphLogHandler(secret string, logger *logrus.Logger) fiber.Handler {
+type GraphLog struct {
+	repo   database.GraphLogRepository
+	logger *logrus.Logger
+}
+
+func NewGraphLog(repo database.GraphLogRepository, logger *logrus.Logger) *GraphLog {
+	return &GraphLog{
+		repo:   repo,
+		logger: logger,
+	}
+}
+
+func (gh *GraphLog) Handler(c *fiber.Ctx) error {
+	answerIDStr := c.Query("answer_id")
+	if answerIDStr == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "answer_id is a required query parameter",
+		})
+	}
+
+	answerID, err := strconv.Atoi(answerIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid answer ID format",
+		})
+	}
+
+	graphLog, err := gh.repo.GetGraphLog(answerID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Error get user profile",
+			"details": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(graphLog)
+}
+
+func GraphLogHandlerWS(secret string, repo database.GraphLogRepository, logger *logrus.Logger) fiber.Handler {
 	return websocket.New(func(c *websocket.Conn) {
 		var uuid uuid.UUID
 		var err error
@@ -50,6 +90,9 @@ func GraphLogHandler(secret string, logger *logrus.Logger) fiber.Handler {
 				break
 			}
 
+			if err := repo.UpdateGraphLog(msg.Message, msg.Tag, msg.AnswerID); err != nil {
+				logger.Errorf("Ошибка записи данных в бд: ", err.Error())
+			}
 			// Выводим сообщение в консоль
 			logger.Debugf("Чат %s | Пользователь %s: %s\n", chatID, userUUID, msg.Message)
 
