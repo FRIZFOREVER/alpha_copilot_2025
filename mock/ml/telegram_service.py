@@ -1,6 +1,7 @@
 """
 Сервис для работы с Telegram Bot API
 """
+
 import os
 import json
 import logging
@@ -10,8 +11,6 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Путь к файлу для хранения токенов
-# Используем относительный путь или переменную окружения
 DATA_DIR = Path(os.getenv("TELEGRAM_DATA_DIR", "/app/data"))
 TOKENS_FILE = DATA_DIR / "telegram_tokens.json"
 
@@ -52,20 +51,21 @@ class TelegramService:
             logger.error(f"Error saving tokens: {e}")
             raise
 
-    def save_token(self, user_id: str, bot_token: str, chat_id: Optional[str] = None) -> bool:
+    def save_token(
+        self, user_id: str, bot_token: str, chat_id: Optional[str] = None
+    ) -> bool:
         """
         Сохраняет токен бота и chat_id для пользователя
-        
+
         Args:
             user_id: ID пользователя в системе
             bot_token: Токен Telegram бота
             chat_id: ID чата для отправки сообщений (опционально)
-        
+
         Returns:
             True если токен валидный и сохранен
         """
         try:
-            # Проверяем валидность токена
             if not self._validate_token(bot_token):
                 logger.error(f"Invalid bot token for user {user_id}")
                 return False
@@ -126,12 +126,12 @@ class TelegramService:
     ) -> Dict[str, Any]:
         """
         Отправляет сообщение в Telegram
-        
+
         Args:
             user_id: ID пользователя в системе
             text: Текст сообщения
             chat_id: ID чата (если не указан, используется сохраненный)
-        
+
         Returns:
             Результат отправки сообщения
         """
@@ -170,7 +170,9 @@ class TelegramService:
                         "message_id": response_data.get("result", {}).get("message_id"),
                     }
                 else:
-                    error_description = response_data.get("description", "Unknown error")
+                    error_description = response_data.get(
+                        "description", "Unknown error"
+                    )
                     logger.error(
                         f"Failed to send message to Telegram: {error_description}"
                     )
@@ -204,4 +206,3 @@ class TelegramService:
         except Exception as e:
             logger.error(f"Error getting bot info: {e}")
             return None
-

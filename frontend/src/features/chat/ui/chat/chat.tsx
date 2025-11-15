@@ -2,7 +2,6 @@ import { ChatHeader } from "../chatHeader";
 import { MessageList, type MessageData } from "../messageList";
 import { ChatInput } from "../chatInput";
 import { type Suggestion } from "../suggestions";
-import { TelegramContact } from "@/entities/auth/types/types";
 
 export interface ChatProps {
   messages?: MessageData[];
@@ -12,8 +11,6 @@ export interface ChatProps {
   suggestions?: Suggestion[];
   hideHeader?: boolean;
   isCompact?: boolean;
-  selectedTelegramContact?: TelegramContact | null;
-  onTelegramContactClick?: () => void;
 }
 
 export const Chat = ({
@@ -24,8 +21,6 @@ export const Chat = ({
   suggestions,
   hideHeader = false,
   isCompact = false,
-  selectedTelegramContact,
-  onTelegramContactClick,
 }: ChatProps) => {
   return (
     <div className="flex h-full flex-col bg-white overflow-hidden">
@@ -43,8 +38,6 @@ export const Chat = ({
         disabled={isLoading}
         suggestions={suggestions}
         isCompact={isCompact}
-        selectedTelegramContact={selectedTelegramContact}
-        onTelegramContactClick={onTelegramContactClick}
       />
     </div>
   );

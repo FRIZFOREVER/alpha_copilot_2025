@@ -95,3 +95,17 @@ export interface TelegramContactsResponse {
   contacts: TelegramContact[];
   error?: string;
 }
+
+export interface TelegramSendMessageRequest {
+  phone_number: string;
+  recipient_id: number | string;
+  text: string;
+}
+
+export interface TelegramSendMessageResponse {
+  status: "ok" | "error";
+  success?: boolean;
+  message_id?: number;
+  date?: string;
+  error?: string;
+}

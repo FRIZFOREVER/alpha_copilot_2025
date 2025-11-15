@@ -1,5 +1,5 @@
 import { cn } from "@/shared/lib/mergeClass";
-import { Copy, ThumbsUp, RefreshCw, Check } from "lucide-react";
+import { Copy, ThumbsUp, RefreshCw, Check, Send } from "lucide-react";
 import { useModal } from "@/shared/lib/modal/context";
 import { EModalVariables } from "@/shared/lib/modal/constants";
 import { MarkdownContent } from "./markdownContent";
@@ -9,6 +9,10 @@ import { Image } from "@/shared/ui/image/image";
 import { useParams } from "react-router-dom";
 import { FileMessage } from "./fileMessage";
 import { TAG_COLORS } from "../tagSelector/tagSelector";
+import { useState } from "react";
+import { useTelegramStatusQuery } from "@/entities/auth/hooks/useTelegramStatus";
+import { sendTelegramMessage } from "@/entities/auth/api/authService";
+import { TelegramContact } from "@/entities/auth/types/types";
 
 export interface MessageProps {
   content: string;
@@ -36,6 +40,61 @@ export const Message = ({
   const { openModal } = useModal();
 
   const { handleCopyClick, isCopied } = useCopied();
+
+  const [isSendingTelegram, setIsSendingTelegram] = useState(false);
+
+  const getStoredPhoneNumber = (): string | undefined => {
+    try {
+      const stored = localStorage.getItem("telegram_phone_number");
+      return stored || undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const phone_number = getStoredPhoneNumber();
+  const { data: telegramStatus } = useTelegramStatusQuery(phone_number);
+
+  const handleSendToTelegram = () => {
+    if (!phone_number || !telegramStatus?.authorized) {
+      console.warn("Telegram not authorized. Please authorize first.");
+      return;
+    }
+
+    const tg_user_id = telegramStatus?.user_info?.id;
+    const request_data = tg_user_id
+      ? { tg_user_id }
+      : phone_number
+      ? { phone_number }
+      : null;
+
+    if (!request_data) {
+      console.warn("No phone_number or tg_user_id available");
+      return;
+    }
+
+    openModal(EModalVariables.TELEGRAM_CONTACTS_MODAL, {
+      ...request_data,
+      onSelect: async (contact: TelegramContact) => {
+        if (!phone_number || !content.trim()) {
+          return;
+        }
+
+        setIsSendingTelegram(true);
+        try {
+          await sendTelegramMessage({
+            phone_number,
+            recipient_id: contact.id,
+            text: content,
+          });
+        } catch (error) {
+          console.error("Failed to send Telegram message:", error);
+        } finally {
+          setIsSendingTelegram(false);
+        }
+      },
+    });
+  };
 
   const handleLikeClick = () => {
     if (answerId) {
@@ -133,6 +192,21 @@ export const Message = ({
                 aria-label="Готово"
               >
                 <Check className="h-4 w-4 text-green-600 " />
+              </button>
+            )}
+            {telegramStatus?.authorized && (
+              <button
+                disabled={isSendingTelegram || !content.trim()}
+                className={cn(
+                  "p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer",
+                  (isSendingTelegram || !content.trim()) &&
+                    "opacity-50 cursor-not-allowed"
+                )}
+                aria-label="Отправить в Telegram"
+                onClick={handleSendToTelegram}
+                title="Отправить в Telegram"
+              >
+                <Send className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </button>
             )}
             <button

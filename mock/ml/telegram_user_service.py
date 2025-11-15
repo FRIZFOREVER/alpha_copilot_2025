@@ -18,12 +18,10 @@ from pyrogram.errors import (
 
 logger = logging.getLogger(__name__)
 
-# Путь к файлу для хранения сессий
 DATA_DIR = Path(os.getenv("TELEGRAM_DATA_DIR", "/app/data"))
 SESSIONS_DIR = DATA_DIR / "telegram_sessions"
 SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Файл для хранения данных авторизации
 AUTH_DATA_FILE = DATA_DIR / "telegram_auth.json"
 
 
@@ -89,12 +87,9 @@ class TelegramUserService:
 
             await client.connect()
 
-            # Проверяем, авторизован ли уже (в Pyrogram 2.0 используем get_me)
             try:
                 me = await client.get_me()
-                # Если get_me успешно выполнился, значит уже авторизован
                 await client.disconnect()
-                # Сохраняем данные
                 auth_data = self._load_auth_data()
                 auth_data[user_id] = {
                     "api_id": api_id,
@@ -115,10 +110,8 @@ class TelegramUserService:
                     },
                 }
             except Exception:
-                # Если get_me не удался, значит не авторизован - продолжаем процесс
                 pass
 
-            # Отправляем код
             sent_code = await client.send_code(phone_number)
             phone_code_hash = sent_code.phone_code_hash
 
@@ -126,7 +119,6 @@ class TelegramUserService:
                 f"Code sent to {phone_number}, phone_code_hash: {phone_code_hash[:10] if phone_code_hash else 'None'}..."
             )
 
-            # Сохраняем промежуточные данные и клиент для последующего использования
             auth_data = self._load_auth_data()
             auth_data[user_id] = {
                 "api_id": api_id,
@@ -138,8 +130,6 @@ class TelegramUserService:
             self._save_auth_data(auth_data)
             logger.info(f"Auth data saved for user {user_id}")
 
-            # Сохраняем клиент для использования в verify_code
-            # НЕ отключаем клиент, так как phone_code_hash привязан к этой сессии
             self._active_clients[user_id] = client
 
             return {
@@ -178,7 +168,6 @@ class TelegramUserService:
                     "error": "Auth session not found. Please start auth first.",
                 }
 
-            # Проверяем phone_code_hash до создания клиента
             phone_code_hash = user_auth.get("phone_code_hash")
             if not phone_code_hash:
                 logger.error(f"Phone code hash not found for user {user_id}")
@@ -187,12 +176,9 @@ class TelegramUserService:
                     "error": "Phone code hash not found. Please start auth again.",
                 }
 
-            # Используем сохраненный клиент, если он есть (из start_auth)
-            # Это важно, так как phone_code_hash привязан к конкретной сессии
             client = self._active_clients.get(user_id)
 
             if not client:
-                # Если клиент не найден, создаем новый (но это может не сработать)
                 session_name = f"{SESSIONS_DIR}/{user_id}"
                 client = Client(
                     name=session_name,
@@ -205,7 +191,6 @@ class TelegramUserService:
                     f"Using new client for user {user_id}, phone_code_hash may not work"
                 )
             else:
-                # Проверяем, что клиент подключен
                 if not client.is_connected:
                     await client.connect()
                 logger.info(f"Using existing client for user {user_id}")
@@ -218,8 +203,6 @@ class TelegramUserService:
             )
 
             try:
-                # В Pyrogram sign_in требует все три параметра как именованные аргументы
-                # Важно: используем тот же phone_code_hash, который был получен при send_code
                 result = await client.sign_in(
                     phone_number=user_auth["phone_number"],
                     phone_code_hash=phone_code_hash,
@@ -228,17 +211,14 @@ class TelegramUserService:
                 logger.info(f"Sign in successful for user {user_id}")
             except PhoneCodeExpired as e:
                 logger.error(f"Phone code expired for user {user_id}: {e}")
-                # Удаляем устаревший phone_code_hash, чтобы пользователь мог запросить новый код
                 if user_id in auth_data:
                     auth_data[user_id].pop("phone_code_hash", None)
                     self._save_auth_data(auth_data)
-                # Отключаем клиент только если подключен
                 if client.is_connected:
                     try:
                         await client.disconnect()
                     except Exception:
                         pass
-                # Удаляем из активных клиентов
                 if user_id in self._active_clients:
                     del self._active_clients[user_id]
                 return {
@@ -273,7 +253,6 @@ class TelegramUserService:
                         await client.disconnect()
                     except Exception:
                         pass
-                # Удаляем из активных клиентов
                 if user_id in self._active_clients:
                     del self._active_clients[user_id]
                 return {
@@ -281,19 +260,13 @@ class TelegramUserService:
                     "error": "Session expired. Please start auth again.",
                 }
 
-            # Авторизация успешна
             user_auth["authorized"] = True
             user_auth.pop("phone_code_hash", None)
             self._save_auth_data(auth_data)
 
-            # Получаем информацию о пользователе
             me = await client.get_me()
 
-            # Удаляем клиент из активных после успешной авторизации
-            # Сессия сохранена в файл, можно переподключиться позже
-            # Проверяем, что клиент из активных - это тот же объект, что и текущий
             if user_id in self._active_clients:
-                # Если это тот же клиент, отключаем только один раз
                 if self._active_clients[user_id] is client:
                     if client.is_connected:
                         try:
@@ -301,7 +274,6 @@ class TelegramUserService:
                         except Exception:
                             pass
                 else:
-                    # Если разные клиенты, отключаем оба
                     if self._active_clients[user_id].is_connected:
                         try:
                             await self._active_clients[user_id].disconnect()
@@ -314,7 +286,6 @@ class TelegramUserService:
                             pass
                 del self._active_clients[user_id]
             elif client.is_connected:
-                # Если клиента нет в активных, но он подключен, отключаем
                 try:
                     await client.disconnect()
                 except Exception:
@@ -348,7 +319,6 @@ class TelegramUserService:
         Returns:
             Pyrogram Client или None
         """
-        # Проверяем кэш
         if user_id in self._active_clients:
             client = self._active_clients[user_id]
             if client.is_connected:
@@ -397,18 +367,13 @@ class TelegramUserService:
                     "error": "User not authorized. Please complete authorization first.",
                 }
 
-            # Пытаемся отправить сообщение
             try:
-                # Преобразуем recipient_id в нужный формат
-                # recipient_id может быть числом (int) или строкой
                 if isinstance(recipient_id, (int, str)):
-                    # Если это строка и состоит из цифр, преобразуем в int
                     if isinstance(recipient_id, str) and recipient_id.isdigit():
                         recipient = int(recipient_id)
                     elif isinstance(recipient_id, int):
                         recipient = recipient_id
                     else:
-                        # Иначе считаем username
                         recipient = recipient_id
 
                     logger.info(
@@ -454,7 +419,6 @@ class TelegramUserService:
         """
         auth_data = self._load_auth_data()
 
-        # Нормализуем номер телефона (убираем пробелы, скобки, дефисы)
         normalized_phone = (
             phone_number.replace(" ", "")
             .replace("(", "")
@@ -465,7 +429,6 @@ class TelegramUserService:
 
         for user_id, user_auth in auth_data.items():
             saved_phone = user_auth.get("phone_number", "")
-            # Нормализуем сохраненный номер
             normalized_saved = (
                 saved_phone.replace(" ", "")
                 .replace("(", "")
@@ -474,7 +437,6 @@ class TelegramUserService:
                 .replace("+", "")
             )
 
-            # Сравниваем нормализованные номера
             if normalized_phone == normalized_saved or saved_phone == phone_number:
                 return user_id
 
@@ -562,7 +524,6 @@ class TelegramUserService:
             Список контактов с информацией о пользователях
         """
         try:
-            # Ищем user_id по tg_user_id через все сессии
             auth_data = self._load_auth_data()
             found_user_id = None
 
@@ -617,22 +578,18 @@ class TelegramUserService:
         Returns:
             Список контактов с информацией о пользователях из адресной книги
         """
-        # Проверяем, что клиент подключен
         if not client.is_connected:
             await client.connect()
 
         logger.info(f"Getting contacts for user {user_id}")
         logger.info(f"Client is connected: {client.is_connected}")
 
-        # Получаем контакты из адресной книги текущей авторизованной сессии
         contacts = []
 
         try:
-            # Используем только get_contacts() - получаем контакты из адресной книги
             logger.info("Fetching contacts from Telegram address book...")
             contact_count = 0
 
-            # В Pyrogram get_contacts() возвращает список, а не асинхронный итератор
             contacts_list = await client.get_contacts()
 
             for contact in contacts_list:
@@ -669,7 +626,6 @@ class TelegramUserService:
                 "contacts": [],
             }
 
-        # Сортируем контакты по имени
         contacts.sort(key=lambda x: (x.get("first_name", "") or "").lower())
 
         logger.info(f"Returning {len(contacts)} contacts for user {user_id}")
@@ -688,13 +644,11 @@ class TelegramUserService:
                     await client.stop()
                 del self._active_clients[user_id]
 
-            # Удаляем данные авторизации
             auth_data = self._load_auth_data()
             if user_id in auth_data:
                 del auth_data[user_id]
                 self._save_auth_data(auth_data)
 
-            # Удаляем файл сессии
             session_file = SESSIONS_DIR / f"{user_id}.session"
             if session_file.exists():
                 session_file.unlink()

@@ -41,7 +41,7 @@ export const TelegramContactsModal = () => {
     isLoading,
     isError,
     error,
-  } = useTelegramContactsQuery(modalData);
+  } = useTelegramContactsQuery(modalData as TelegramContactsModalData);
 
   useEffect(() => {
     if (isOpen && isTelegramContactsModal) {
@@ -72,7 +72,7 @@ export const TelegramContactsModal = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={closeModal}>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-[500px] max-h-[60vh] flex flex-col p-0">
         <DialogHeader className="p-6 pb-4">
           <DialogTitle>Выберите контакт Telegram</DialogTitle>
           <DialogDescription>
@@ -127,7 +127,7 @@ export const TelegramContactsModal = () => {
                   key={contact.id}
                   onClick={() => handleSelectContact(contact)}
                   className={cn(
-                    "w-full text-left p-4 rounded-3xl border-2 transition-all duration-200",
+                    "w-full text-left p-3.5 rounded-3xl border-2 transition-all duration-200",
                     "hover:border-red-200 hover:bg-red-50/50",
                     "border-gray-200 bg-white"
                   )}
@@ -174,4 +174,3 @@ export const TelegramContactsModal = () => {
     </Dialog>
   );
 };
-
