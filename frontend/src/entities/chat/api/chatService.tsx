@@ -100,6 +100,7 @@ class ChatService {
           file_url: sendMessageDto.file_url || "",
           tag: sendMessageDto.tag || "",
           mode: sendMessageDto.mode || "",
+          profile: sendMessageDto.profile,
         }),
       });
 

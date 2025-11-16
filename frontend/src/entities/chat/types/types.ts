@@ -66,7 +66,15 @@ export interface SendMessageStreamDto {
   voice_url?: string;
   file_url?: string;
   tag?: string;
-  mode?: "fast";
+  mode?: "fast" | "auto";
+  profile: {
+    id: number;
+    login: string;
+    fio: string;
+    user_info: string;
+    business_info: string;
+    additional_instructions: string;
+  };
 }
 
 export interface StreamInitialResponse {

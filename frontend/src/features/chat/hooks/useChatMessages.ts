@@ -9,6 +9,8 @@ import { ERouteNames } from "@/shared/lib/routeVariables";
 import { capitalizeFirst } from "@/shared/lib/utils/userHelpers";
 import { type Suggestion } from "../ui/suggestions";
 import { type TagId } from "../ui/tagSelector/tagSelector";
+import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
+import { SendMessageStreamDto } from "@/entities/chat/types";
 
 const DEFAULT_SUGGESTIONS: Suggestion[] = [
   {
@@ -31,6 +33,7 @@ const DEFAULT_SUGGESTIONS: Suggestion[] = [
 const CHAT_ROUTE_PREFIX = `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}`;
 
 export const useChatMessages = () => {
+  const { data: profile } = useGetProfileQuery();
   const params = useParams<{ chatId?: string }>();
   const navigate = useNavigate();
   const chatId = useMemo(
@@ -79,16 +82,24 @@ export const useChatMessages = () => {
 
   const handleSendMessage = useCallback(
     (data: { message: string; file_url?: string; tag?: TagId }) => {
-      if (!data.message.trim()) return;
+      if (!data.message.trim() || !profile) return;
 
       const trimmedMessage = data.message.trim();
       const tag = data.tag || "";
 
-      const sendMessageDto = {
+      const sendMessageDto: SendMessageStreamDto = {
         question: trimmedMessage,
         file_url: data.file_url,
         tag: tag,
-        mode: "fast" as const,
+        mode: "auto" as const,
+        profile: {
+          id: profile.id,
+          fio: profile.username,
+          login: profile.login,
+          additional_instructions: profile.additional_instructions,
+          business_info: profile.business_info,
+          user_info: profile.user_info,
+        },
       };
 
       if (!chatId) {
@@ -127,6 +138,7 @@ export const useChatMessages = () => {
 
   const handleSendVoice = useCallback(
     (voiceBlob: Blob) => {
+      if (!profile) return;
       const currentChatId = chatIdRef.current;
 
       if (!currentChatId) {
@@ -141,6 +153,14 @@ export const useChatMessages = () => {
               sendVoice({
                 chatId: data.chat_id,
                 voiceBlob,
+                profile: {
+                  id: profile.id,
+                  fio: profile.username,
+                  login: profile.login,
+                  additional_instructions: profile.additional_instructions,
+                  business_info: profile.business_info,
+                  user_info: profile.user_info,
+                },
               });
             },
             onError: (error) => {
@@ -152,6 +172,14 @@ export const useChatMessages = () => {
         sendVoice({
           chatId: currentChatId,
           voiceBlob,
+          profile: {
+            id: profile.id,
+            fio: profile.username,
+            login: profile.login,
+            additional_instructions: profile.additional_instructions,
+            business_info: profile.business_info,
+            user_info: profile.user_info,
+          },
         });
       }
     },
