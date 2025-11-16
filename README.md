@@ -74,7 +74,7 @@ git clone https://github.com/FRIZFOREVER/alfa_copilot_2025.git
 </div>
 
 ## <a name="6">Команда </a>
--
+
 *Состав команды "Жабки МИСИС"*   
 
 - <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @facT0RR, Маслов Денис - Backend-developer</h3>
@@ -86,4 +86,4 @@ git clone https://github.com/FRIZFOREVER/alfa_copilot_2025.git
 
 ## <a name="7">Скринкаст </a>
 
-- [ссылка на скринкаст](https://drive.google.com/drive/folders/1BwoBICXg2sa_pRCZ6IFFrk211rVWjvbB?usp=sharing)&nbsp;
+- [Cсылка на скринкаст](https://drive.google.com/drive/folders/1BwoBICXg2sa_pRCZ6IFFrk211rVWjvbB?usp=sharing)&nbsp;
