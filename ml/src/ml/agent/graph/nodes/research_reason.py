@@ -17,6 +17,7 @@ _REASON_HEADER = "reason:"
 _TOOL_HEADER = "suggested tool:"
 _EXPECTED_INFO_HEADER = "expected information:"
 
+
 def _split_template_sections(raw: str) -> dict[str, str]:
     sections: dict[str, list[str]] = {
         _REASON_HEADER: [],
@@ -52,6 +53,8 @@ def _extract_tool_name(section_text: str) -> str:
     error_message = "Reasoning response did not include a tool name"
     logger.error(error_message)
     raise ValueError(error_message)
+
+
 def _prepare_forced_finalize(state: GraphState) -> GraphState:
     logger.warning("Reasoning loop limit reached, requesting finalization")
     summary = (
