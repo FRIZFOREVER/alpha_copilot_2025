@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from pydantic import BaseModel, Field
 
 from ml.agent.tools.base import BaseTool
-from ml.configs.message import ChatHistory
+from ml.configs.message import ChatHistory, UserProfile
 
 
 class ThinkingPlannerAction(BaseModel):
@@ -38,7 +38,7 @@ def _format_tool_catalog(tools: Sequence[BaseTool]) -> str:
 
 
 def get_thinking_planner_prompt(
-    *, user_request: str, available_tools: Sequence[BaseTool]
+    *, profile: UserProfile, messages: str, available_tools: Sequence[BaseTool]
 ) -> ChatHistory:
     """Compose a prompt that only focuses on the latest user request."""
 
