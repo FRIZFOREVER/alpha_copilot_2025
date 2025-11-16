@@ -124,10 +124,6 @@ class GraphState(BaseModel):
         default_factory=list,
         description="Chronological record of reasoning, tool calls, and observations",
     )
-    active_tool_request: ResearchToolRequest | None = Field(
-        default=None,
-        description="Tool request being prepared for execution in the current step",
-    )
     active_observation: ResearchObservation | None = Field(
         default=None,
         description="Latest observation received from an external tool",
@@ -139,10 +135,6 @@ class GraphState(BaseModel):
     suggested_tool_name: str | None = Field(
         default=None,
         description="Identifier of the tool proposed by the reasoning model",
-    )
-    suggested_tool_args: dict[str, str] = Field(
-        default_factory=dict,
-        description="Arguments proposed for the next tool call",
     )
     suggested_objective: str | None = Field(
         default=None,

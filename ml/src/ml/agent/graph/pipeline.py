@@ -17,7 +17,6 @@ from ml.agent.graph.nodes import (
     research_tool_call_node,
     thinking_answer_node,
     thinking_planner_node,
-    tool_command_node,
 )
 from ml.agent.graph.state import GraphState, NextAction
 from ml.agent.prompts.system_prompt import get_system_prompt
@@ -33,13 +32,10 @@ def _extract_pipeline_mode(state: GraphState) -> str:
     return state.payload.mode.value
 
 
-def _extract_research_route(state: GraphState) -> str:
-    if state.final_prompt is not None:
-        return NextAction.FINISH.value
-    next_action = state.next_action
-    if next_action == NextAction.AWAIT_OBSERVATION:
-        return NextAction.REQUEST_TOOL.value
-    return next_action.value
+def _route_tool_or_answer(state: GraphState) -> str:
+    if state.next_action == NextAction.ANSWER:
+        return NextAction.ANSWER.value
+    return NextAction.AWAIT_OBSERVATION.value
 
 
 def create_pipeline(client: ReasoningModelClient) -> StateGraph:
@@ -55,7 +51,6 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow.add_node("Thinking planner", partial(thinking_planner_node, client=client))
     workflow.add_node("Thinking answer", thinking_answer_node)
     workflow.add_node("Research reason", partial(reason_node, client=client))
-    workflow.add_node("Research tool command", partial(tool_command_node, client=client))
     workflow.add_node("Research tool call", partial(research_tool_call_node, client=client))
     workflow.add_node("Research observer", partial(research_observer_node, client=client))
     workflow.add_node("Research answer", partial(research_answer_node, client=client))
@@ -90,26 +85,15 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow.add_edge("Thinking answer", "Final answer")
 
     # Research
+    workflow.add_edge("Research reason", "Research tool call")
     workflow.add_conditional_edges(
-        "Research reason",
-        _extract_research_route,
+        "Research tool call",
+        _route_tool_or_answer,
         {
-            NextAction.THINK.value: "Research reason",
-            NextAction.REQUEST_TOOL.value: "Research tool command",
+            NextAction.AWAIT_OBSERVATION.value: "Research observer",
             NextAction.ANSWER.value: "Research answer",
-            NextAction.FINISH.value: "Research answer",
         },
     )
-    workflow.add_conditional_edges(
-        "Research tool command",
-        _extract_research_route,
-        {
-            NextAction.REQUEST_TOOL.value: "Research tool call",
-            NextAction.ANSWER.value: "Research answer",
-            NextAction.FINISH.value: "Research answer",
-        },
-    )
-    workflow.add_edge("Research tool call", "Research observer")
     workflow.add_edge("Research observer", "Research reason")
     workflow.add_edge("Research answer", "Final answer")
 
