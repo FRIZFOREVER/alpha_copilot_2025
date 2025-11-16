@@ -91,16 +91,24 @@ export interface SendMessageStreamCallbacks {
   onError?: (error: Error) => void;
 }
 
-export interface SearchMessageResult {
-  question_id: number;
-  answer_id: number;
-  question: string;
-  answer: string;
-  question_time: string;
-  answer_time: string;
-  voice_url: string;
+export interface SearchMessageResult extends Omit<HistoryMessage, "tag"> {
   file_url: string;
-  rating: number | null;
 }
 
 export type SearchMessagesResponse = SearchMessageResult[] | null;
+
+export interface GraphLog {
+  id: number;
+  tag: string;
+  message: string;
+  log_time: string;
+  answer_id: number;
+}
+
+export type GetGraphLogsResponse = GraphLog[];
+
+export interface GraphLogWebSocketMessage {
+  tag: string;
+  answer_id: number;
+  message: string;
+}

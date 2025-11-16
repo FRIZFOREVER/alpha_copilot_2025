@@ -11,6 +11,9 @@ func main() {
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
 	settings := settings.InitSettings(logger)
+	if settings.Debug == "INFO" {
+		logger.SetLevel(logrus.InfoLevel)
+	}
 	app, err := internal.InitApp(&settings, logger)
 	if err != nil {
 		if err := app.Stop(); err != nil {
