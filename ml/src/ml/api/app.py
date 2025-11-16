@@ -89,10 +89,8 @@ def create_app() -> FastAPI:
             headers=headers,
         )
 
-        # функция принимает стринг, отдает
-
     @app.get("/ping")
-    def ping() -> dict[str, str]:  # type: ignore[reportUnusedFunction]
+    async def ping() -> dict[str, str]:  # type: ignore[reportUnusedFunction]
         return {"message": "pong"}
 
     @app.get("/ollama")
@@ -105,7 +103,7 @@ def create_app() -> FastAPI:
         }
 
     @app.get("/health")
-    def healthcheck() -> dict[str, str]:  # type: ignore[reportUnusedFunction]
+    async def healthcheck() -> dict[str, str]:  # type: ignore[reportUnusedFunction]
         return {"status": "healthy"}
 
     return app
