@@ -35,6 +35,7 @@ export default defineConfig(({ mode }) => ({
       "@shared": path.resolve(__dirname, "src/shared"),
       "@lib": path.resolve(__dirname, "src/lib"),
     },
+    dedupe: ["react", "react-dom", "react-is"],
   },
   test: {
     globals: true,
@@ -59,10 +60,13 @@ export default defineConfig(({ mode }) => ({
     },
   },
   ssr: {
-    noExternal: ["@tanstack/react-query"],
+    noExternal: ["@tanstack/react-query", "react-is"],
     resolve: {
       conditions: ["development", "browser"],
     },
+  },
+  optimizeDeps: {
+    include: ["react-is"],
   },
   build: {
     rollupOptions: {
