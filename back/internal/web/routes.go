@@ -46,7 +46,10 @@ func InitPrivateRoutes(
 	server *fiber.App,
 	db *sql.DB,
 	s3Client *minio.Client,
-	recognizer *client.RecognizerClient,
+	recognizerAssambleAI *client.AssamblyAIClient,
+	isAssamblyAIEnable bool,
+	recognizerWhisper *client.WhisperClient,
+	isWhisperAlive *bool,
 	streamClient *client.StreamMessageClient,
 	logger *logrus.Logger,
 ) {
@@ -62,7 +65,7 @@ func InitPrivateRoutes(
 	server.Put("/like/:chat_id", like.Handler)
 
 	voiceStorage := s3.NewMinIOAudioFileManager(s3Client)
-	voice := handlers.NewVoice(recognizer, voiceStorage, logger)
+	voice := handlers.NewVoice(recognizerAssambleAI, recognizerWhisper, voiceStorage, isWhisperAlive, isAssamblyAIEnable, logger)
 	server.Post("/voice", voice.Handler)
 
 	fileStorege := s3.NewMinIOFileManager(s3Client)

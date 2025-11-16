@@ -30,10 +30,10 @@ func NewMinIOAudioFileManager(client *minio.Client) *MinIOAudioFileManager {
 	}
 }
 
-// Upload загружает MP3 файл в объектное хранилище
+// Upload загружает WEBM файл в объектное хранилище
 // Возвращает путь к файлу или ошибку в случае неудачи.
 func (m *MinIOAudioFileManager) Upload(bucketName, uuid string, mp3Data []byte) (string, error) {
-	fileName := fmt.Sprintf("%s_%d.mp3", uuid, time.Now().Unix())
+	fileName := fmt.Sprintf("%s_%d.webm", uuid, time.Now().Unix())
 
 	reader := bytes.NewReader(mp3Data)
 
