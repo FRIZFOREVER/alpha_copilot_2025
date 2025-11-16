@@ -1,12 +1,17 @@
+import logging
 from collections.abc import Iterator
 
 from ml.agent.prompts import VoiceValidationResponse, get_voice_validation_prompt
+from ml.api.graph_history import PicsTags
+from ml.api.graph_logging import send_graph_log
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory
 from ml.configs.message import Message as ChatMessage
 from ollama import ChatResponse
 from ollama import Message as OllamaMessage
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 
 class StreamChunk(BaseModel):
@@ -23,11 +28,18 @@ class StreamChunk(BaseModel):
     message: ChatMessage | None = None
 
 
-def validate_voice(voice_decoding: ChatHistory, reasoning_client: ReasoningModelClient) -> bool:
+def validate_voice(
+    voice_decoding: ChatHistory,
+    reasoning_client: ReasoningModelClient,
+    answer_id: int | None = None,
+) -> bool:
     prompt: ChatHistory
     schema: type[VoiceValidationResponse]
 
     prompt, schema = get_voice_validation_prompt(voice_decoding)
+
+    if not send_graph_log(PicsTags.Mic, answer_id, "Обрабатываю голосовой запрос"):
+        logger.debug("Graph log dispatcher unavailable for voice validation")
 
     return reasoning_client.call_structured(
         prompt,

@@ -9,6 +9,7 @@ from ml.agent.graph.state import GraphState, NextAction, PlannerToolExecution
 from ml.agent.prompts import ThinkingPlannerAction, get_thinking_planner_prompt
 from ml.agent.tools.base import BaseTool
 from ml.agent.tools.registry import get_tool_registry
+from ml.api.graph_logging import log_think
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory, Role
 
@@ -30,6 +31,7 @@ def _latest_user_request(conversation: ChatHistory) -> str:
 
 def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Thinking planner node")
+    log_think(state, "Думаю")
     user_request = _latest_user_request(state.payload.messages)
     if not user_request:
         logger.warning("Planner skipped: no user request found")
