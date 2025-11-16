@@ -32,12 +32,12 @@ func NewStream(client client.StreamMessageProcessor, repo database.MessageManage
 }
 
 type streamIn struct {
-	Question string  `json:"question"`
-	VoiceURL string  `json:"voice_url"`
-	FileURL  string  `json:"file_url"`
-	Tag      string  `json:"tag"`
-	Mode     string  `json:"mode"`
-	Profile  Profile `json:"profile"`
+	Question string         `json:"question"`
+	VoiceURL string         `json:"voice_url"`
+	FileURL  string         `json:"file_url"`
+	Tag      string         `json:"tag"`
+	Mode     string         `json:"mode"`
+	Profile  client.Profile `json:"profile"`
 }
 
 func (sh *Stream) Handler(c *fiber.Ctx) error {
@@ -130,6 +130,8 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 	messageToModel.ChatID = chatIDStr
 
 	messageToModel.Mode = streamIn.Mode
+
+	messageToModel.Profile = streamIn.Profile
 
 	messageChan, tag, err := sh.client.StreamRequestToModel(messageToModel)
 	if err != nil {
