@@ -6,6 +6,7 @@ import json
 import logging
 import os
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from types import TracebackType
 from typing import TypedDict
@@ -21,8 +22,14 @@ BACKEND_URL_KEY = "BACKEND_URL"
 DOCKERENV_PATH = Path("/.dockerenv")
 
 
+class PicsTags(str, Enum):
+    Web = "web"
+    Think = "think"
+    Mic = "mic"
+
+
 class GraphLogMessage(TypedDict):
-    tag: str
+    tag: PicsTags
     answer_id: int
     message: str
 
@@ -121,7 +128,7 @@ class GraphLogClient:
             self._reset_connection()
             return False
 
-    async def send_log(self, tag: str, question_id: int, message: str) -> bool:
+    async def send_log(self, tag: PicsTags, question_id: int, message: str) -> bool:
         """
         Отправка лога через WebSocket.
 
