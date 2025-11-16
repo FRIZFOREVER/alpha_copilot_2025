@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from ollama import ChatResponse
 
@@ -48,6 +49,14 @@ def create_app() -> FastAPI:
     """Configure and return the FastAPI application."""
     app = FastAPI(title="Agent Base API", lifespan=lifespan)
 
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     @app.post("/message")
     async def message(payload: RequestPayload) -> JSONResponse:  # type: ignore[reportUnusedFunction]
         # Check if models are initialized
@@ -66,7 +75,9 @@ def create_app() -> FastAPI:
                 detail="Failed to generate response from collect workflow",
             ) from exc
 
-        return JSONResponse(content={"message": message_text}, headers={"Tag": tag.value})
+        return JSONResponse(
+            content={"message": message_text}, headers={"Tag": tag.value}
+        )
 
     @app.post("/message_stream")
     async def message_stream(payload: RequestPayload) -> StreamingResponse:  # type: ignore[reportUnusedFunction]
