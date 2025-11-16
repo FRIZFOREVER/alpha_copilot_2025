@@ -151,7 +151,6 @@ def research_tool_call_node(state: GraphState, client: ReasoningModelClient) -> 
     available_tools: list[BaseTool] = list(get_tool_registry().values())
 
     prompt: ChatHistory = get_research_tool_prompt(
-        profile=state.payload.profile,
         conversation=state.payload.messages,
         latest_reasoning=latest_reasoning,
         evidence_snippets=state.final_answer_evidence,

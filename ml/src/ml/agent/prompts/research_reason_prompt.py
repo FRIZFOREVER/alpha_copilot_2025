@@ -6,7 +6,6 @@ from ml.agent.graph.state import ResearchTurn
 from ml.agent.prompts.context_blocks import (
     build_conversation_context_block,
     build_evidence_snippet_block,
-    build_persona_block,
 )
 from ml.agent.tools.base import BaseTool
 from ml.configs.message import ChatHistory, UserProfile
@@ -46,6 +45,27 @@ def _format_tool_catalog(tools: Sequence[BaseTool]) -> str:
     return "\n".join(lines)
 
 
+def _build_persona_block(profile: UserProfile) -> str:
+    """Assemble a compact persona paragraph for the research reason prompt."""
+    sentences: list[str] = []
+
+    if profile.username:
+        sentences.append(f"Фио пользователя или как к нему обращаться: {profile.username}.")
+
+    if profile.user_info:
+        sentences.append(f"Пользователь сам описывает себя так: {profile.user_info}.")
+
+    if profile.additional_instructions:
+        sentences.append(
+            f"Дополнительные установки от пользователя: {profile.additional_instructions}."
+        )
+
+    if not sentences:
+        return "Персональный контекст пользователя: сведений не указано."
+
+    return "Персональный контекст пользователя: " + " ".join(sentences)
+
+
 def get_research_reason_prompt(
     *,
     profile: UserProfile,
@@ -57,7 +77,7 @@ def get_research_reason_prompt(
 ) -> ChatHistory:
     """Создать подсказку для рассуждений без прямых транскриптов наблюдений."""
 
-    persona_block = build_persona_block(profile)
+    persona_block = _build_persona_block(profile)
     conversation_block = build_conversation_context_block(conversation)
     evidence_block = build_evidence_snippet_block(evidence_snippets)
     turn_summary = _summarize_turn_history(turn_history)
@@ -83,10 +103,19 @@ def get_research_reason_prompt(
     prompt.add_or_change_system("\n\n".join(sections))
 
     user_instruction = (
-        "Опиши обычным текстом: почему текущие данные недостаточны, что именно нужно узнать "
-        "дальше и какой инструмент потенциально пригодится. "
-        "Не используй заголовки и шаблоны — просто несколько предложений с выводами и "
-        "желаемым результатом обращения к инструменту."
+        "Сначала молча проанализируй весь предоставленный контекст: профиль пользователя, "
+        "историю диалога, подтверждённые фрагменты и сводку шагов. Используй только те части, "
+        "которые явно связаны с текущим запросом и исследовательской задачей, игнорируя остальное. "
+        "Если запрос пользователя не имеет отношения к его бизнесу, то сфокусируйся на его выполнении "
+        "не беря в рассчёт его персональную информацию. "
+        "Внутренне рассмотрим несколько возможных направлений исследования (So-CoT), сравни их и выбери "
+        "наиболее перспективное, но в ответе покажи только итоговый вывод. Если текущих данных действительно "
+        "недостаточно, кратко укажи, каких сведений не хватает и что именно нужно выяснить дальше. Если данных "
+        "уже достаточно для обоснованного шага, не говори, что их мало — просто утвердительно опиши следующий "
+        "шаг исследования и цель этого шага. Пиши кратко, в 3–5 связанных предложениях, без заголовков, списков "
+        "и шаблонов, только ясное описание следующего шага и того, на какую информацию он нацелен. "
+        "Если информации достаточно, то чётко сформулируй запрос на необходимость вызова финального ответа"
     )
+
     prompt.add_user(user_instruction)
     return prompt

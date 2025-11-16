@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 
 import httpx
@@ -12,6 +13,8 @@ USER_AGENT = (
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/124.0.0.0 Safari/537.36"
 )
+
+logger = logging.getLogger(__name__)
 
 
 def fetch_page_html(url: str, timeout: float, max_bytes: int) -> str:
@@ -61,7 +64,13 @@ def fetch_page_html(url: str, timeout: float, max_bytes: int) -> str:
 
                 content = b"".join(collected)
                 encoding = response.encoding or "utf-8"
-                return content.decode(encoding, errors="ignore")
+                html = content.decode(encoding, errors="ignore")
+
+                logger.debug(
+                    "Fetched HTML from %s: %d bytes (encoding=%s)", url, len(html), encoding
+                )
+
+                return html
     except httpx.HTTPError as exc:  # pragma: no cover - defensive guard
         message = f"Failed to fetch URL {url}: {exc}"
         raise RuntimeError(message) from exc
@@ -81,7 +90,13 @@ def html_to_text(html: str) -> str:
 
     text = soup.get_text(" ", strip=True)
     text = re.sub(r"\s+", " ", text)
-    return text.strip()
+    text = text.strip()
+
+    # DEBUG:
+    logger.debug("Parsed text length: %d characters", len(text))
+    logger.debug("Parsed text preview: %r", text[:500])
+
+    return text
 
 
 def build_excerpt(text: str, query: str, *, window: int) -> str:

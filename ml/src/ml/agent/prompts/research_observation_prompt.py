@@ -3,7 +3,7 @@
 import logging
 from collections.abc import Sequence
 
-from ml.configs.message import ChatHistory, Role, UserProfile
+from ml.configs.message import ChatHistory, Role
 
 logger = logging.getLogger(__name__)
 
@@ -32,26 +32,6 @@ def _format_documents(tool_name: str, documents: Sequence[str]) -> str:
     return "\n".join(lines)
 
 
-def _build_observer_persona_block(profile: UserProfile) -> str:
-    """Return a persona section tailored for interpreting tool observations."""
-
-    lines: list[str] = ["Персональный контекст пользователя для наблюдений:"]
-    has_details = False
-
-    if profile.user_info:
-        lines.append(f"- Самоописание пользователя: {profile.user_info}")
-        has_details = True
-
-    if profile.business_info:
-        lines.append(f"- Описание бизнеса: {profile.business_info}")
-        has_details = True
-
-    if not has_details:
-        lines.append("- Пользователь не предоставил дополнительных сведений.")
-
-    return "\n".join(lines)
-
-
 def _build_latest_reasoning_block(latest_reasoning: str) -> str:
     return "Предыдущее рассуждение исполнителя:\n" + latest_reasoning
 
@@ -62,7 +42,6 @@ def _build_latest_request_block(latest_request: str, tool_name: str) -> str:
 
 def get_research_observation_prompt(
     *,
-    profile: UserProfile,
     conversation: ChatHistory,
     latest_reasoning: str,
     latest_request: str,
@@ -71,7 +50,6 @@ def get_research_observation_prompt(
 ) -> ChatHistory:
     """Build a prompt for interpreting tool outputs and updating the plan."""
 
-    persona_block = _build_observer_persona_block(profile)
     try:
         latest_user_message = conversation.messages[-1]
     except IndexError as exc:  # pragma: no cover - validated upstream
@@ -90,7 +68,6 @@ def get_research_observation_prompt(
         reasoning_block,
         documents_block,
         request_block,
-        persona_block,
         latest_user_message_block,
     ]
 

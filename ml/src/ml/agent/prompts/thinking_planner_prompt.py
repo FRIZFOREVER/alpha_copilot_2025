@@ -2,13 +2,13 @@
 
 from collections.abc import Sequence
 
+from pydantic import BaseModel, Field, model_validator
+
 from ml.agent.prompts.context_blocks import (
     build_conversation_context_block,
-    build_persona_block,
 )
 from ml.agent.tools.base import BaseTool
 from ml.configs.message import ChatHistory, UserProfile
-from pydantic import BaseModel, Field, model_validator
 
 
 class PlannerToolCall(BaseModel):
@@ -132,11 +132,10 @@ def get_thinking_planner_prompt(
 
     prompt = ChatHistory()
     planner_instructions: list[str] = []
-    persona_block = build_persona_block(profile)
+    # TODO: Persona block was here
     conversation_block = build_conversation_context_block(conversation)
 
     system_sections: list[str] = []
-    system_sections.append(persona_block)
     if conversation_block:
         system_sections.append(conversation_block)
 

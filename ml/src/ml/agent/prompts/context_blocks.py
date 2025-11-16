@@ -1,16 +1,8 @@
-"""Reusable helpers for building persona, conversation, and evidence context blocks."""
+"""Reusable helpers for building conversation and evidence context blocks."""
 
 from collections.abc import Sequence
 
-from ml.agent.prompts.system_prompt import get_system_prompt
-from ml.configs.message import ChatHistory, UserProfile
-
-
-def build_persona_block(profile: UserProfile) -> str:
-    """Return a persona section that adapts the assistant to the user profile."""
-
-    persona_text = get_system_prompt(profile)
-    return "Персона ассистента:\n" + persona_text
+from ml.configs.message import ChatHistory
 
 
 def build_conversation_context_block(conversation: ChatHistory) -> str:

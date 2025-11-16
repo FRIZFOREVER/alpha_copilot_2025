@@ -3,10 +3,9 @@ from collections.abc import Sequence
 from ml.agent.prompts.context_blocks import (
     build_conversation_context_block,
     build_evidence_snippet_block,
-    build_persona_block,
 )
 from ml.agent.tools.base import BaseTool
-from ml.configs.message import ChatHistory, UserProfile
+from ml.configs.message import ChatHistory
 
 
 def _format_tool_catalog(tools: Sequence[BaseTool]) -> str:
@@ -22,7 +21,6 @@ def _format_tool_catalog(tools: Sequence[BaseTool]) -> str:
 
 def get_research_tool_prompt(
     *,
-    profile: UserProfile,
     conversation: ChatHistory,
     latest_reasoning: str,
     evidence_snippets: Sequence[str] | None,
@@ -30,7 +28,7 @@ def get_research_tool_prompt(
 ) -> ChatHistory:
     """Build a prompt that lets the tool node choose and execute the next action."""
 
-    persona_block: str = build_persona_block(profile)
+    # TODO: Persona block was here
     conversation_block: str = build_conversation_context_block(conversation)
     evidence_block: str = build_evidence_snippet_block(evidence_snippets)
     tools_block: str = _format_tool_catalog(available_tools)
@@ -47,7 +45,6 @@ def get_research_tool_prompt(
             "Выбери подходящий инструмент или заверши расследование, "
             "ориентируясь на рассуждение и контекст."
         ),
-        persona_block,
         conversation_block,
         evidence_block,
         "Доступные инструменты:\n" + tools_block,
@@ -61,7 +58,8 @@ def get_research_tool_prompt(
         "Верни решение в структурированном виде. Допустимые действия: "
         "'call_tool' (с указанием названия и аргументов) или 'finalize_answer'. \n"
         "При выборе исходи из последнего рассуждения исполнителя"
-        "Если выбираешь web_search, сформулируй осмысленный поисковый запрос, "
+        "Если выбираешь web_search, сформулируй осмысленный поисковый запрос "
+        "на русском языке, "
         "который соответствует цели и не повторяет рассуждение дословно."
     )
     return prompt

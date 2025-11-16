@@ -23,7 +23,7 @@ def reason_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
         latest_reasoning=state.latest_reasoning_text,
         available_tools=available_tools,
     )
-
+    logger.debug("Reason prompt: \n%s", prompt.model_dump_json(indent=2))
     response_text: str = client.call(messages=prompt)
 
     logger.info("Reason node response: \n%s", response_text)

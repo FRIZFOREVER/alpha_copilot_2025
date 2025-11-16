@@ -2,8 +2,7 @@ from collections.abc import Iterator
 
 from ml.agent.prompts import VoiceValidationResponse, get_voice_validation_prompt
 from ml.api.ollama_calls import ReasoningModelClient
-from ml.configs.message import ChatHistory
-from ml.configs.message import Message as ChatMessage
+from ml.configs.message import ChatHistory, Message as ChatMessage
 from ollama import ChatResponse
 from ollama import Message as OllamaMessage
 from pydantic import BaseModel
@@ -23,7 +22,7 @@ class StreamChunk(BaseModel):
     message: ChatMessage | None = None
 
 
-def validate_voice(voice_decoding: ChatMessage, reasoning_client: ReasoningModelClient) -> bool:
+def validate_voice(voice_decoding: ChatHistory, reasoning_client: ReasoningModelClient) -> bool:
     prompt: ChatHistory
     schema: type[VoiceValidationResponse]
 
