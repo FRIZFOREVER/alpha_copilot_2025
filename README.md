@@ -2,7 +2,7 @@
   
 # АЛЬФА БУДУЩЕЕ ХАКАТОН <br> Разработка copilot-приложения для клиентов микробизнеса
 
-<img height="300" alt="logo" src="assets/header.jpg">
+<img height="300" alt="logo" src="header.png">
 
 </div> 
 
