@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from ollama import ChatResponse
 
-from ml.agent.router import workflow, workflow_collected
+from ml.agent.router import workflow, workflow_collected_async
 from ml.api.ollama_setup import (
     download_missing_models,
     fetch_available_models,
@@ -57,7 +57,7 @@ def create_app() -> FastAPI:
         message_text: str
         tag: Tag
         try:
-            message_text, tag = workflow_collected(payload)
+            message_text, tag = await workflow_collected_async(payload)
         except HTTPException:
             raise
         except Exception as exc:
