@@ -70,7 +70,7 @@ func GraphLogHandlerWS(secret string, repo database.GraphLogRepository, logger *
 		ws.AddConnection(chatID, userUUID, c)
 		defer ws.RemoveConnection(chatID, userUUID)
 
-		logger.Infof("WebSocket соединение установлено для чата: %s, пользователь: %s\n", chatID, userUUID)
+		logger.Infof("WebSocket соединение установлено для чата: %s, пользователь: %s (UUID: %s)\n", chatID, userUUID, userUUID)
 
 		// Отправляем пользователю подтверждение подключения
 		if err := c.WriteJSON(map[string]string{
@@ -94,9 +94,10 @@ func GraphLogHandlerWS(secret string, repo database.GraphLogRepository, logger *
 				logger.Errorf("Ошибка записи данных в бд: %v\n", err.Error())
 			}
 			// Выводим сообщение в консоль
-			logger.Debugf("Чат %s | Пользователь %s: %s\n", chatID, userUUID, msg.Message)
+			logger.Debugf("Получено graph_log сообщение: Чат %s | Пользователь %s | Tag: %s | AnswerID: %d | Message: %s\n", chatID, userUUID, msg.Tag, msg.AnswerID, msg.Message)
 
 			// Отправляем сообщение всем пользователям в чате, кроме отправителя
+			logger.Infof("Трансляция сообщения в чат %s, отправитель UUID: %s\n", chatID, userUUID)
 			ws.BroadcastMessage(chatID, userUUID, msg)
 		}
 	})

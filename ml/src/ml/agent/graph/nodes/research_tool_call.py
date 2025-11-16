@@ -1,11 +1,15 @@
 """Tool execution node for research workflow."""
 
+import asyncio
+import logging
 from random import shuffle
 from typing import Any
 
 from ml.agent.graph.state import GraphState, NextAction, ResearchObservation
 from ml.agent.tools.base import ToolResult
 from ml.agent.tools.registry import get_tool
+
+logger = logging.getLogger(__name__)
 
 
 def research_tool_call_node(state: GraphState, client: Any) -> GraphState:
@@ -56,5 +60,25 @@ def research_tool_call_node(state: GraphState, client: Any) -> GraphState:
     state.active_observation = observation
     state.active_tool_request = None
     state.next_action = NextAction.AWAIT_OBSERVATION
+
+    # Логирование вызова инструмента
+    if (
+        state.graph_log_client
+        and state.question_id
+        and state.payload.tag
+        and state.graph_log_loop
+    ):
+        try:
+            tool_info = f"Tool: {request.tool_name}, Query: {request.input_text[:200]}"
+            # Используем event loop для отправки лога
+            state.graph_log_loop.run_until_complete(
+                state.graph_log_client.send_log(
+                    tag=state.payload.tag.value,
+                    question_id=state.question_id,
+                    message=f"Research Tool Call - {tool_info}",
+                )
+            )
+        except Exception as e:
+            logger.warning(f"Ошибка отправки graph_log: {e}")
 
     return state

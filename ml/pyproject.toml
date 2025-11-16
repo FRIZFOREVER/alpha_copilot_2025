@@ -19,6 +19,7 @@ dependencies = [
     "uvicorn>=0.38.0",
     "rope>=1.14.0",
     "pylsp-rope>=0.1.17",
+    "websockets>=14.0",
 ]
 
 [tool.uv.build-backend]

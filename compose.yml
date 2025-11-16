@@ -34,11 +34,13 @@ services:
       - ./.env
     environment:
       - OLLAMA_HOST=http://ollama:11434
+      - BACKEND_URL=http://app:8080
     ports:
       - "8000:8000"
     restart: unless-stopped
     depends_on:
       - ollama
+      - app
 
   postgres:
     image: postgres:15-alpine
