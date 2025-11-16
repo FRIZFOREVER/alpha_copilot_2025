@@ -10,6 +10,7 @@ from ml.agent.graph.state import (
     ResearchTurn,
 )
 from ml.agent.prompts import get_research_reason_prompt
+from ml.agent.tools.registry import get_tool_registry
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory
 
@@ -47,11 +48,13 @@ class ResearchReactResponse(BaseModel):
 
 def research_react_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Research react node")
+    available_tools = list(get_tool_registry().values())
     prompt: ChatHistory = get_research_reason_prompt(
         profile=state.payload.profile,
         conversation=state.payload.messages,
         turn_history=state.turn_history,
         latest_reasoning=state.latest_reasoning,
+        available_tools=available_tools,
     )
 
     response = client.call_structured(

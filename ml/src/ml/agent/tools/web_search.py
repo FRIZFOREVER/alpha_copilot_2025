@@ -5,13 +5,15 @@ from collections.abc import Iterable
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlparse
 
 from ddgs import DDGS
+from pydantic import BaseModel, Field
+
 from ml.agent.tools import page_text
 from ml.agent.tools.base import BaseTool, ToolResult
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory
-from pydantic import BaseModel, Field
 
 DEFAULT_FETCH_TIMEOUT = 5.0
 DEFAULT_MAX_BYTES = 500_000
@@ -24,6 +26,11 @@ SearchResult = dict[str, Any]
 
 
 logger = logging.getLogger(__name__)
+
+
+def _get_domain_from_url(url: str) -> str:
+    parsed = urlparse(url)
+    return parsed.hostname or parsed.netloc or url
 
 
 class PageSummaryResponse(BaseModel):
@@ -72,7 +79,10 @@ class WebSearchTool(BaseTool):
 
     @property
     def description(self) -> str:
-        return "Поиск информации в интернете с помощью DuckDuckGo. Возвращает результаты поиска с заголовками, ссылками и краткими описаниями."
+        return (
+            "Поиск информации в интернете с помощью DuckDuckGo. Возвращает результаты поиска с "
+            "заголовками, ссылками и краткими описаниями."
+        )
 
     @property
     def schema(self) -> dict[str, Any]:
@@ -188,9 +198,10 @@ class WebSearchTool(BaseTool):
         summary = ""
         is_viable = False
 
+        domain = _get_domain_from_url(url)
         if text:
             try:
-                summary_response = self._summarize_text(text, query)
+                summary_response = self._summarize_text(text, query, domain)
             except Exception:
                 logger.exception("Failed to summarize page %s", url)
             else:
@@ -205,19 +216,27 @@ class WebSearchTool(BaseTool):
 
         return FetchedPage(text=text, summary=summary, is_viable=is_viable)
 
-    def _summarize_text(self, text: str, query: str) -> PageSummaryResponse:
+    def _summarize_text(self, text: str, query: str, domain: str) -> PageSummaryResponse:
         prompt = ChatHistory()
         prompt.add_or_change_system(
-            "You are a diligent research assistant. Evaluate the provided web page and determine "
-            "whether it contains information that directly helps address the user's request. "
-            "When it does, summarise every relevant fact without omitting details. You may use "
-            "bullet lists, tables, or other structured formats to make the summary easy to parse. "
-            "If the page lacks useful information, clearly mark it as not viable while keeping the "
-            "summary concise. Behave simultaneously as a precise filter and an exhaustive summarizer."
+            "Вы — вдумчивый исследователь-ассистент. Оцените, содержит ли эта страница "
+            "сведения, непосредственно отвечающие на запрос пользователя. "
+            "Если информация есть, структурируйте результаты так, чтобы они точно соответствовали "
+            " требуемой схеме JSON и не теряли деталей — можно использовать списки, таблицы или "
+            "другие понятные форматы до тех пор, пока они остаются типом string. "
+            "Если страница не содержит полезных данных, признавайте ее неактуальной и сразу "
+            "возвращайте пустую строку в полях, где должен быть релевантный контент (например, в "
+            "описании, фактах или выводах).\n"
+            "Действуйте одновременно как тщательный фильтр и как аккуратный создатель JSON-ответа."
         )
-        prompt.add_user(f"User request:\n{query}\n\nWeb page content:\n{text}")
+        prompt.add_user(
+            "Обрабатываемые данные:\n"
+            f"Домен страницы: {domain}\n"
+            f"Поисковый запрос: {query}\n\n"
+            f"Содержимое страницы:\n{text}"
+        )
 
-        logger.info("Summarizing page content for query: %s", query)
+        logger.info("Summarizing page content for domain: %s", domain)
 
         summary_response: PageSummaryResponse = self._reasoning_client.call_structured(
             messages=prompt,
