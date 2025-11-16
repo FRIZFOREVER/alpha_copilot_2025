@@ -2,6 +2,7 @@ import logging
 
 from ml.agent.graph.state import GraphState
 from ml.agent.prompts import ModeDecisionResponse, get_mode_decision_prompt
+from ml.api.graph_logging import log_think
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ModelMode
 
@@ -12,6 +13,7 @@ def graph_mode_node(state: GraphState, *, client: ReasoningModelClient) -> Graph
     logger.info("Entered Graph mode node")
     if state.payload.mode == ModelMode.Auto:
         logger.info("Running dynamic mode selection via the latest user request")
+        log_think(state, "Выбираю режим работы")
 
         prompt_history = state.payload.messages.last_message_as_history()
         prompt = get_mode_decision_prompt(
@@ -33,5 +35,6 @@ def graph_mode_node(state: GraphState, *, client: ReasoningModelClient) -> Graph
             logger.exception("Failed to coerce mode decision into ModelMode: %s", decision.mode)
             raise
         logger.info("Mode selected dynamically: %s", state.payload.mode.value)
+        log_think(state, f"Выбрал режим {state.payload.mode.value}")
 
     return state

@@ -5,6 +5,7 @@ from typing import Any
 
 from ml.agent.graph.state import GraphState, ResearchTurn
 from ml.agent.prompts import get_research_observation_prompt
+from ml.api.graph_logging import log_think
 from ml.api.ollama_calls import ReasoningModelClient
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -62,6 +63,7 @@ def _collect_documents(observation_metadata: dict[str, Any]) -> list[str]:
 
 def research_observer_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Research observer node")
+    log_think(state, "Думаю")
     observation = state.active_observation
     if observation is None:
         return state
