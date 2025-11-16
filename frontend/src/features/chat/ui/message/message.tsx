@@ -59,8 +59,6 @@ export const Message = ({
 
   const graphLogsContext = useGraphLogsContext();
 
-  // Проверяем наличие логов для отображения кнопки
-  // Запрос выполняется только если есть контекст и answerId
   const shouldCheckLogs = !!answerId && !!graphLogsContext;
   const { data: graphLogs } = useGraphLogsQuery(
     shouldCheckLogs ? answerId : undefined
