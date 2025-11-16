@@ -1,11 +1,8 @@
 """Prompt builder and structured schema for selecting the reasoning mode."""
 
-from collections.abc import Sequence
-
 from pydantic import BaseModel, Field, field_validator
 
-from ml.agent.prompts.system_prompt import get_system_prompt
-from ml.configs.message import ChatHistory, ModelMode, Tag, UserProfile
+from ml.configs.message import ChatHistory, ModelMode, UserProfile
 
 
 class ModeDecisionResponse(BaseModel):
@@ -26,57 +23,44 @@ class ModeDecisionResponse(BaseModel):
         return value
 
 
-def get_mode_decision_prompt(
-    *,
-    profile: UserProfile,
-    conversation_summary: str,
-    tag: Tag | None = None,
-    evidence: Sequence[str] | None = None,
-) -> ChatHistory:
-    """Construct a prompt that asks the model to choose a reasoning mode."""
+def _format_personal_info(profile: UserProfile) -> str | None:
+    details: list[str] = []
+    if profile.username:
+        details.append(f"ФИО: {profile.username}")
+    if profile.user_info:
+        details.append(f"О себе: {profile.user_info}")
+    if profile.business_info:
+        details.append(f"Про бизнес: {profile.business_info}")
+    if profile.additional_instructions:
+        details.append(f"Дополнительные инструкции: {profile.additional_instructions}")
+    if not details:
+        return None
+    return " | ".join(details)
 
-    persona_text = get_system_prompt(profile)
+
+def get_mode_decision_prompt(*, profile: UserProfile, history: ChatHistory) -> ChatHistory:
+    """Inject system instructions for selecting the reasoning mode."""
+
+    prompt = history.model_copy(deep=True)
 
     system_sections: list[str] = [
-        "Ты выступаешь в роли диспетчера, который выбирает стратегию ответа для ассистента.",
+        "Вы — диспетчер, выбирающий стратегию ответа (fast/thinking/research) для ассистента.",
         (
-            "Выбери один режим из списка: fast (моментальный ответ), "
-            "thinking (углублённое рассуждение) или research (исследование с инструментами)."
+            "Отвечайте ТОЛЬКО одним JSON-объектом с единственным полем mode, "
+            'например {"mode":"thinking"}.'
         ),
-        "Ответ должен быть в формате JSON с единственным полем mode.",
-        "Персона ассистента:\n" + persona_text,
+        (
+            "Fast — когда ответ уже есть в истории, и от пользователя требуется лишь уточнение, "
+            "либо зарпос пользователяочень простой и не требует уточнения информации в интернете. "
+            "Thinking — для рассуждений, планов и рекомендаций. "
+            "Research — для генерации новых идей или глубокого анализа, требующих инструментов."
+        ),
+        "Не добавляйте пояснений, только поставьте нужный режим.",
     ]
 
-    if conversation_summary:
-        system_sections.append("Сжатая выжимка последних сообщений:\n" + conversation_summary)
-    else:
-        system_sections.append("Сжатая выжимка последних сообщений отсутствует.")
+    personal_info = _format_personal_info(profile)
+    if personal_info:
+        system_sections.append("Персональные сведения пользователя: " + personal_info)
 
-    if tag is not None:
-        system_sections.append("Текущий тег беседы: " + tag.value)
-
-    if evidence:
-        evidence_lines = [item for item in evidence if item]
-        if evidence_lines:
-            formatted_evidence = "\n".join(f"- {item}" for item in evidence_lines)
-            system_sections.append("Накопленные факты и наблюдения:\n" + formatted_evidence)
-
-    prompt = ChatHistory()
     prompt.add_or_change_system("\n\n".join(system_sections))
-
-    user_sections: list[str] = [
-        "Запрошенный режим: auto",
-        (
-            "Стандартный режим — thinking. Используй его для большинства запросов и всегда, когда"
-            " остаются сомнения.\n"
-            "Режим research выбирай только если пользователь просит провести анализ, исследование"
-            " темы или сгенерировать новые идеи. Он не предназначен для простого поиска фактов.\n"
-            "Режим fast выбирай только когда ответ уже есть в истории чата, а текущий запрос —"
-            " уточнение, правка или простой вопрос, ответ на который явно содержится в предыдущих"
-            " сообщениях."
-        ),
-    ]
-
-    prompt.add_user("\n\n".join(user_sections))
-
     return prompt
