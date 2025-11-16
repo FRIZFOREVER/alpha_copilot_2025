@@ -315,7 +315,7 @@ export const Sidebar = () => {
                           transition={{ duration: 0.2, ease: "easeInOut" }}
                           className="overflow-hidden"
                         >
-                          <div className="mt-1 space-y-0.5 ml-[21px] pl-[8px] border-l">
+                          <div className="mt-1 space-y-0.5 ml-[20px] pl-[8px] border-l">
                             {group.items.map((chat) => {
                               const isActive = currentChatId === chat.id;
 
