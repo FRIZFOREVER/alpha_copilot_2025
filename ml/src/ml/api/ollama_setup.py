@@ -8,8 +8,8 @@ from fastapi.encoders import jsonable_encoder
 from ollama import ListResponse, ProcessResponse
 
 from ml.api.ollama_calls import EmbeddingModelClient, ReasoningModelClient
-from ml.api.types import ModelClients
 from ml.configs.message import ChatHistory
+from ml.configs.types import ModelClients
 
 logger: logging.Logger = logging.getLogger(__name__)
 

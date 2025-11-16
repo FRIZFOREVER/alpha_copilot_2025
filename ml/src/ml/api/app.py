@@ -17,8 +17,8 @@ from ml.api.ollama_setup import (
     init_models,
     warmup_models,
 )
-from ml.api.types import ModelClients
 from ml.configs.message import RequestPayload, Tag
+from ml.configs.types import ModelClients
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -66,9 +66,7 @@ def create_app() -> FastAPI:
                 detail="Failed to generate response from collect workflow",
             ) from exc
 
-        return JSONResponse(
-            content={"message": message_text}, headers={"Tag": tag.value}
-        )
+        return JSONResponse(content={"message": message_text}, headers={"Tag": tag.value})
 
     @app.post("/message_stream")
     async def message_stream(payload: RequestPayload) -> StreamingResponse:  # type: ignore[reportUnusedFunction]
