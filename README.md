@@ -61,7 +61,7 @@ git clone https://github.com/FRIZFOREVER/alfa_copilot_2025.git
   <img src="https://github.com/simple-icons/simple-icons/raw/refs/heads/develop/icons/langgraph.svg" title="langgraph" alt="langgraph" height="40"/>
   <img src="https://github.com/devicons/devicon/blob/master/icons/fastapi/fastapi-plain-wordmark.svg" title="fastapi" alt="fastapi" height="40"/>
   <img src="https://fronty.com/static/uploads/1.11-30.11/languages%20in%202022/go.png" title="GO" alt="GO" height="40"/>
-  <img src="./assets/websocket.svg" title="websocket" alt="websocket" height="40"/>
+  <img src="./assets/websocket.svg" title="websocket" alt="websocket" height="40"/>  <img src="./assets/minio.svg" title="minio" alt="minio" height="40"/>
   <img src="https://github.com/devicons/devicon/blob/master/icons/fiber/fiber-plain.svg" title="Fiber" alt="Fiber" height="40"/>
   <img src="https://github.com/devicons/devicon/blob/master/icons/postgresql/postgresql-plain.svg" title="postgres" alt="postgres" height="40"/>
   <img src="https://github.com/devicons/devicon/blob/master/icons/react/react-original.svg" title="react" alt="react" height="40"/>
