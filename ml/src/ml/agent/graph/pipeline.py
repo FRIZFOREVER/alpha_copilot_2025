@@ -19,9 +19,8 @@ from ml.agent.graph.nodes import (
     thinking_planner_node,
 )
 from ml.agent.graph.state import GraphState, NextAction
-from ml.agent.prompts.system_prompt import get_system_prompt
 from ml.api.ollama_calls import ReasoningModelClient
-from ml.configs.message import RequestPayload, Tag
+from ml.configs.message import ChatHistory, RequestPayload, Tag
 from ml.utils.tag_validation import define_tag
 from ml.utils.voice_validation import form_final_report, validate_voice
 
@@ -99,7 +98,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
 
     workflow.add_edge("Final answer", END)
 
-    app: StateGraph = workflow.compile()
+    app: StateGraph = workflow.compile()  # type: ignore
 
     return app
 
@@ -108,14 +107,11 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
     # Create Reasoning model client
     client: ReasoningModelClient = ReasoningModelClient()
 
-    # form system prompt for this dialogue
-    system_prompt: str = get_system_prompt(payload.profile)
-    payload.messages.add_or_change_system(system_prompt)
-
     # validate user request if voice
     if payload.is_voice:
+        voice_history: ChatHistory = payload.messages.last_message_as_history()
         voice_is_valid: bool = validate_voice(
-            voice_decoding=payload.messages.last_message_as_history(),
+            voice_decoding=voice_history,
             reasoning_client=client,
         )
         if not voice_is_valid:
@@ -124,13 +120,11 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
                 payload.messages.model_dump_string(),
             )
             if not payload.tag:
-                error_message: str = "Voice validation failed for a conversation without a tag."
-                logger.error(error_message)
-                raise RuntimeError(error_message)
+                payload.tag = Tag.General
             logger.info("Returning fallback stream with tag %s", payload.tag.value)
             return form_final_report(reasoning_client=client), payload.tag
 
-    # FUTURE: validate tag if tag is empty
+    # validate tag if tag is empty
     if not payload.tag:
         logger.info("Tag not found. Starting tag definition")
         payload.tag = define_tag(
@@ -144,9 +138,13 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
     # Create initial state
     state: GraphState = GraphState(payload=payload)
 
-    raw_result: dict[str, Any] = app.invoke(state)
+    raw_result: dict[str, Any] = app.invoke(state)  # type: ignore
     try:
         result: GraphState = GraphState.model_validate(raw_result)
+        logging.debug(
+            "Started final prompt generation with payload: \n%s",
+            result.final_prompt.model_dump_json(ensure_ascii=False, indent=2),  # type: ignore
+        )
     except Exception as exc:  # pragma: no cover - validation should succeed
         logger.error(
             "Failed to validate GraphState from graph output: %s; raw_result=%s",
@@ -155,9 +153,11 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
         )
         raise RuntimeError("GraphState validation failed") from exc
 
-    logging.debug(
-        "Started final prompt generation with payload: \n%s",
-        result.final_prompt.model_dump_json(ensure_ascii=False, indent=2),
-    )
+    if result.final_prompt:
+        return client.stream(result.final_prompt), payload.tag
 
-    return client.stream(result.final_prompt), payload.tag
+    error_message = "Graph execution finished without final prompt"
+    logger.error(
+        "%s; state: %s", error_message, result.model_dump_json(ensure_ascii=False, indent=2)
+    )
+    raise RuntimeError(error_message)

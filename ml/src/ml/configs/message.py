@@ -101,15 +101,18 @@ class RequestPayload(BaseModel):
 
     @field_validator("tag", mode="before")
     @classmethod
-    def replace_tag(cls, v: str | None) -> Tag | None:
+    def replace_tag(cls, v: Tag | str | None) -> Tag | None:
         if v is None:
             return None
 
-        if v == "":
+        elif v == "":
             return None
 
         if isinstance(v, Tag):
             return v
 
-        logger.exception("Found invalid tag inside payload: %s", v)
-        raise RuntimeError("Expected a valid Tag value")
+        try:
+            return Tag(v)
+        except ValueError as exc:
+            logger.exception("Found invalid tag inside payload: %s", v)
+            raise RuntimeError("Expected a valid Tag value") from exc

@@ -85,7 +85,6 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
         raise ValueError("Conversation history is empty") from exc
 
     prompt = get_research_observation_prompt(
-        profile=state.payload.profile,
         conversation=state.payload.messages,
         latest_reasoning=latest_reasoning_text,
         latest_request=latest_request,
