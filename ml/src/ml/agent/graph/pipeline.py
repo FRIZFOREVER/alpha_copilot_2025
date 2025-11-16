@@ -35,7 +35,10 @@ def _extract_pipeline_mode(state: GraphState) -> str:
 def _extract_research_route(state: GraphState) -> str:
     if state.final_prompt is not None:
         return NextAction.FINISH.value
-    return state.next_action.value
+    next_action = state.next_action
+    if next_action == NextAction.AWAIT_OBSERVATION:
+        return NextAction.REQUEST_TOOL.value
+    return next_action.value
 
 
 def create_pipeline(client: ReasoningModelClient) -> StateGraph:
@@ -105,15 +108,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
         },
     )
     workflow.add_edge("Research tool call", "Research observer")
-    workflow.add_conditional_edges(
-        "Research observer",
-        _extract_research_route,
-        {
-            NextAction.THINK.value: "Research reason",
-            NextAction.ANSWER.value: "Research answer",
-            NextAction.FINISH.value: "Research answer",
-        },
-    )
+    workflow.add_edge("Research observer", "Research reason")
     workflow.add_edge("Research answer", END)
 
     app: StateGraph = workflow.compile()

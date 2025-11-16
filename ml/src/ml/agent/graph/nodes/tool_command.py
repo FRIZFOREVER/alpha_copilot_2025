@@ -6,6 +6,11 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
+from ml.agent.graph.constants import (
+    FORCE_FINALIZE_METADATA_KEY,
+    STOP_REASON_KEY,
+    STOP_TOOL_NAME,
+)
 from ml.agent.graph.nodes.tooling import select_primary_input
 from ml.agent.graph.state import GraphState, NextAction, ResearchToolRequest
 from ml.agent.prompts import get_research_tool_prompt
@@ -55,6 +60,17 @@ def _normalize_arguments(arguments: dict[str, Any]) -> dict[str, str]:
     return normalized
 
 
+def _finalize_from_justification(state: GraphState, justification: str) -> GraphState:
+    if state.turn_history:
+        last_turn = state.turn_history[-1]
+        last_turn.reasoning_summary = justification
+        last_turn.request = None
+    state.active_tool_request = None
+    state.latest_reasoning_text = justification
+    state.next_action = NextAction.ANSWER
+    return state
+
+
 def tool_command_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Research tool command node")
     pending_request = state.active_tool_request
@@ -62,6 +78,18 @@ def tool_command_node(state: GraphState, client: ReasoningModelClient) -> GraphS
         error_message = "Active tool request is missing for tool command node"
         logger.error(error_message)
         raise ValueError(error_message)
+
+    metadata = pending_request.metadata or {}
+    force_finalize = metadata.get(FORCE_FINALIZE_METADATA_KEY)
+    if force_finalize or pending_request.tool_name == STOP_TOOL_NAME:
+        stop_reason = metadata.get(STOP_REASON_KEY)
+        justification = stop_reason or (
+            "Достигнут лимит исследовательских итераций. Закрываем расследование."
+        )
+        logger.info(
+            "Tool command received forced finalize directive from %s", pending_request.tool_name
+        )
+        return _finalize_from_justification(state, justification)
 
     comparison_note = pending_request.metadata.get("comparison_text") if pending_request.metadata else None
     prompt = get_research_tool_prompt(
@@ -93,14 +121,7 @@ def tool_command_node(state: GraphState, client: ReasoningModelClient) -> GraphS
 
     if command.action == "finalize_answer":
         logger.info("Tool command requested to finalize the research answer")
-        if state.turn_history:
-            last_turn = state.turn_history[-1]
-            last_turn.reasoning_summary = command.justification
-            last_turn.request = None
-        state.active_tool_request = None
-        state.latest_reasoning_text = command.justification
-        state.next_action = NextAction.ANSWER
-        return state
+        return _finalize_from_justification(state, command.justification)
 
     tool_name = command.tool_name
     if tool_name is None:
