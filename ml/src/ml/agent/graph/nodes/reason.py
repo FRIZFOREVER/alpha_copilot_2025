@@ -3,6 +3,11 @@
 import logging
 from typing import Any
 
+from ml.agent.graph.constants import (
+    FORCE_FINALIZE_METADATA_KEY,
+    STOP_REASON_KEY,
+    STOP_TOOL_NAME,
+)
 from ml.agent.graph.nodes.tooling import select_primary_input
 from ml.agent.graph.state import (
     GraphState,
@@ -85,18 +90,40 @@ def _parse_call_plan(section_text: str) -> tuple[str | None, dict[str, str]]:
     return objective, arguments
 
 
+def _prepare_forced_finalize(state: GraphState) -> GraphState:
+    logger.warning("Reasoning loop limit reached, requesting finalization")
+    summary = (
+        "Достигнут лимит исследовательских итераций. Сформируй итоговый ответ без новых "
+        "вызовов инструментов."
+    )
+    stop_request = ResearchToolRequest(
+        tool_name=STOP_TOOL_NAME,
+        input_text="",
+        arguments={},
+        metadata={
+            FORCE_FINALIZE_METADATA_KEY: True,
+            STOP_REASON_KEY: summary,
+        },
+    )
+    turn = ResearchTurn(reasoning_summary=summary, request=stop_request)
+    state.active_tool_request = stop_request
+    state.turn_history.append(turn)
+    state.latest_reasoning_text = summary
+    state.next_action = NextAction.REQUEST_TOOL
+    return state
+
+
 def reason_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Research reason node")
     if state.loop_counter >= MAX_REASONING_LOOPS:
-        error_message = "Reasoning loop limit exceeded before scheduling a tool call"
-        logger.error(error_message)
-        raise RuntimeError(error_message)
+        return _prepare_forced_finalize(state)
 
     available_tools = list(get_tool_registry().values())
     prompt: ChatHistory = get_research_reason_prompt(
         profile=state.payload.profile,
         conversation=state.payload.messages,
         turn_history=state.turn_history,
+        evidence_snippets=state.final_answer_evidence,
         latest_reasoning=state.latest_reasoning_text,
         available_tools=available_tools,
     )
