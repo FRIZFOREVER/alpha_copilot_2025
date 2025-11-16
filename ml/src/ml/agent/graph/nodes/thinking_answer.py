@@ -21,4 +21,5 @@ def thinking_answer_node(state: GraphState) -> GraphState:
     )
 
     state.final_prompt = prompt
+    logger.info("Thinking answer final prompt:\n%s", prompt.model_dump_string())
     return state
