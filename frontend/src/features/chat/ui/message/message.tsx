@@ -22,6 +22,9 @@ import { useTodoistStatusQuery } from "@/entities/auth/hooks/useTodoistStatus";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
 import { sendTelegramMessage } from "@/entities/auth/api/authService";
 import { TelegramContact } from "@/entities/auth/types/types";
+import { useGraphLogsContext } from "../chat/chat";
+import { useGraphLogsQuery } from "@/entities/chat/hooks/useGraphLogs";
+import { SourcesButton } from "./sourcesButton";
 
 export interface MessageProps {
   id: string;
@@ -53,6 +56,17 @@ export const Message = ({
   const { handleCopyClick, isCopied } = useCopied();
 
   const [isSendingTelegram, setIsSendingTelegram] = useState(false);
+
+  const graphLogsContext = useGraphLogsContext();
+
+  // Проверяем наличие логов для отображения кнопки
+  // Запрос выполняется только если есть контекст и answerId
+  const shouldCheckLogs = !!answerId && !!graphLogsContext;
+  const { data: graphLogs } = useGraphLogsQuery(
+    shouldCheckLogs ? answerId : undefined
+  );
+
+  const hasGraphLogs = graphLogs && graphLogs.length > 0;
 
   const getStoredPhoneNumber = (): string | undefined => {
     try {
@@ -279,6 +293,16 @@ export const Message = ({
             >
               <RefreshCw className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </button>
+            {!isCompact &&
+              answerId &&
+              graphLogsContext &&
+              hasGraphLogs &&
+              graphLogs && (
+                <SourcesButton
+                  count={graphLogs.length}
+                  onClick={() => graphLogsContext?.openGraphLogs(answerId)}
+                />
+              )}
           </div>
         )}
       </div>
