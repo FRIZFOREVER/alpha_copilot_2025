@@ -4,11 +4,12 @@ import {
   MessageSquare,
   X,
   ChevronDown,
-  ChevronUp,
   ChevronRight,
   ChartArea,
   SquarePen,
+  Clock,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/shared/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
 import { cn } from "@/shared/lib/mergeClass";
@@ -23,7 +24,6 @@ import {
   getUserInitials,
   getDisplayName,
 } from "@/shared/lib/utils/userHelpers";
-import { getChatIcon, getChatInitial } from "@/shared/lib/utils/chatHelpers";
 import { Icon, IconTypes } from "@/shared/ui/icon";
 import { useChatCollapse } from "@/shared/lib/chatCollapse";
 
@@ -40,6 +40,7 @@ export const Sidebar = () => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["chats"])
   );
+  const [hoveredHistoryButton, setHoveredHistoryButton] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams<{ chatId?: string }>();
@@ -154,7 +155,7 @@ export const Sidebar = () => {
           shouldHideSidebar && "hidden md:hidden"
         )}
       >
-        <div className="flex items-center justify-between px-3.5 py-3 pb-0">
+        <div className="flex items-center justify-between px-3.5 py-3 pb-2.5">
           <div
             className={cn(
               "flex items-center justify-start w-full",
@@ -233,35 +234,28 @@ export const Sidebar = () => {
               </button>
             </div>
           ) : (
-            <div className="px-2 space-y-0">
-              <button
-                className={cn(
-                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3"
-                )}
-              >
-                <span className="text-zinc-500 font-medium">Обзор</span>
-              </button>
+            <div className="px-2 space-y-1">
               <button
                 onClick={() => {
                   openModal(EModalVariables.SEARCH_CHATS_MODAL);
                 }}
                 className={cn(
-                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
-                  "text-gray-700 hover:bg-[#0000000f]/60"
+                  "w-full text-left px-3 border py-[9px] rounded-4xl transition-all text-sm flex items-center gap-1.5 cursor-pointer bg-[#0000000f]/60",
+                  "text-gray-700"
                 )}
               >
-                <Search className="h-5 w-5 text-gray-500" />
-                <span>Поиск в чатах</span>
+                <Search className="h-[18px] w-[18px] text-gray-500" />
+                <span>Поиск</span>
               </button>
 
               <button
                 onClick={handleNewChat}
                 className={cn(
-                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
+                  "w-full text-left px-3 py-2.5 rounded-3xl transition-all text-sm flex items-center gap-1.5 cursor-pointer",
                   "text-gray-700 hover:bg-[#0000000f]/60"
                 )}
               >
-                <SquarePen className="h-5 w-5 text-gray-500" />
+                <SquarePen className="h-[18px] w-[18px] text-gray-500" />
                 <span>Новый чат</span>
               </button>
 
@@ -273,11 +267,11 @@ export const Sidebar = () => {
                   setIsMobileOpen(false);
                 }}
                 className={cn(
-                  "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer",
+                  "w-full text-left px-3 py-2.5 rounded-3xl transition-all text-sm flex items-center gap-1.5 cursor-pointer",
                   "text-gray-700 hover:bg-[#0000000f]/60"
                 )}
               >
-                <ChartArea className="h-5 w-5 text-gray-500" />
+                <ChartArea className="h-[18px] w-[18px] text-gray-500" />
                 <span>Аналитика</span>
               </button>
 
@@ -288,56 +282,65 @@ export const Sidebar = () => {
                   <div key={group.id}>
                     <button
                       onClick={() => toggleSection(group.id)}
+                      onMouseEnter={() => setHoveredHistoryButton(true)}
+                      onMouseLeave={() => setHoveredHistoryButton(false)}
                       className={cn(
-                        "w-full text-left px-3 py-2.5 rounded-lg transition-all text-sm flex items-center gap-3"
+                        "w-full text-left px-2 py-2 gap-0.5 hover:bg-[#0000000f]/60 cursor-pointer rounded-3xl transition-all text-sm flex items-center"
                       )}
                       disabled={!filteredChats.length}
                     >
-                      <span className="text-zinc-500 font-medium flex-1">
-                        Чаты
+                      <span className="rounded-full p-1 hover:bg-[#0000000f]/80 transition-all duration-300">
+                        {hoveredHistoryButton ? (
+                          isExpanded ? (
+                            <ChevronRight className="h-[18px] w-[18px] text-gray-400 cursor-pointer" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-gray-400 cursor-pointer" />
+                          )
+                        ) : (
+                          <Clock className="h-[18px] w-[18px] text-gray-400" />
+                        )}
                       </span>
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4 text-gray-400 cursor-pointer" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-gray-400 cursor-pointer" />
-                      )}
+
+                      <span className="text-zinc-500 font-medium flex-1">
+                        История
+                      </span>
                     </button>
 
-                    {isExpanded && group.items.length > 0 && (
-                      <div className="mt-1 space-y-0.5">
-                        {group.items.map((chat) => {
-                          const isActive = currentChatId === chat.id;
-                          const chatColor = getChatIcon(chat.id);
-                          const chatInitial = getChatInitial(chat.title);
+                    <AnimatePresence>
+                      {isExpanded && group.items.length > 0 && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-1 space-y-0.5 ml-[21px] pl-[8px] border-l">
+                            {group.items.map((chat) => {
+                              const isActive = currentChatId === chat.id;
 
-                          return (
-                            <button
-                              key={chat.id}
-                              onClick={() => handleSelectChat(chat.id)}
-                              className={cn(
-                                "w-full text-left px-3 py-2 rounded-lg transition-all text-sm flex items-center gap-3 cursor-pointer hover:bg-[#0000000f]/60",
-                                isActive && "bg-[#0000000f] text-gray-900"
-                              )}
-                            >
-                              <div
-                                className={cn(
-                                  "h-6 w-6 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0",
-                                  chatColor
-                                )}
-                              >
-                                {chatInitial}
-                              </div>
-                              <span className="truncate flex-1 text-gray-700">
-                                {chat.title}
-                              </span>
-                              {isActive && (
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
+                              return (
+                                <button
+                                  key={chat.id}
+                                  onClick={() => handleSelectChat(chat.id)}
+                                  className={cn(
+                                    "w-full text-left px-3 py-2 rounded-2xl transition-all text-sm flex items-center gap-3 cursor-pointer hover:bg-[#0000000f]/60",
+                                    isActive && "bg-[#0000000f] text-gray-900"
+                                  )}
+                                >
+                                  <span className="truncate flex-1 text-gray-700">
+                                    {chat.title}
+                                  </span>
+                                  {isActive && (
+                                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 );
               })}
@@ -354,7 +357,7 @@ export const Sidebar = () => {
 
         <div
           className={cn(
-            "py-2 border-t border-gray-200/50 bg-[#0000000f] rounded-2xl m-2",
+            "py-2 border-t border-gray-200/50 hover:bg-[#0000000f] bg-[#0000000f]/60 rounded-3xl m-2",
             isCollapsed && "bg-[#f9f9f9]"
           )}
         >

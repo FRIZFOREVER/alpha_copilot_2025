@@ -4,7 +4,7 @@ import { Mic, ChevronUp, X, Check, Paperclip } from "lucide-react";
 import { cn } from "@/shared/lib/mergeClass";
 import { useComputerVoiceRecorder } from "@/entities/chat/hooks/useComputerVoiceRecorder";
 import { formatTime } from "@/shared/lib/utils/timeHelpers";
-import { Suggestions, type Suggestion } from "../suggestions";
+import { type Suggestion } from "../suggestions";
 import { useFileAttachments } from "../../hooks/useFileAttachments";
 import { FileBadge } from "../fileBadge";
 import { uploadFile } from "@/entities/chat/api/chatService";
@@ -26,7 +26,6 @@ export const ChatInput = ({
   onSendVoice,
   placeholder = "Спросите что-нибудь...",
   disabled = false,
-  suggestions,
   isCompact = false,
 }: ChatInputProps) => {
   const [message, setMessage] = useState("");
@@ -145,11 +144,11 @@ export const ChatInput = ({
     }
   };
 
-  const handleSuggestionSelect = (suggestion: Suggestion) => {
-    const fullText = `${suggestion.title} ${suggestion.subtitle}`;
-    setMessage(fullText);
-    textareaRef.current?.focus();
-  };
+  // const handleSuggestionSelect = (suggestion: Suggestion) => {
+  //   const fullText = `${suggestion.title} ${suggestion.subtitle}`;
+  //   setMessage(fullText);
+  //   textareaRef.current?.focus();
+  // };
 
   const handleTagSelect = (tag: TagId) => {
     const cursorPosition = textareaRef.current?.selectionStart || 0;
@@ -289,21 +288,21 @@ export const ChatInput = ({
   }, [showTagSelector]);
 
   return (
-    <div className="bg-white">
+    <div>
       <div
         className={cn(
-          "mx-auto max-w-[832px] px-4 md:px-8 py-4",
+          "mx-auto max-w-[772px] px-4 md:px-0 pb-4 rounded-4xl",
           isCompact && "px-4 md:px-4"
         )}
       >
-        {suggestions && suggestions.length > 0 && (
+        {/* {suggestions && suggestions.length > 0 && (
           <Suggestions
             suggestions={suggestions}
             onSelect={handleSuggestionSelect}
             isCompact={isCompact}
             className="mb-2"
           />
-        )}
+        )} */}
         <div className="relative overflow-visible" ref={tagSelectorRef}>
           {showTagSelector && (
             <TagSelector

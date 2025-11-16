@@ -1,5 +1,3 @@
-import { MessageData } from "@/shared/types/message";
-
 export interface CreateChatDto {
   name: string;
 }

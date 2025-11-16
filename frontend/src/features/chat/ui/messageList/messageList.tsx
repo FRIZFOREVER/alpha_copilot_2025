@@ -6,16 +6,13 @@ import { cn } from "@/shared/lib/mergeClass";
 import { useEffect } from "react";
 import type { MessageData } from "@/shared/types/message";
 import { useChatScroll } from "../../hooks/useChatScroll";
+import { ScrollToBottomButton } from "../scrollToBottomButton";
 
 export interface MessageListProps {
   messages: MessageData[];
   isLoading?: boolean;
   isCompact?: boolean;
   onScrollContainerReady?: (ref: React.RefObject<HTMLElement>) => void;
-  onScrollStateChange?: (
-    isAtBottom: boolean,
-    scrollToBottom: () => void
-  ) => void;
 }
 
 export const MessageList = ({
@@ -23,7 +20,6 @@ export const MessageList = ({
   isLoading = false,
   isCompact = false,
   onScrollContainerReady,
-  onScrollStateChange,
 }: MessageListProps) => {
   const lastMessage = messages[messages.length - 1];
 
@@ -38,12 +34,6 @@ export const MessageList = ({
     channelId: "chat",
     chatRef: contentRef,
   });
-
-  useEffect(() => {
-    if (onScrollStateChange) {
-      onScrollStateChange(isAtBottom, scrollToBottom);
-    }
-  }, [isAtBottom, scrollToBottom, onScrollStateChange]);
 
   useEffect(() => {
     if (onScrollContainerReady && contentRef.current) {
@@ -81,8 +71,10 @@ export const MessageList = ({
     return () => cancelAnimationFrame(rafId);
   }, [lastMessage?.content, lastMessage?.isUser, contentRef]);
 
+  const showScrollButton = !isAtBottom && messages.length > 0;
+
   return (
-    <ScrollArea className="flex-1 max-w-[832px]" ref={contentRef}>
+    <ScrollArea className="flex-1 max-w-[832px] relative" ref={contentRef}>
       <div
         className={cn(
           messages.length === 0 && "h-full flex items-center justify-center"
@@ -94,6 +86,7 @@ export const MessageList = ({
           messages.map((message) => (
             <Message
               key={message.id}
+              id={message.id}
               isCompact={isCompact}
               content={message.content}
               isUser={message.isUser}
@@ -106,6 +99,11 @@ export const MessageList = ({
           ))
         )}
       </div>
+      <ScrollToBottomButton
+        isCompact={isCompact}
+        show={showScrollButton}
+        onClick={scrollToBottom}
+      />
     </ScrollArea>
   );
 };

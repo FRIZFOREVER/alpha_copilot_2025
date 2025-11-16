@@ -24,6 +24,7 @@ import { sendTelegramMessage } from "@/entities/auth/api/authService";
 import { TelegramContact } from "@/entities/auth/types/types";
 
 export interface MessageProps {
+  id: string;
   content: string;
   isUser: boolean;
   answerId?: number;
@@ -35,6 +36,7 @@ export interface MessageProps {
 }
 
 export const Message = ({
+  id,
   content,
   isUser,
   answerId,
@@ -133,6 +135,7 @@ export const Message = ({
 
   return (
     <div
+      data-message-id={id}
       className={cn(
         "flex gap-4 px-4 md:px-8 py-4 md:py-6",
         isUser ? "justify-end" : "justify-start",
