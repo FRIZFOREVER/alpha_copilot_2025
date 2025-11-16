@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { LoginSchema, TypeLoginSchema } from "../lib/schemes/loginSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem } from "@/shared/ui/form/form";
-import { CircleAlert, X } from "lucide-react";
+import { CircleAlert, X, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/shared/ui";
 import { Link } from "react-router-dom";
 import { FloatingLabelInput } from "@/shared/ui/input/floatingInputLabel";
@@ -11,6 +12,8 @@ import { ERouteNames } from "@/shared/lib/routeVariables";
 import { useLoginMutation } from "../hooks/useLogin";
 
 export const LoginForm = () => {
+  const [showPassword, setShowPassword] = useState(false);
+
   const form = useForm<TypeLoginSchema>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -85,9 +88,9 @@ export const LoginForm = () => {
                   <FloatingLabelInput
                     {...field}
                     label="Пароль"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     className={cn(
-                      "py-1.5 text-black bg-[#f0f3f7] rounded-3xl shadow-sm border-[#f0f3f7]",
+                      "py-1.5 text-black bg-[#f0f3f7] rounded-3xl shadow-sm border-[#f0f3f7] pr-12",
                       errors.password && "border-red-700",
                     )}
                   />
@@ -96,19 +99,38 @@ export const LoginForm = () => {
                       {errors.password.message}
                     </span>
                   )}
-                  {field.value && !errors.password && (
-                    <button
-                      className="absolute right-4 top-4.5 text-blue-800 cursor-pointer"
-                      onClick={() => field.onChange("")}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                  {errors.password && (
-                    <button className="absolute right-4 top-4.5 text-red-800 cursor-pointer">
-                      <CircleAlert className="w-4 h-4" />
-                    </button>
-                  )}
+                  <div className="absolute right-4 top-4.5 flex items-center gap-2">
+                    {field.value && !errors.password && (
+                      <>
+                        <button
+                          type="button"
+                          className="text-blue-800 cursor-pointer hover:text-blue-900"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          className="text-blue-800 cursor-pointer hover:text-blue-900"
+                          onClick={() => field.onChange("")}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
+                    {errors.password && (
+                      <button
+                        type="button"
+                        className="text-red-800 cursor-pointer"
+                      >
+                        <CircleAlert className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </FormItem>
               )}
             />

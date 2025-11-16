@@ -16,7 +16,7 @@ interface OnboardingContextType {
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(
-  undefined,
+  undefined
 );
 
 export const useOnboarding = () => {
@@ -32,14 +32,27 @@ interface OnboardingProviderProps {
 }
 
 export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
-  const [isOnboardingCompleted, setIsOnboardingCompleted] = useState(false);
+  const [isOnboardingCompleted, setIsOnboardingCompleted] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const completed = localStorage.getItem(
+      ELocalStorageKeys.ONBOARDING_COMPLETED
+    );
+    return completed === "true";
+  });
   const [isOnboardingActive, setIsOnboardingActive] = useState(false);
 
   useEffect(() => {
-    const completed = localStorage.getItem(
-      ELocalStorageKeys.ONBOARDING_COMPLETED,
-    );
-    setIsOnboardingCompleted(completed === "true");
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === ELocalStorageKeys.ONBOARDING_COMPLETED) {
+        setIsOnboardingCompleted(e.newValue === "true");
+        if (e.newValue === "true") {
+          setIsOnboardingActive(false);
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   const startOnboarding = () => {
