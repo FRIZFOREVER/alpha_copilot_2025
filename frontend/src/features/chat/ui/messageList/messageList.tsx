@@ -147,7 +147,10 @@ export const MessageList = ({
       {scrollButtonContainerRef?.current &&
         createPortal(
           <div
-            className="absolute right-0 md:-right-7 z-50 pointer-events-auto"
+            className={cn(
+              "absolute right-0 md:-right-7 z-50 pointer-events-auto",
+              isCompact && "md:-right-3"
+            )}
             style={{
               bottom: `${Math.max(24, inputHeight + 4)}px`,
             }}

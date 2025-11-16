@@ -14,7 +14,7 @@ export const useGraphLogsQuery = (answerId: number | undefined) => {
       const response = await getGraphLogs(answerId);
       return response;
     },
+    retry: false,
     enabled: !!answerId,
   });
 };
-
