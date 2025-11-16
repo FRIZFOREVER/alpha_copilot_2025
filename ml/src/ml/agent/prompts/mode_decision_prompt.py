@@ -1,9 +1,11 @@
 """Prompt builder and structured schema for selecting the reasoning mode."""
 
+from collections.abc import Sequence
+
 from pydantic import BaseModel, Field, field_validator
 
-from ml.agent.prompts.system_prompt import extract_system_prompt
-from ml.configs.message import ChatHistory, ModelMode, RequestPayload
+from ml.agent.prompts.system_prompt import get_system_prompt
+from ml.configs.message import ChatHistory, ModelMode, Tag, UserProfile
 
 
 class ModeDecisionResponse(BaseModel):
@@ -24,43 +26,56 @@ class ModeDecisionResponse(BaseModel):
         return value
 
 
-def get_mode_decision_prompt(payload: RequestPayload) -> ChatHistory:
+def get_mode_decision_prompt(
+    *,
+    profile: UserProfile,
+    conversation_summary: str,
+    tag: Tag | None = None,
+    evidence: Sequence[str] | None = None,
+) -> ChatHistory:
     """Construct a prompt that asks the model to choose a reasoning mode."""
 
-    prompt: ChatHistory = ChatHistory()
+    persona_text = get_system_prompt(profile)
 
-    system_sections: list[str] = []
-    system_sections.append(extract_system_prompt(payload.messages))
-    system_sections.append(
-        "Ты выступаешь в роли диспетчера, который выбирает стратегию ответа для ассистента."
-    )
-    system_sections.append(
-        "Выбери один режим из списка: fast (моментальный ответ), "
-        "thiking (углублённое рассуждение) или research (исследование с инструментами)."
-    )
-    system_sections.append("Ответ должен быть в формате JSON с единственным полем mode.")
-    prompt.add_or_change_system("\n".join(system_sections))
+    system_sections: list[str] = [
+        "Ты выступаешь в роли диспетчера, который выбирает стратегию ответа для ассистента.",
+        (
+            "Выбери один режим из списка: fast (моментальный ответ), "
+            "thinking (углублённое рассуждение) или research (исследование с инструментами)."
+        ),
+        "Ответ должен быть в формате JSON с единственным полем mode.",
+        "Персона ассистента:\n" + persona_text,
+    ]
 
-    user_sections: list[str] = []
-    conversation_dump: str = payload.messages.model_dump_string()
-    if conversation_dump:
-        user_sections.append("Диалог:\n" + conversation_dump)
+    if conversation_summary:
+        system_sections.append("Сжатая выжимка последних сообщений:\n" + conversation_summary)
     else:
-        user_sections.append("Диалог:\nнет сообщений")
+        system_sections.append("Сжатая выжимка последних сообщений отсутствует.")
 
-    if payload.tag is not None:
-        user_sections.append("Текущий тег беседы: " + payload.tag.value)
+    if tag is not None:
+        system_sections.append("Текущий тег беседы: " + tag.value)
 
-    user_sections.append("Запрошенный режим: auto")
-    user_sections.append(
-        "Учти сложность и контекст задачи, а затем выбери наиболее подходящий режим.\n"
-        "Для Задач, которые не требуют поиска дополнительной информации, определи режим fast\n"
-        "Если пользователь уточняет, что требуется исследование или просить сравнить информацию из "
-        "разных источников, то выбери режим research\n"
-        "Если пользователь спрашивает вопрос, фактов для ответа на которой не содержиться в "
-        "истории чата, то следует выбрать режим thinking"
-        "Если ты сомневаешься, то выбирай режим thinking"
-    )
+    if evidence:
+        evidence_lines = [item for item in evidence if item]
+        if evidence_lines:
+            formatted_evidence = "\n".join(f"- {item}" for item in evidence_lines)
+            system_sections.append("Накопленные факты и наблюдения:\n" + formatted_evidence)
+
+    prompt = ChatHistory()
+    prompt.add_or_change_system("\n\n".join(system_sections))
+
+    user_sections: list[str] = [
+        "Запрошенный режим: auto",
+        (
+            "Стандартный режим — thinking. Используй его для большинства запросов и всегда, когда"
+            " остаются сомнения.\n"
+            "Режим research выбирай только если пользователь просит провести анализ, исследование"
+            " темы или сгенерировать новые идеи. Он не предназначен для простого поиска фактов.\n"
+            "Режим fast выбирай только когда ответ уже есть в истории чата, а текущий запрос —"
+            " уточнение, правка или простой вопрос, ответ на который явно содержится в предыдущих"
+            " сообщениях."
+        ),
+    ]
 
     prompt.add_user("\n\n".join(user_sections))
 
