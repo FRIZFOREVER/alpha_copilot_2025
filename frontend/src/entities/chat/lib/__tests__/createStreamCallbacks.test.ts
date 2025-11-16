@@ -15,6 +15,14 @@ describe("createStreamCallbacks", () => {
     question: "Test question",
     tag: "general",
     mode: "fast",
+    profile: {
+      fio: "Яровицын Егор Викторович",
+      additional_instructions: "",
+      business_info: "",
+      id: 1,
+      login: "egor@gmail.com",
+      user_info: "",
+    },
   };
 
   beforeEach(() => {

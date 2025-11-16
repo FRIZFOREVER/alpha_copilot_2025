@@ -23,9 +23,11 @@ export const useSendVoiceMutation = () => {
     mutationFn: async ({
       chatId,
       voiceBlob,
+      profile,
     }: {
       chatId: number;
       voiceBlob: Blob;
+      profile: SendMessageStreamDto["profile"];
     }): Promise<SendVoiceResult> => {
       const voiceResponse: SendVoiceResponse = await sendVoice(voiceBlob);
 
@@ -74,6 +76,7 @@ export const useSendVoiceMutation = () => {
         voice_url: voiceResponse.voice_url,
         mode: "fast",
         tag: "",
+        profile,
       };
 
       return new Promise((resolve, reject) => {

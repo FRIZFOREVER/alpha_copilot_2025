@@ -12,7 +12,12 @@ services:
       - ollama:/root/.ollama
     environment:
       - OLLAMA_AUTH=disabled
+      - CUDA_VISIBLE_DEVICES=""
     restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices: []
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:11434/api/tags"]
       interval: 30s
