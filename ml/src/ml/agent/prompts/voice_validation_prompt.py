@@ -1,5 +1,6 @@
-from ml.configs.message import ChatHistory
 from pydantic import BaseModel
+
+from ml.configs.message import ChatHistory
 
 
 class VoiceValidationResponse(BaseModel):
