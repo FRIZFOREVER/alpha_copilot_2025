@@ -83,6 +83,7 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
         conversation_summary=conversation_summary,
         tool_name=observation.tool_name,
         documents=documents,
+        turn_history=state.turn_history,
     )
 
     summary: str = client.call(messages=prompt)

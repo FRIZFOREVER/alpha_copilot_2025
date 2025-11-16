@@ -3,7 +3,6 @@
 from collections.abc import Sequence
 
 from ml.agent.graph.state import ResearchTurn
-from ml.agent.prompts.system_prompt import get_system_prompt
 from ml.configs.message import ChatHistory, Role, UserProfile
 
 
@@ -49,15 +48,45 @@ def _format_documents(tool_name: str, documents: Sequence[str]) -> str:
     return "\n".join(lines)
 
 
+def _build_observer_persona_block(profile: UserProfile) -> str:
+    """Return a persona section tailored for interpreting tool observations."""
+
+    lines: list[str] = ["Персональный контекст пользователя для наблюдений:"]
+    has_details = False
+
+    if profile.username:
+        lines.append(f"- Полное имя: {profile.username}")
+        has_details = True
+
+    if profile.user_info:
+        lines.append(f"- Самоописание пользователя: {profile.user_info}")
+        has_details = True
+
+    if profile.business_info:
+        lines.append(f"- Описание бизнеса: {profile.business_info}")
+        has_details = True
+
+    if profile.additional_instructions:
+        lines.append("- Приоритетные указания пользователя:"
+                     " " + profile.additional_instructions)
+        has_details = True
+
+    if not has_details:
+        lines.append("- Пользователь не предоставил дополнительных сведений.")
+
+    return "\n".join(lines)
+
+
 def get_research_observation_prompt(
     profile: UserProfile,
     conversation_summary: str,
     tool_name: str,
     documents: Sequence[str],
+    turn_history: Sequence[ResearchTurn] | None = None,
 ) -> ChatHistory:
     """Build a prompt for interpreting tool outputs and updating the plan."""
 
-    persona_text = get_system_prompt(profile)
+    persona_block = _build_observer_persona_block(profile)
     conversation_block = (
         "Контекст диалога:\n" + conversation_summary
         if conversation_summary
@@ -65,10 +94,11 @@ def get_research_observation_prompt(
     )
 
     documents_block = "Последние данные от инструмента:\n" + _format_documents(tool_name, documents)
+    history_block = summarize_turn_history_for_observer(turn_history or ())
 
     system_sections: list[str] = [
         "Вы — аналитичный исследователь, который изучает новые данные и обобщает находки.",
-        "Персона ассистента:\n" + persona_text,
+        persona_block,
         conversation_block,
         history_block,
         documents_block,
