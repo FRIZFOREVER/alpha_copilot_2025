@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useSocket } from "@/entities/socket/model/context";
+import { GraphLogWebSocketMessage } from "@/entities/chat/types/types";
 
 export interface GraphLogMessage {
   message?: string;
@@ -8,7 +9,7 @@ export interface GraphLogMessage {
 }
 
 export const useGraphLogEvents = (
-  onMessage?: (data: GraphLogMessage) => void,
+  onMessage?: (data: GraphLogWebSocketMessage) => void,
   onConnectionEstablished?: (uuid: string) => void,
 ) => {
   const { graphLogSocket } = useSocket();
@@ -18,15 +19,27 @@ export const useGraphLogEvents = (
 
     const handleMessage = (event: MessageEvent) => {
       try {
-        const parsedData = JSON.parse(event.data) as GraphLogMessage;
+        const parsedData = JSON.parse(event.data);
 
         if (parsedData.type === "connection_established" && parsedData.uuid) {
           onConnectionEstablished?.(parsedData.uuid);
           return;
         }
 
+        // Проверяем, является ли сообщение GraphLogWebSocketMessage
+        if (
+          parsedData.tag &&
+          parsedData.answer_id !== undefined &&
+          parsedData.message
+        ) {
+          const graphLogMessage = parsedData as GraphLogWebSocketMessage;
+          onMessage?.(graphLogMessage);
+          return;
+        }
+
+        // Старый формат для обратной совместимости
         if (parsedData.message) {
-          onMessage?.(parsedData);
+          onMessage?.(parsedData as unknown as GraphLogWebSocketMessage);
         }
       } catch (error) {
         console.error("Ошибка при парсинге сообщения graph_log:", error);

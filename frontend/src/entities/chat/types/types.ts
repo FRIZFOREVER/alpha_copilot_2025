@@ -96,3 +96,19 @@ export interface SearchMessageResult extends Omit<HistoryMessage, "tag"> {
 }
 
 export type SearchMessagesResponse = SearchMessageResult[] | null;
+
+export interface GraphLog {
+  id: number;
+  tag: string;
+  message: string;
+  log_time: string;
+  answer_id: number;
+}
+
+export type GetGraphLogsResponse = GraphLog[];
+
+export interface GraphLogWebSocketMessage {
+  tag: string;
+  answer_id: number;
+  message: string;
+}
