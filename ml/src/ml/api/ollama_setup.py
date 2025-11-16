@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+from collections.abc import Iterator
 from typing import Any, cast
 
 import ollama
@@ -37,7 +38,15 @@ async def download_missing_models(available_models: list[str], requested_models:
     if to_download:
         logger.info("Downloading missing models: %s", ", ".join(to_download))
         for model in to_download:
-            ollama.pull(model=model)
+            download_stream: Iterator[ollama.ProgressResponse] = ollama.pull(
+                model=model, stream=True
+            )
+            for progress in download_stream:
+                logger.info(
+                    "Downloading %s: %s",
+                    model,
+                    progress.model_dump(exclude_none=True),
+                )
     logger.info("All required models are downloaded")
 
 
