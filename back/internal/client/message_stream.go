@@ -37,7 +37,6 @@ type PayloadStream struct {
 	FileURL   string    `json:"file_url"`
 	IsVoice   bool      `json:"is_voice"`
 	Profile   Profile   `json:"profile"`
-	AnswerID  int        `json:"answer_id"`
 }
 
 // StreamMessage представляет структуру сообщения из стрима.

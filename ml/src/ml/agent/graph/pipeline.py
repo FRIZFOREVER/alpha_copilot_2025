@@ -107,10 +107,10 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
     # Create Reasoning model client
     client: ReasoningModelClient = ReasoningModelClient()
 
-    # Инициализация GraphLogClient если есть answer_id
+    # Инициализация GraphLogClient если есть chat_id
     graph_log_client: GraphLogClient | None = None
     loop = None
-    if payload.answer_id:
+    if payload.chat_id:
         try:
             backend_url = get_backend_url()
             graph_log_client = GraphLogClient(
@@ -155,11 +155,19 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
     # Create Graph
     app: StateGraph = create_pipeline(client)
 
+    # Извлекаем question_id из последнего сообщения с role="user"
+    question_id: int | None = None
+    for message in reversed(payload.messages.messages):
+        if message.role.value == "user" and message.id is not None:
+            question_id = message.id
+            break
+
     # Create initial state with graph_log_client and event loop
     state: GraphState = GraphState(
         payload=payload,
         graph_log_client=graph_log_client,
         graph_log_loop=loop if graph_log_client else None,
+        question_id=question_id,
     )
 
     try:

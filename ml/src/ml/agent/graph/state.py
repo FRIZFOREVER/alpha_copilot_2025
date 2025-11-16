@@ -114,3 +114,8 @@ class GraphState(BaseModel):
         description="Event loop for sending graph logs asynchronously",
         exclude=True,
     )
+    question_id: Optional[int] = Field(
+        default=None,
+        description="ID вопроса из последнего сообщения с role='user'",
+        exclude=True,
+    )

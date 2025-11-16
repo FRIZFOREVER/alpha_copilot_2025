@@ -47,13 +47,13 @@ class GraphLogClient:
             self.connected = False
             return False
 
-    async def send_log(self, tag: str, answer_id: int, message: str) -> bool:
+    async def send_log(self, tag: str, question_id: int, message: str) -> bool:
         """
         Отправка лога через WebSocket.
 
         Args:
             tag: Тег лога
-            answer_id: ID ответа
+            question_id: ID вопроса (из последнего сообщения с role="user")
             message: Сообщение лога
 
         Returns:
@@ -66,7 +66,7 @@ class GraphLogClient:
         try:
             log_message = {
                 "tag": tag,
-                "answer_id": answer_id,
+                "answer_id": question_id,  # Передаем question_id, бэкенд получит answer_id по нему
                 "message": message,
             }
             await self.ws.send(json.dumps(log_message))

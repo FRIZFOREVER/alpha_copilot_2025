@@ -64,7 +64,7 @@ def research_react_node(state: GraphState, client: ReasoningModelClient) -> Grap
     # Логирование reasoning
     if (
         state.graph_log_client
-        and state.payload.answer_id
+        and state.question_id
         and state.payload.tag
         and state.graph_log_loop
     ):
@@ -73,7 +73,7 @@ def research_react_node(state: GraphState, client: ReasoningModelClient) -> Grap
             state.graph_log_loop.run_until_complete(
                 state.graph_log_client.send_log(
                     tag=state.payload.tag.value,
-                    answer_id=state.payload.answer_id,
+                    question_id=state.question_id,
                     message=f"Research React - Reasoning: {response.thought[:500]}",
                 )
             )
