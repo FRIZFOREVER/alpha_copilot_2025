@@ -1,222 +1,80 @@
-## Setting up for Development
+<div align="center">
+  
+# АЛЬФА БУДУЩЕЕ ХАКАТОН <br> Разработка copilot-приложения для клиентов микробизнеса
 
-### Install project
+<img height="300" alt="logo" src="assets/header.jpg">
 
-git clone repo via any way you like
+</div> 
 
-For windows: make sure you are running git bash terminal inside VS Code, not powershell
 
-update pip and install uv 
-```bash
-pip install --upgrade pip
-pip install uv
+## Оглавление
+- ### [Кейс](#1)
+- ### [Решение](#2)
+- ### [Запуск кода](#3)
+- ### [Уникальность нашего решения](#4)
+- ### [Стек](#5)
+- ### [Команда](#6)
+- ### [Скринкаст](#7)
+
+## <a name="1"> Кейс </a>
+
+Разработайте приложение-помощник, которое поможет владельцам малого бизнеса эффективно решать повседневные задачи с использованием возможностей LLM (Language Learning Models). Приложение должно предоставлять рекомендации по ключевым аспектам бизнеса, таким как юридические вопросы, маркетинг, финансы и другие.
+
+## <a name="2">Решение </a>
+
+### Архетиктура решения
+
+Решение представляет собой ...
+
+### Архетиктура модели
+
+...
+
+## <a name="3">Запуск кода </a>
+
+### Последовательные шаги для запуска кода:
+1. Склонируйте гит репозиторий;
+```Bash
+git clone https://github.com/FRIZFOREVER/alfa_copilot_2025.git
 ```
+2. 
 
-create venv via uv inside ml:
-```bash
-cd ml
-uv venv
-```
-### CONFIGURE .gitignore !
+3. 
 
-create .gitignore at:
-- agent-base/
-- agent-base/ml/
+4. Для доступа к сайту необходимо перейти по ссылке http://localhost:
 
-via cli:
 
-```bash
-( curl -fsSL https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore
-  echo
-  echo ".gitignore"                                                                                   
-  echo ".vscode/*"
-) > .gitignore
-```
+## <a name="4">Уникальность нашего решения </a>
 
-### Sync project
+### Киллерфичи:
+1. 
+2. 
 
-#### Linux
+3. 
 
-```bash
-source .venv/bin/activate 
-uv sync
-```
+## <a name="5">Стек </a>
+<div align="center">
+  <img src="https://github.com/devicons/devicon/blob/master/icons/python/python-original-wordmark.svg" title="Python" alt="Python" height="40"/>&nbsp;
+  <img src="https://github.com/devicons/devicon/blob/master/icons/pytorch/pytorch-original.svg" title="Pytorch" alt="Pytorch" height="40"/>&nbsp;
+  <img src="https://github.com/devicons/devicon/blob/master/icons/numpy/numpy-original.svg" title="Numpy" alt="Numpy" height="40"/>&nbsp;
+  <img src="https://github.com/devicons/devicon/blob/master/icons/opencv/opencv-original.svg" title="OpenCV" alt="OpenCV" height="40"/>&nbsp;
+  <img src="https://pjreddie.com/media/image/yologo_2.png" title="Yolo" alt="Yolo" height="40"/>&nbsp;
+  <img src="https://fuzeservers.ru/wp-content/uploads/4/7/b/47bf752c2f13d3f13363ea5b624bd2db.png" title="JS" alt="JS"  height="40"/>&nbsp;
+  <img src="https://fronty.com/static/uploads/1.11-30.11/languages%20in%202022/go.png" title="GO" alt="GO" height="40"/>&nbsp;
+  <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Flask_logo.svg"  title="Flask" alt="Flask" height="40"/>
+</div>
 
-#### Windows 
+## <a name="6">Команда </a>
+-
+*Состав команды "Жабки МИСИС"*   
 
-```bash
-source .venv/scripts/activate
-uv sync
-```
+- <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @facT0RR, Маслов Денис - Backend-developer</h3>
+- <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @FRIZFOREVER, Хромов Кирилл - ML-engineer</h3>
+- <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @egoryaaa, Яровицын Егор - Frontend-developer</h3>
+- <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @Llaceyne, Гулария Лана - UI/UX Designer </h3>
+- <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @Magoxdd, Магомедов Мариф - ML-engineer</h3>
 
-## VS code setup
 
-### Trash files excluding
+## <a name="7">Скринкаст </a>
 
-VS code exclude cache setup + quicks:
-Open File -> Preferences -> Settings -> Search: exclude
-Inside "files: exclude" -> add patterns: 
-1. `**/__pycache__` - python cache
-2. `**/*.pyc` - python runtime cache
-3. `**/.pytest_cache` - pytest cache
-4. (OPTIONAL) `/.venv` - local environment
-5. (OPTIONAL) `/.git` - git folder (can be excluded via other setting, search git instead RECOMMENDED)
-
-### VS Code .venv
-Setup current local environment to make Pylance Shut up:
-ctrl+shift+P -> Python: Select Interpreter -> Enter Interpreter path -> navigate according to OS:
-- linux    - `agent-base/ml/.venv/bin/activate`
-- windows  - `agent-base/ml/.venv/scripts/python.exe`
-
-## Testing
-Run tests:
-```bash
-uv run pytest
-```
-
-## CUDA
-
-Adjust models in .env if needed
-
-### Linux
-
-Install via your package manager
-Fedora 42 driver installation example: 
-```bash
-sudo dnf upgrade -y
-sudo dnf install -y \
-  https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
-  https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-sudo dnf install -y akmod-nvidia xorg-x11-drv-nvidia-cuda
-sudo reboot
-```
-
-Linux general docker nvidia-container-toolkit:
-```bash
-curl -fsSL https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \
-  sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
-sudo dnf install -y nvidia-container-toolkit
-sudo nvidia-ctk runtime configure --runtime=docker
-sudo systemctl restart docker
-```
-
-### Windows
-
-1) NVIDIA Driver (Windows)
-  - Install latest GeForce/Studio driver from NVIDIA → reboot.
-
-2) Enable WSL2
-  - Start → “Turn Windows features on or off”
-  - Check: “Virtual Machine Platform” and “Windows Subsystem for Linux” → OK → reboot.
-
-3) Linux distro
-  - Microsoft Store → install “Ubuntu” (or your choice) → launch once to finish setup.
-
-4) Docker Desktop
-  - Install Docker Desktop.
-  - Settings → General → ✔ “Use the WSL 2 based engine”
-  - Settings → Resources → WSL Integration → ✔ your distro (e.g., Ubuntu) → Apply & Restart.
-
-### ollama Testing
-
-This command should give non-empty json with created models
-```bash
-curl -s http://localhost:11434/api/tags
-```
-
-## Docker image via Dockerfile
-
-from ml directory
-```bash
-docker build -t agent-base .
-docker run --rm -p 8000:8000 agent-base
-```
-
-## Compose service
-
-### Linux
-Navigate to compose.yaml and click "run all services"
-
-or CLI way:
-- upp'ing service
-```bash
-docker compose up --build
-```
-- shutting it down after Ctrl+C or in another terminal:
-```bash
-docker compose down
-```
-
-### Windows
-Navigate to compose.windows.yaml and click "run all services"
-
-or CLI way:
-- upp'ing service
-```bash
-docker compose -f compose.windows.yml up --build
-```
-- shutting it down after Ctrl+C or in another terminal:
-```bash
-docker compose -f compose.windows.yml down
-```
-
-## Project policy's
-
-### English-only including:
-- instructions
-- comments
-- tests
-- obviously code and deployment
-
-### We are using uv as package installer, dependency manager and build-tool. Here's how you can add a dependency:
-- `uv add PACKAGE_NAME` - Add it
-- `uv pip install PACKAGE_NAME` - install for everyday usage
-- `uv sync` - Update dependency's and make sure current setup is working
-
-### NO DEVELOPMENT IN MASTER BRANCH GOD BLESS. 
-    
-here is correct way to develop from a local branch:
-1. make sure you are on latest master:
-```bash
-git fetch origin
-git checkout master
-git pull --ff-only
-```
-2. create a new local branch and work there
-```bash
-git checkout -b feature_name
-git add .
-git commit -m "Job's done"
-```
-3. Publish branch (can be done anywhere along step 2)
-```bash
-git push -u origin HEAD
-```
-4. When you think it's ready, create a PR via Gihub GUI or CLI:
-```bash
-gh pr create --base master --fill # Msg me (FRIZ) for changes review before merging
-```
-5. Merge via gh with rebase. Deleting it is recommended
-```bash
-gh pr merge --rebase -d # -d -> deletes branch
-```
-
-6. Pull new master
-```bash
-git switch master
-git pull origin master
-```
-
-7. (OPTIONAL) If you didn't delete branch, here's how to continue working on it
-- Align branch HEAD with master, basically same as re-creating same branch from origin/master
-```bash
-git switch api
-git fetch origin # just in case
-git reset --hard origin/master # Align with newly setted up master
-git push origin HEAD --force-with-lease # update origin feature HEAD
-```
-- or you could just merge with origin master instead, but it adds an uggly commit in git history:
-```bash
-git switch fature_name
-git git merge origin/master -m "syncing with master"
-```
+- [ссылка на скринкаст](https://drive.google.com/drive/folders/1BwoBICXg2sa_pRCZ6IFFrk211rVWjvbB?usp=sharing)&nbsp;
