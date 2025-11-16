@@ -1,19 +1,44 @@
-"""Tool execution node for research workflow."""
+"""Tool selection and execution node for the research workflow."""
 
 import logging
 from random import shuffle
-from typing import Any
+from typing import Any, Literal
 
+from pydantic import BaseModel, Field, ValidationError
+
+from ml.agent.graph.constants import STOP_TOOL_NAME
+from ml.agent.graph.nodes.tooling import select_primary_input
 from ml.agent.graph.state import GraphState, NextAction, ResearchObservation, ResearchToolRequest
+from ml.agent.prompts import get_research_tool_prompt
 from ml.agent.tools.base import BaseTool, ToolResult
-from ml.agent.tools.registry import get_tool
+from ml.agent.tools.registry import get_tool, get_tool_registry
+from ml.api.ollama_calls import ReasoningModelClient
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def _validate_tool_arguments(request: ResearchToolRequest, tool: BaseTool) -> None:
+class ToolCallDecision(BaseModel):
+    action: Literal["call_tool", "finalize_answer"]
+    tool_name: str | None = None
+    arguments: dict[str, Any] = Field(default_factory=dict)
+    justification: str = Field(default="")
+
+
+def _normalize_arguments(arguments: dict[str, Any]) -> dict[str, str]:
+    normalized: dict[str, str] = {}
+    for key, value in arguments.items():
+        if value is None:
+            normalized[key] = ""
+            continue
+        if isinstance(value, str):
+            normalized[key] = value
+            continue
+        normalized[key] = str(value)
+    return normalized
+
+
+def _validate_tool_arguments(arguments: dict[str, str], tool: BaseTool) -> None:
     schema = tool.schema
-    arguments = request.arguments
     if not arguments:
         error_message = f"Tool '{tool.name}' requires arguments"
         logger.error(error_message)
@@ -25,9 +50,14 @@ def _validate_tool_arguments(request: ResearchToolRequest, tool: BaseTool) -> No
 
     if required:
         for field in required:
-            value = arguments.get(field)
-            if value is None:
+            try:
+                value = arguments[field]
+            except KeyError as exc:
                 error_message = f"Missing required argument '{field}' for tool '{tool.name}'"
+                logger.exception(error_message)
+                raise ValueError(error_message) from exc
+            if value is None:
+                error_message = f"Argument '{field}' must not be None for tool '{tool.name}'"
                 logger.error(error_message)
                 raise ValueError(error_message)
             if not isinstance(value, str):
@@ -77,25 +107,21 @@ def _prepare_payload(result: ToolResult) -> dict[str, Any]:
     return payload
 
 
-def research_tool_call_node(state: GraphState, client: Any) -> GraphState:
-    logger.info("Entered Research tool call node")
-    request = state.active_tool_request
-    if request is None:
-        error_message = "Active tool request is missing for research tool call"
-        logger.error(error_message)
-        raise ValueError(error_message)
+def _finalize_from_justification(state: GraphState, justification: str) -> GraphState:
+    note = justification or state.latest_reasoning_text or "Достаточно информации для ответа"
+    state.latest_reasoning_text = note
+    if state.turn_history:
+        state.turn_history[-1].reasoning_summary = note
+    state.active_observation = None
+    state.next_action = NextAction.ANSWER
+    return state
 
-    tool = get_tool(request.tool_name)
-    if tool is None:
-        error_message = f"Requested tool '{request.tool_name}' is not registered"
-        logger.error(error_message)
-        raise ValueError(error_message)
 
-    _validate_tool_arguments(request, tool)
-
-    tool_result = tool.execute(**request.arguments)
+def _build_observation(
+    request: ResearchToolRequest,
+    tool_result: ToolResult,
+) -> ResearchObservation:
     payload = _prepare_payload(tool_result)
-
     metadata: dict[str, Any] = dict(request.metadata)
     metadata["success"] = tool_result.success
     metadata["payload"] = payload
@@ -106,17 +132,88 @@ def research_tool_call_node(state: GraphState, client: Any) -> GraphState:
     if not tool_result.success and tool_result.error:
         content = tool_result.error
 
-    observation = ResearchObservation(
+    return ResearchObservation(
         tool_name=request.tool_name,
         content=content,
         metadata=metadata,
     )
 
+
+def research_tool_call_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
+    logger.info("Entered Research tool call node")
+    latest_reasoning = state.latest_reasoning_text
+    if latest_reasoning is None:
+        error_message = "Tool call node requires latest reasoning text"
+        logger.error(error_message)
+        raise ValueError(error_message)
+
+    available_tools = list(get_tool_registry().values())
+
+    if state.suggested_tool_name == STOP_TOOL_NAME:
+        justification = state.suggested_objective or latest_reasoning
+        return _finalize_from_justification(state, justification)
+
+    prompt = get_research_tool_prompt(
+        profile=state.payload.profile,
+        conversation=state.payload.messages,
+        turn_history=state.turn_history,
+        latest_reasoning=latest_reasoning,
+        suggested_tool=state.suggested_tool_name,
+        desired_information=state.suggested_objective,
+        evidence_snippets=state.final_answer_evidence,
+        available_tools=available_tools,
+    )
+
+    try:
+        decision = client.call_structured(messages=prompt, output_schema=ToolCallDecision)
+    except ValidationError:
+        logger.exception("Tool decision schema validation failed")
+        raise
+    except Exception:
+        logger.exception("Failed to obtain tool decision")
+        raise
+
+    if decision.action == "finalize_answer":
+        return _finalize_from_justification(state, decision.justification)
+
+    tool_name = decision.tool_name
+    if tool_name is None:
+        error_message = "Structured decision is missing tool_name for call_tool action"
+        logger.error(error_message)
+        raise ValueError(error_message)
+
+    tool = get_tool(tool_name)
+    if tool is None:
+        error_message = f"Requested tool '{tool_name}' is not registered"
+        logger.error(error_message)
+        raise ValueError(error_message)
+
+    normalized_arguments = _normalize_arguments(decision.arguments)
+    _validate_tool_arguments(normalized_arguments, tool)
+
+    request_metadata: dict[str, Any] = {}
+    if decision.justification:
+        request_metadata["justification"] = decision.justification
+    if state.suggested_objective:
+        request_metadata["desired_information"] = state.suggested_objective
+
+    request = ResearchToolRequest(
+        tool_name=tool_name,
+        input_text=select_primary_input(normalized_arguments),
+        arguments=dict(normalized_arguments),
+        metadata=request_metadata,
+    )
+
+    tool_result = tool.execute(**request.arguments)
+    observation = _build_observation(request, tool_result)
+
     if state.turn_history:
-        state.turn_history[-1].observation = observation
+        turn = state.turn_history[-1]
+        turn.request = request
+        if decision.justification:
+            turn.reasoning_summary = decision.justification
 
     state.active_observation = observation
-    state.active_tool_request = None
     state.next_action = NextAction.AWAIT_OBSERVATION
 
     return state
