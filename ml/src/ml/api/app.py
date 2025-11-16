@@ -88,9 +88,7 @@ def create_app() -> FastAPI:
                 detail="Failed to generate response from collect workflow",
             ) from exc
 
-        return JSONResponse(
-            content={"message": message_text}, headers={"Tag": tag.value}
-        )
+        return JSONResponse(content={"message": message_text}, headers={"Tag": tag.value})
 
     @app.post("/message_stream")
     async def message_stream(payload: RequestPayload) -> StreamingResponse:  # type: ignore[reportUnusedFunction]
@@ -104,7 +102,9 @@ def create_app() -> FastAPI:
             raise
         except Exception as exc:
             logger.exception("Failed to start streaming workflow")
-            raise HTTPException(status_code=500, detail="Failed to start streaming workflow") from exc
+            raise HTTPException(
+                status_code=500, detail="Failed to start streaming workflow"
+            ) from exc
 
         async def event_generator() -> AsyncIterator[str]:
             try:
@@ -113,7 +113,9 @@ def create_app() -> FastAPI:
                     if item is STREAM_COMPLETE:
                         break
                     if isinstance(item, StreamError):
-                        raise HTTPException(status_code=500, detail="Streaming workflow failed") from item.error
+                        raise HTTPException(
+                            status_code=500, detail="Streaming workflow failed"
+                        ) from item.error
                     yield f"data: {item.model_dump_json()}\n\n"
             except asyncio.CancelledError:
                 raise
