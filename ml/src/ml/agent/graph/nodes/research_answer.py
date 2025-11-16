@@ -4,7 +4,11 @@ import logging
 from collections.abc import Sequence
 
 from ml.agent.graph.state import GraphState, NextAction, ResearchObservation, ResearchTurn
-from ml.agent.prompts import get_research_answer_prompt
+from ml.agent.prompts import (
+    get_research_answer_prompt,
+    get_research_evidence_summary_prompt,
+)
+from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory, UserProfile
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -87,7 +91,24 @@ def _summarize_turn_highlights(turn_history: Sequence[ResearchTurn], limit: int 
     return highlights
 
 
-def research_answer_node(state: GraphState) -> GraphState:
+def _summarize_evidence(
+    *, profile: UserProfile, evidence_pool: Sequence[str], client: ReasoningModelClient
+) -> str:
+    if not evidence_pool:
+        return ""
+
+    summary_prompt = get_research_evidence_summary_prompt(
+        profile=profile, evidence_snippets=evidence_pool
+    )
+    try:
+        summary: str = client.call(summary_prompt)
+    except Exception:
+        logger.exception("Failed to summarize evidence snippets")
+        raise
+    return summary
+
+
+def research_answer_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Research answer node")
     evidence_pool: list[str] = list(state.final_answer_evidence)
     if not evidence_pool:
@@ -98,12 +119,17 @@ def research_answer_node(state: GraphState) -> GraphState:
     latest_notes = state.latest_reasoning_text or ""
     state.final_answer_draft = latest_notes
 
+    evidence_summary = _summarize_evidence(
+        profile=profile, evidence_pool=evidence_pool, client=client
+    )
+
     prompt: ChatHistory = get_research_answer_prompt(
         profile=profile,
         conversation=state.payload.messages,
         turn_highlights=turn_highlights,
         latest_reasoning=latest_notes,
         evidence_snippets=evidence_pool,
+        evidence_summary=evidence_summary,
     )
 
     state.final_prompt = prompt
