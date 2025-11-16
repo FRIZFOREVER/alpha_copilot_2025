@@ -50,8 +50,6 @@ def get_research_tool_prompt(
     conversation: ChatHistory,
     turn_history: Sequence[ResearchTurn],
     latest_reasoning: str,
-    suggested_tool: str | None,
-    desired_information: str | None,
     evidence_snippets: Sequence[str] | None,
     available_tools: Sequence[BaseTool],
 ) -> ChatHistory:
@@ -63,11 +61,11 @@ def get_research_tool_prompt(
     turn_summary = _summarize_turn_history(turn_history)
     tools_block = _format_tool_catalog(available_tools)
 
-    reasoning_lines: list[str] = ["Последнее рассуждение исполнителя:", latest_reasoning]
-    if suggested_tool:
-        reasoning_lines.append("Предложенный инструмент: " + suggested_tool)
-    if desired_information:
-        reasoning_lines.append("Цель/ожидаемая информация: " + desired_information)
+    reasoning_lines: list[str] = [
+        "Последнее рассуждение исполнителя:",
+        latest_reasoning,
+        "Опиши следующий шаг, пользуясь рассуждением и контекстом.",
+    ]
 
     instruction_sections: list[str] = [
         (
