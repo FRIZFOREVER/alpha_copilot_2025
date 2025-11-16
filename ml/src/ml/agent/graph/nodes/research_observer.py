@@ -4,10 +4,7 @@ import logging
 from typing import Any
 
 from ml.agent.graph.state import GraphState, ResearchTurn
-from ml.agent.prompts import (
-    get_research_observation_prompt,
-    summarize_conversation_for_observer,
-)
+from ml.agent.prompts import get_research_observation_prompt
 from ml.api.ollama_calls import ReasoningModelClient
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -76,11 +73,22 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
         collected.extend(documents)
         state.final_answer_evidence = collected
 
-    conversation_summary = summarize_conversation_for_observer(state.payload.messages)
+    latest_reasoning_text = state.latest_reasoning_text
+    if latest_reasoning_text is None:
+        logger.exception("Latest reasoning text is missing before observation handling")
+        raise ValueError("Latest reasoning text must be set before processing observations")
+
+    try:
+        latest_request = state.payload.messages.messages[-1].content
+    except IndexError as exc:  # pragma: no cover - not expected in normal runs
+        logger.exception("Conversation history is empty, cannot extract the latest request")
+        raise ValueError("Conversation history is empty") from exc
 
     prompt = get_research_observation_prompt(
         profile=state.payload.profile,
-        conversation_summary=conversation_summary,
+        conversation=state.payload.messages,
+        latest_reasoning=latest_reasoning_text,
+        latest_request=latest_request,
         tool_name=observation.tool_name,
         documents=documents,
     )
