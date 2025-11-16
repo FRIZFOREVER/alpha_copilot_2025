@@ -12,6 +12,8 @@ from pydantic import BaseModel, Field
 
 from ml.agent.tools import page_text
 from ml.agent.tools.base import BaseTool, ToolResult
+from ml.api.graph_history import PicsTags
+from ml.api.graph_logging import get_context_answer_id, send_graph_log
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory
 
@@ -120,6 +122,11 @@ class WebSearchTool(BaseTool):
         self._content_preview = content_preview
         self._reasoning_client = reasoning_client or ReasoningModelClient()
 
+    def _log_web_activity(self, message: str) -> None:
+        answer_id = get_context_answer_id()
+        if not send_graph_log(PicsTags.Web, answer_id, message):
+            logger.debug("Graph log dispatcher unavailable for web activity: %s", message)
+
     @property
     def name(self) -> str:
         return "web_search"
@@ -160,6 +167,7 @@ class WebSearchTool(BaseTool):
         Returns:
             ToolResult with search results
         """
+        self._log_web_activity("Изучаю интернет")
         try:
             with DDGS() as ddgs:  # type: ignore
                 raw_results = list(
@@ -357,6 +365,7 @@ class WebSearchTool(BaseTool):
         return FetchedPage(text=text, summary=summary, is_viable=is_viable)
 
     def _summarize_text(self, text: str, query: str, domain: str) -> PageSummaryResponse:
+        self._log_web_activity(f"Изучаю {domain}")
         prompt = ChatHistory()
 
         prompt.add_or_change_system(

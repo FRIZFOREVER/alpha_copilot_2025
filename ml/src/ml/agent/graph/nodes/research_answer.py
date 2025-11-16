@@ -8,6 +8,7 @@ from ml.agent.prompts import (
     get_research_answer_prompt,
     get_research_evidence_summary_prompt,
 )
+from ml.api.graph_logging import log_think
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory, UserProfile
 
@@ -110,6 +111,7 @@ def _summarize_evidence(
 
 def research_answer_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Research answer node")
+    log_think(state, "Готовлю ответ")
     evidence_pool: list[str] = list(state.final_answer_evidence)
     if not evidence_pool:
         evidence_pool = _gather_turn_evidence(state.turn_history)
