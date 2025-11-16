@@ -12,6 +12,7 @@ from ml.agent.prompts import get_research_tool_prompt
 from ml.agent.tools.base import BaseTool, ToolResult
 from ml.agent.tools.registry import get_tool, get_tool_registry
 from ml.api.ollama_calls import ReasoningModelClient
+from ml.configs.message import ChatHistory
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -120,7 +121,7 @@ def _build_observation(
     request: ResearchToolRequest,
     tool_result: ToolResult,
 ) -> ResearchObservation:
-    payload = _prepare_payload(tool_result)
+    payload: dict[str, Any] = _prepare_payload(tool_result)
     metadata: dict[str, Any] = dict(request.metadata)
     metadata["success"] = tool_result.success
     metadata["payload"] = payload
@@ -140,18 +141,18 @@ def _build_observation(
 
 def research_tool_call_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Research tool call node")
-    latest_reasoning = state.latest_reasoning_text
+    latest_reasoning: str | None = state.latest_reasoning_text
+
     if latest_reasoning is None:
         error_message = "Tool call node requires latest reasoning text"
         logger.error(error_message)
         raise ValueError(error_message)
 
-    available_tools = list(get_tool_registry().values())
+    available_tools: list[BaseTool] = list(get_tool_registry().values())
 
-    prompt = get_research_tool_prompt(
+    prompt: ChatHistory = get_research_tool_prompt(
         profile=state.payload.profile,
         conversation=state.payload.messages,
-        turn_history=state.turn_history,
         latest_reasoning=latest_reasoning,
         evidence_snippets=state.final_answer_evidence,
         available_tools=available_tools,
@@ -169,13 +170,13 @@ def research_tool_call_node(state: GraphState, client: ReasoningModelClient) -> 
     if decision.action == "finalize_answer":
         return _finalize_from_justification(state, decision.justification)
 
-    tool_name = decision.tool_name
+    tool_name: str | None = decision.tool_name
     if tool_name is None:
         error_message = "Structured decision is missing tool_name for call_tool action"
         logger.error(error_message)
         raise ValueError(error_message)
 
-    tool = get_tool(tool_name)
+    tool: BaseTool | None = get_tool(tool_name)
     if tool is None:
         error_message = f"Requested tool '{tool_name}' is not registered"
         logger.error(error_message)
@@ -204,6 +205,6 @@ def research_tool_call_node(state: GraphState, client: ReasoningModelClient) -> 
             turn.reasoning_summary = decision.justification
 
     state.active_observation = observation
-    state.next_action = NextAction.AWAIT_OBSERVATION
+    state.next_action = NextAction.OBSERVATION
 
     return state

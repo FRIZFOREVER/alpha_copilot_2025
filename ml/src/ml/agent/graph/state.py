@@ -14,11 +14,8 @@ class MemoriesEvidance(BaseModel):
 
 
 class NextAction(str, Enum):
-    THINK = "think"
-    REQUEST_TOOL = "request_tool"
-    AWAIT_OBSERVATION = "await_observation"
+    OBSERVATION = "observation"
     ANSWER = "answer"
-    FINISH = "finish"
 
 
 class ResearchToolRequest(BaseModel):
@@ -53,6 +50,10 @@ class ResearchObservation(BaseModel):
 
 
 class ResearchTurn(BaseModel):
+    reasoning_summary: str | None = Field(
+        default=None,
+        description="Short summary of why the agent took this turn",
+    )
     request: ResearchToolRequest | None = Field(
         default=None,
         description="Tool request issued during this turn, if any",
@@ -60,10 +61,6 @@ class ResearchTurn(BaseModel):
     observation: ResearchObservation | None = Field(
         default=None,
         description="Observation returned for the issued request",
-    )
-    reasoning_summary: str | None = Field(
-        default=None,
-        description="Short summary of why the agent took this turn",
     )
 
 

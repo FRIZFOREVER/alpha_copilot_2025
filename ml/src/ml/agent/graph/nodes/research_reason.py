@@ -2,7 +2,7 @@
 
 import logging
 
-from ml.agent.graph.state import GraphState, NextAction, ResearchTurn
+from ml.agent.graph.state import GraphState, ResearchTurn
 from ml.agent.prompts import get_research_reason_prompt
 from ml.agent.tools.registry import get_tool_registry
 from ml.api.ollama_calls import ReasoningModelClient
@@ -24,17 +24,13 @@ def reason_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
         available_tools=available_tools,
     )
 
-    response_text = client.call(messages=prompt)
-    if response_text == "":
-        error_message = "Reasoning response is empty"
-        logger.error(error_message)
-        raise ValueError(error_message)
+    response_text: str = client.call(messages=prompt)
 
+    logger.info("Reason node response: \n%s", response_text)
     state.latest_reasoning_text = response_text
 
     turn = ResearchTurn(reasoning_summary=response_text)
     state.turn_history.append(turn)
-    state.next_action = NextAction.REQUEST_TOOL
 
     logger.info("Reasoning summary ready")
     return state
