@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient } from "@tanstack/react-query";
 import { createStreamCallbacks } from "../createStreamCallbacks";
 import { GET_HISTORY_QUERY } from "../../lib/constants";
+import { ModelMode } from "@/shared/types/modelMode";
 import type {
   StreamInitialResponse,
   StreamChunk,
@@ -14,7 +15,7 @@ describe("createStreamCallbacks", () => {
   const sendMessageDto: SendMessageStreamDto = {
     question: "Test question",
     tag: "general",
-    mode: "fast",
+    mode: ModelMode.Fast,
     profile: {
       fio: "Яровицын Егор Викторович",
       additional_instructions: "",
