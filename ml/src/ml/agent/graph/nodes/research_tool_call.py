@@ -6,7 +6,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ml.agent.graph.constants import STOP_TOOL_NAME
 from ml.agent.graph.nodes.tooling import select_primary_input
 from ml.agent.graph.state import GraphState, NextAction, ResearchObservation, ResearchToolRequest
 from ml.agent.prompts import get_research_tool_prompt
@@ -149,17 +148,11 @@ def research_tool_call_node(state: GraphState, client: ReasoningModelClient) -> 
 
     available_tools = list(get_tool_registry().values())
 
-    if state.suggested_tool_name == STOP_TOOL_NAME:
-        justification = state.suggested_objective or latest_reasoning
-        return _finalize_from_justification(state, justification)
-
     prompt = get_research_tool_prompt(
         profile=state.payload.profile,
         conversation=state.payload.messages,
         turn_history=state.turn_history,
         latest_reasoning=latest_reasoning,
-        suggested_tool=state.suggested_tool_name,
-        desired_information=state.suggested_objective,
         evidence_snippets=state.final_answer_evidence,
         available_tools=available_tools,
     )
@@ -194,9 +187,6 @@ def research_tool_call_node(state: GraphState, client: ReasoningModelClient) -> 
     request_metadata: dict[str, Any] = {}
     if decision.justification:
         request_metadata["justification"] = decision.justification
-    if state.suggested_objective:
-        request_metadata["desired_information"] = state.suggested_objective
-
     request = ResearchToolRequest(
         tool_name=tool_name,
         input_text=select_primary_input(normalized_arguments),
