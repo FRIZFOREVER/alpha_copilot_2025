@@ -55,6 +55,7 @@ class ReasoningClientSettings(ClientSettings):
     )
 
     @model_validator(mode="before")
+    @classmethod
     def define_chat_model_name(cls, values):
         if not values.get("model"):
             values["model"] = _get_model_name_from_env("chat")
@@ -71,6 +72,7 @@ class EmbeddingClientSettings(ClientSettings):
     )
 
     @model_validator(mode="before")
+    @classmethod
     def define_chat_model_name(cls, values):
         if not values.get("model"):
             values["model"] = _get_model_name_from_env("embeddings")
