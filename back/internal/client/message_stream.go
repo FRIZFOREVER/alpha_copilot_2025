@@ -116,7 +116,13 @@ func (c *StreamMessageClient) StreamRequestToModel(payload PayloadStream) (<-cha
 	}
 	tag = resp.Header.Get("Tag")
 	// Проверяем статус ответа
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK {	
+
+		if resp.StatusCode == 422 {
+			b, _ := io.ReadAll(resp.Body);
+			fmt.Println("---!!!АХТУНГ!!!--\n\n", string(b),"\n\n---!!!АХТУНГ!!!--")
+		}
+
 		if err := resp.Body.Close(); err != nil {
 			c.logger.Error("Ошибка при закрытии тела запроса: ", err)
 		}
