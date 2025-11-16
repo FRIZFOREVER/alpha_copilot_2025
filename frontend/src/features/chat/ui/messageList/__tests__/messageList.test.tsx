@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { MessageList } from "../messageList";
 import type { MessageData } from "@/shared/types/message";
 
@@ -42,36 +42,36 @@ describe("MessageList", () => {
   ];
 
   it("should render empty state when no messages", () => {
-    render(<MessageList messages={[]} />);
-    expect(screen.getByTestId("chat-empty-state")).toBeInTheDocument();
+    const { getByTestId } = render(<MessageList messages={[]} />);
+    expect(getByTestId("chat-empty-state")).toBeInTheDocument();
   });
 
   it("should render messages when provided", () => {
-    render(<MessageList messages={mockMessages} />);
-    expect(screen.getByText("Hello")).toBeInTheDocument();
-    expect(screen.getByText("Hi there!")).toBeInTheDocument();
+    const { getByText } = render(<MessageList messages={mockMessages} />);
+    expect(getByText("Hello")).toBeInTheDocument();
+    expect(getByText("Hi there!")).toBeInTheDocument();
   });
 
   it("should render user and assistant messages correctly", () => {
-    render(<MessageList messages={mockMessages} />);
-    expect(screen.getByTestId("message-user")).toBeInTheDocument();
-    expect(screen.getByTestId("message-assistant")).toBeInTheDocument();
+    const { getByTestId } = render(<MessageList messages={mockMessages} />);
+    expect(getByTestId("message-user")).toBeInTheDocument();
+    expect(getByTestId("message-assistant")).toBeInTheDocument();
   });
 
   it("should pass isCompact prop to empty state", () => {
-    render(<MessageList messages={[]} isCompact={true} />);
-    const emptyState = screen.getByTestId("chat-empty-state");
+    const { getByTestId } = render(<MessageList messages={[]} isCompact={true} />);
+    const emptyState = getByTestId("chat-empty-state");
     expect(emptyState).toHaveAttribute("data-compact", "true");
   });
 
   it("should handle isLoading prop", () => {
-    const { rerender } = render(
+    const { rerender, getByText } = render(
       <MessageList messages={mockMessages} isLoading={false} />
     );
-    expect(screen.getByText("Hello")).toBeInTheDocument();
+    expect(getByText("Hello")).toBeInTheDocument();
 
     rerender(<MessageList messages={mockMessages} isLoading={true} />);
-    expect(screen.getByText("Hello")).toBeInTheDocument();
+    expect(getByText("Hello")).toBeInTheDocument();
   });
 
   it("should render all messages in order", () => {
@@ -82,10 +82,10 @@ describe("MessageList", () => {
       tag: "general",
     }));
 
-    render(<MessageList messages={manyMessages} />);
+    const { getByText } = render(<MessageList messages={manyMessages} />);
 
     manyMessages.forEach((msg) => {
-      expect(screen.getByText(msg.content)).toBeInTheDocument();
+      expect(getByText(msg.content)).toBeInTheDocument();
     });
   });
 });
