@@ -4,29 +4,26 @@ import { ChatEmptyState } from "../chatEmptyState";
 import { useScrollBottom } from "@/shared/hooks/useScrollBottom";
 import { cn } from "@/shared/lib/mergeClass";
 import { useEffect } from "react";
-
-export interface MessageData {
-  id: string;
-  content: string;
-  isUser: boolean;
-  timestamp?: string;
-  answerId?: number;
-  rating?: number | null;
-  isTyping?: boolean;
-  file_url?: string;
-  tag: string;
-}
+import type { MessageData } from "@/shared/types/message";
+import { useChatScroll } from "../../hooks/useChatScroll";
 
 export interface MessageListProps {
   messages: MessageData[];
   isLoading?: boolean;
   isCompact?: boolean;
+  onScrollContainerReady?: (ref: React.RefObject<HTMLElement>) => void;
+  onScrollStateChange?: (
+    isAtBottom: boolean,
+    scrollToBottom: () => void
+  ) => void;
 }
 
 export const MessageList = ({
   messages,
   isLoading = false,
   isCompact = false,
+  onScrollContainerReady,
+  onScrollStateChange,
 }: MessageListProps) => {
   const lastMessage = messages[messages.length - 1];
 
@@ -36,6 +33,30 @@ export const MessageList = ({
     lastMessage && !lastMessage.isUser ? lastMessage.content.length : 0,
     isLoading ? "loading" : "loaded",
   ]);
+
+  const { isAtBottom, scrollToBottom } = useChatScroll({
+    channelId: "chat",
+    chatRef: contentRef,
+  });
+
+  useEffect(() => {
+    if (onScrollStateChange) {
+      onScrollStateChange(isAtBottom, scrollToBottom);
+    }
+  }, [isAtBottom, scrollToBottom, onScrollStateChange]);
+
+  useEffect(() => {
+    if (onScrollContainerReady && contentRef.current) {
+      const scrollContainer = contentRef.current
+        .firstElementChild as HTMLElement;
+      if (scrollContainer) {
+        const containerRef = {
+          current: scrollContainer,
+        } as React.RefObject<HTMLElement>;
+        onScrollContainerReady(containerRef);
+      }
+    }
+  }, [onScrollContainerReady, contentRef]);
 
   useEffect(() => {
     if (!lastMessage || lastMessage.isUser) return;
@@ -76,11 +97,11 @@ export const MessageList = ({
               isCompact={isCompact}
               content={message.content}
               isUser={message.isUser}
-              answerId={message.answerId}
-              rating={message.rating}
-              isTyping={message.isTyping}
+              answerId={message.isUser ? undefined : message.answerId}
+              rating={message.isUser ? undefined : message.rating}
+              isTyping={message.isUser ? undefined : message.isTyping}
               tag={message.tag}
-              file_url={message.file_url}
+              file_url={message.isUser ? message.file_url : undefined}
             />
           ))
         )}

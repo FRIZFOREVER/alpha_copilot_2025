@@ -6,9 +6,9 @@ import {
   useState,
   useCallback,
 } from "react";
-import { SocketState, SocketHandler } from "./types";
+import { SocketContext as SocketContextType } from "./types";
 
-const SocketContext = createContext<SocketState & SocketHandler>({
+const SocketContext = createContext<SocketContextType>({
   socket: null,
   isConnected: false,
   error: "",
