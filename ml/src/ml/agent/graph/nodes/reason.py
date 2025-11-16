@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+from ml.agent.graph.nodes.tooling import select_primary_input
 from ml.agent.graph.state import (
     GraphState,
     NextAction,
@@ -21,14 +22,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 _REASON_HEADER = "reason:"
 _TOOL_HEADER = "suggested tool:"
 _PLAN_HEADER = "call plan:"
-_KNOWN_INPUT_KEYS: tuple[str, ...] = (
-    "query",
-    "input",
-    "input_text",
-    "request",
-    "prompt",
-)
-
 
 def _split_template_sections(raw: str) -> dict[str, str]:
     sections: dict[str, list[str]] = {
@@ -92,17 +85,6 @@ def _parse_call_plan(section_text: str) -> tuple[str | None, dict[str, str]]:
     return objective, arguments
 
 
-def _select_primary_input(arguments: dict[str, str]) -> str:
-    for key in _KNOWN_INPUT_KEYS:
-        candidate = arguments.get(key)
-        if candidate is None:
-            continue
-        if candidate == "":
-            continue
-        return candidate
-    return ""
-
-
 def reason_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Research reason node")
     if state.loop_counter >= MAX_REASONING_LOOPS:
@@ -147,11 +129,12 @@ def reason_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     if comparison_note is not None:
         metadata["comparison_text"] = comparison_note
 
-    tool_input = _select_primary_input(arguments)
+    tool_input = select_primary_input(arguments)
 
     tool_request = ResearchToolRequest(
         tool_name=suggested_tool,
         input_text=tool_input,
+        arguments=dict(arguments),
         metadata=metadata,
     )
 
