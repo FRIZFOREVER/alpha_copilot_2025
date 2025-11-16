@@ -63,7 +63,7 @@ export const ChatHeader = () => {
   }, []);
 
   return (
-    <div className="flex items-center justify-between bg-white px-4 md:px-6 py-3 border-b border-[#0d0d0d0d]">
+    <div className="flex items-center justify-between bg-white px-4 md:px-6 py-3">
       <div className="flex items-center justify-center flex-1 md:flex-none pl-8 md:pl-0">
         <Select value={selectedModel} onValueChange={setSelectedModel}>
           <SelectTrigger className="h-auto p-0 border-0 bg-transparent hover:bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg md:text-xl font-medium text-gray-900 gap-1.5 hover:text-gray-700 transition-colors cursor-pointer data-[state=open]:text-gray-700 [&>svg]:opacity-60 [&>svg]:hover:opacity-100 [&_[data-slot=select-value]]:hidden">
