@@ -132,14 +132,6 @@ class GraphState(BaseModel):
         default=None,
         description="Latest reasoning summary emitted by the agent",
     )
-    suggested_tool_name: str | None = Field(
-        default=None,
-        description="Identifier of the tool proposed by the reasoning model",
-    )
-    suggested_objective: str | None = Field(
-        default=None,
-        description="High-level objective associated with the suggested tool",
-    )
     loop_counter: int = Field(
         default=0,
         description=(
