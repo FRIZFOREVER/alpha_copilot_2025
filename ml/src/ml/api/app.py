@@ -1,14 +1,19 @@
 import asyncio
 import logging
-from collections.abc import Iterator
-from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager, suppress
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
-from ollama import ChatResponse
 
-from ml.agent.router import workflow, workflow_collected_async
+from ml.agent.router import (
+    STREAM_COMPLETE,
+    AsyncStreamHandle,
+    StreamError,
+    async_stream_workflow,
+    workflow_collected_async,
+)
 from ml.api.ollama_setup import (
     download_missing_models,
     fetch_available_models,
@@ -21,6 +26,14 @@ from ml.configs.message import RequestPayload, Tag
 from ml.configs.types import ModelClients
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+def _drain_async_queue(queue: asyncio.Queue[Any]) -> None:
+    while True:
+        try:
+            queue.get_nowait()
+        except asyncio.QueueEmpty:
+            break
 
 
 @asynccontextmanager
@@ -74,17 +87,34 @@ def create_app() -> FastAPI:
         if not app.state.models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
 
-        stream: Iterator[ChatResponse]
-        tag: Tag
-        stream, tag = workflow(payload)
+        try:
+            stream_handle: AsyncStreamHandle = await async_stream_workflow(payload)
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.exception("Failed to start streaming workflow")
+            raise HTTPException(status_code=500, detail="Failed to start streaming workflow") from exc
 
-        def event_generator(stream: Iterator[ChatResponse]) -> Iterator[str]:
-            for chunk in stream:
-                yield f"data: {chunk.model_dump_json()}\n\n"
+        async def event_generator() -> AsyncIterator[str]:
+            try:
+                while True:
+                    item = await stream_handle.queue.get()
+                    if item is STREAM_COMPLETE:
+                        break
+                    if isinstance(item, StreamError):
+                        raise HTTPException(status_code=500, detail="Streaming workflow failed") from item.error
+                    yield f"data: {item.model_dump_json()}\n\n"
+            except asyncio.CancelledError:
+                raise
+            finally:
+                stream_handle.stop()
+                _drain_async_queue(stream_handle.queue)
+                with suppress(Exception):
+                    await stream_handle.worker_task
 
-        headers: dict[str, Any] = {"tag": tag.value}
+        headers: dict[str, Any] = {"tag": stream_handle.tag.value}
         return StreamingResponse(
-            event_generator(stream=stream),
+            event_generator(),
             media_type="text/event-stream",
             headers=headers,
         )
