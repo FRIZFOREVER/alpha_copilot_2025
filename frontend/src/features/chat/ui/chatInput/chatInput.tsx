@@ -330,7 +330,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
     }, [scrollButtonContainerRef, message, file, selectedTag]);
 
     return (
-      <div>
+      <div className="md:px-4 lg:px-10">
         <div
           ref={inputContainerRef}
           className={cn(
