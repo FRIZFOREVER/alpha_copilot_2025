@@ -1,7 +1,11 @@
 from .fast_answer_prompt import compose_fast_final_prompt
 from .mode_decision_prompt import ModeDecisionResponse, get_mode_decision_prompt
 from .research_answer_prompt import get_research_answer_prompt
-from .research_observation_prompt import get_research_observation_prompt
+from .research_observation_prompt import (
+    get_research_observation_prompt,
+    summarize_conversation_for_observer,
+    summarize_turn_history_for_observer,
+)
 from .research_reason_prompt import get_research_reason_prompt
 from .research_tool_prompt import get_research_tool_prompt
 from .tag_define_prompt import get_tag_define_prompt
@@ -23,6 +27,8 @@ __all__: list[str] = [
     "get_research_reason_prompt",  # Research reasoning stage
     "get_research_tool_prompt",  # Research tool selection stage
     "get_research_observation_prompt",  # Research observation synthesis
+    "summarize_conversation_for_observer",
+    "summarize_turn_history_for_observer",
     "get_research_answer_prompt",  # Research answer assembly
     "get_tag_define_prompt",
     "get_thinking_planner_prompt",  # Thinking planner stage
