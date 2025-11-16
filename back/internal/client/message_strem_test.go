@@ -16,8 +16,8 @@ func TestMessageStream(t *testing.T) {
 		Messages: []Message{
 			{Role: "user", Content: "напиши hello world на javaf"},
 		},
-		Tag:    "",
-		Mode:   "",
+		Tag:  "",
+		Mode: "",
 	}
 
 	// Получаем канал для чтения StreamMessage

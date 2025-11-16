@@ -123,6 +123,15 @@ services:
           devices:
             - capabilities: [gpu]
 
+  recognizer-service:
+    build:
+      context: ./recognizer
+      dockerfile: Dockerfile
+    ports:
+      - "3333:3333"
+    environment:
+      - PYTHONUNBUFFERED=1
+
 volumes:
   ollama:
   postgres_data:
