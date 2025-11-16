@@ -61,12 +61,14 @@ export interface UploadFileResponse {
   file_url: string;
 }
 
+import { ModelMode } from "@/shared/types/modelMode";
+
 export interface SendMessageStreamDto {
   question: string;
   voice_url?: string;
   file_url?: string;
   tag?: string;
-  mode?: "fast" | "auto";
+  mode?: ModelMode;
   profile: {
     id: number;
     login: string;

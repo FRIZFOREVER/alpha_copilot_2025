@@ -16,8 +16,15 @@ import {
   SelectValue,
 } from "@/shared/ui/select/select";
 import { useChatCollapse } from "@/shared/lib/chatCollapse";
+import { useSelectedModel } from "@/shared/hooks/useSelectedModel";
 
 const modelOptions = [
+  {
+    value: "fast",
+    label: "Fin Ai Fast",
+    description: "Отвечает быстро",
+    icon: Zap,
+  },
   {
     value: "thinking",
     label: "Fin Ai Thinking",
@@ -25,16 +32,10 @@ const modelOptions = [
     icon: Brain,
   },
   {
-    value: "thinking-mini",
-    label: "Fin Ai Thinking Mini",
-    description: "Думает быстро",
+    value: "research",
+    label: "Fin Ai Research",
+    description: "Исследует тему глубоко",
     icon: Sparkles,
-  },
-  {
-    value: "instant",
-    label: "Fin Ai Instant",
-    description: "Отвечает сразу",
-    icon: Zap,
   },
   {
     value: "auto",
@@ -45,7 +46,7 @@ const modelOptions = [
 ] as const;
 
 export const ChatHeader = () => {
-  const [selectedModel, setSelectedModel] = useState<string>("thinking");
+  const { selectedModel, setSelectedModel } = useSelectedModel();
   const [isMobile, setIsMobile] = useState(false);
   const { isCollapsed, toggleCollapse } = useChatCollapse();
 

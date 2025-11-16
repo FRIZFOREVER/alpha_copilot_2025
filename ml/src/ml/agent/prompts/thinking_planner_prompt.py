@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from pydantic import BaseModel, Field
 
 from ml.agent.tools.base import BaseTool
-from ml.configs.message import ChatHistory, UserProfile
+from ml.configs.message import ChatHistory, Message, Role, UserProfile
 
 
 class ThinkingPlannerAction(BaseModel):
@@ -37,13 +37,46 @@ def _format_tool_catalog(tools: Sequence[BaseTool]) -> str:
     return "\n".join(lines)
 
 
+def _find_last_user_message(messages: ChatHistory) -> tuple[int | None, str | None]:
+    for index in range(len(messages.messages) - 1, -1, -1):
+        message = messages.messages[index]
+        if message.role == Role.user:
+            return index, message.content
+    return None, None
+
+
+def _build_history_text(messages: Sequence[Message]) -> str | None:
+    role_labels: dict[Role, str] = {
+        Role.user: "Пользователь",
+        Role.assistant: "Ассистент",
+    }
+
+    entries: list[str] = []
+    for message in messages:
+        if message.role == Role.system:
+            continue
+        label = role_labels.get(message.role, message.role.value.capitalize())
+        entries.append(f"{label}: {message.content}")
+
+    if not entries:
+        return None
+    return "\n".join(entries)
+
+
 def get_thinking_planner_prompt(
-    *, profile: UserProfile, messages: str, available_tools: Sequence[BaseTool]
+    *, profile: UserProfile, messages: ChatHistory, available_tools: Sequence[BaseTool]
 ) -> ChatHistory:
     """Compose a prompt that only focuses on the latest user request."""
 
     prompt = ChatHistory()
     instructions: list[str] = []
+    instructions.append(f"Обращение к пользователю: {profile.username}")
+    instructions.append(f"Информация пользователя о себе: {profile.user_info}")
+    instructions.append(f"Информация пользователя о его бизнесе: {profile.business_info}")
+    instructions.append(
+        f"Дополнительные инструкциии пользователя: {profile.additional_instructions}"
+    )
+    instructions.append("Не используй эту персональную информацию при планировании задач")
     instructions.append("Ты планировщик, работающий только с последним сообщением пользователя.")
     instructions.append("Сначала сделай скрытое рассуждение, его не нужно выводить.")
     instructions.append(
@@ -54,10 +87,25 @@ def get_thinking_planner_prompt(
     )
     instructions.append("Не добавляй никаких пояснений, выводи только JSON-объект.")
 
+    last_user_index, last_user_content = _find_last_user_message(messages)
+    if last_user_index is not None:
+        history_messages = messages.messages[:last_user_index]
+    else:
+        history_messages = messages.messages[:-1]
+    history_text = _build_history_text(history_messages)
+    if history_text:
+        instructions.append("История сообщений до последнего запроса:\n" + history_text)
+
     tool_block = _format_tool_catalog(available_tools)
     system_message = "\n".join(instructions) + "\n\nСписок инструментов:\n" + tool_block
     prompt.add_or_change_system(system_message)
 
-    user_message = "Запрос пользователя:\n" + user_request + "\n\nВерни JSON сейчас."
+    if last_user_content is None:
+        if messages.messages:
+            last_user_content = messages.messages[-1].content
+        else:
+            last_user_content = "Нет сообщений для анализа."
+
+    user_message = "Запрос пользователя:\n" + last_user_content
     prompt.add_user(user_message)
     return prompt

@@ -11,6 +11,8 @@ import { type Suggestion } from "../ui/suggestions";
 import { type TagId } from "../ui/tagSelector/tagSelector";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
 import { SendMessageStreamDto } from "@/entities/chat/types";
+import { useSelectedModel } from "@/shared/hooks/useSelectedModel";
+import { mapUIModelToMode } from "@/shared/types/modelMode";
 
 const DEFAULT_SUGGESTIONS: Suggestion[] = [
   {
@@ -34,6 +36,7 @@ const CHAT_ROUTE_PREFIX = `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_RO
 
 export const useChatMessages = () => {
   const { data: profile } = useGetProfileQuery();
+  const { selectedModel } = useSelectedModel();
   const params = useParams<{ chatId?: string }>();
   const navigate = useNavigate();
   const chatId = useMemo(
@@ -41,6 +44,11 @@ export const useChatMessages = () => {
     [params.chatId]
   );
   const chatIdRef = useRef(chatId);
+
+  const modelMode = useMemo(
+    () => mapUIModelToMode(selectedModel),
+    [selectedModel]
+  );
 
   const { data: messages = [], isLoading: isLoadingHistory } =
     useGetHistoryQuery(chatId);
@@ -91,7 +99,7 @@ export const useChatMessages = () => {
         question: trimmedMessage,
         file_url: data.file_url,
         tag: tag,
-        mode: "auto" as const,
+        mode: modelMode,
         profile: {
           id: profile.id,
           fio: profile.username,
@@ -133,13 +141,14 @@ export const useChatMessages = () => {
         });
       }
     },
-    [chatId, createChat, navigate, sendMessage]
+    [chatId, createChat, navigate, sendMessage, modelMode, profile]
   );
 
   const handleSendVoice = useCallback(
     (voiceBlob: Blob) => {
       if (!profile) return;
       const currentChatId = chatIdRef.current;
+      const currentModelMode = mapUIModelToMode(selectedModel);
 
       if (!currentChatId) {
         createChat(
@@ -161,6 +170,7 @@ export const useChatMessages = () => {
                   business_info: profile.business_info,
                   user_info: profile.user_info,
                 },
+                mode: currentModelMode,
               });
             },
             onError: (error) => {
@@ -180,10 +190,11 @@ export const useChatMessages = () => {
             business_info: profile.business_info,
             user_info: profile.user_info,
           },
+          mode: currentModelMode,
         });
       }
     },
-    [createChat, navigate, sendVoice]
+    [createChat, navigate, sendVoice, selectedModel, profile]
   );
 
   useEffect(() => {
