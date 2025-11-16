@@ -62,7 +62,9 @@ export const useChatMessages = () => {
       return messages;
     }
 
-    const hasTypingIndicator = messages.some((msg) => msg.isTyping);
+    const hasTypingIndicator = messages.some(
+      (msg) => !msg.isUser && msg.isTyping
+    );
     if (hasTypingIndicator) return messages;
 
     const typingMessage: BotMessage = {
@@ -76,11 +78,7 @@ export const useChatMessages = () => {
   }, [messages, isSendingMessage, isSendingVoice, chatId]);
 
   const handleSendMessage = useCallback(
-    (data: {
-      message: string;
-      file_url?: string;
-      tag?: TagId;
-    }) => {
+    (data: { message: string; file_url?: string; tag?: TagId }) => {
       if (!data.message.trim()) return;
 
       const trimmedMessage = data.message.trim();
@@ -104,10 +102,9 @@ export const useChatMessages = () => {
           { name: chatName },
           {
             onSuccess: (chatData) => {
-              navigate(
-                `${CHAT_ROUTE_PREFIX}/${chatData.chat_id}`,
-                { replace: true }
-              );
+              navigate(`${CHAT_ROUTE_PREFIX}/${chatData.chat_id}`, {
+                replace: true,
+              });
               sendMessage({
                 chatId: chatData.chat_id,
                 sendMessageDto,
@@ -138,10 +135,9 @@ export const useChatMessages = () => {
           {
             onSuccess: (data) => {
               chatIdRef.current = data.chat_id;
-              navigate(
-                `${CHAT_ROUTE_PREFIX}/${data.chat_id}`,
-                { replace: true }
-              );
+              navigate(`${CHAT_ROUTE_PREFIX}/${data.chat_id}`, {
+                replace: true,
+              });
               sendVoice({
                 chatId: data.chat_id,
                 voiceBlob,

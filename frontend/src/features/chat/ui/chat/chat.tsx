@@ -1,8 +1,7 @@
-import { memo, useRef, useCallback, useState } from "react";
+import { memo, useRef, useCallback } from "react";
 import { ChatHeader } from "../chatHeader";
 import { MessageList } from "../messageList";
 import { ChatInput } from "../chatInput";
-import { ScrollToBottomButton } from "../scrollToBottomButton";
 import { type Suggestion } from "../suggestions";
 import type { MessageData } from "@/shared/types/message";
 import { MessageLadder } from "../message/messageLadder";
@@ -28,10 +27,6 @@ export const Chat = memo(
     isCompact = false,
   }: ChatProps) => {
     const scrollContainerRef = useRef<HTMLElement | null>(null);
-    const [isAtBottom, setIsAtBottom] = useState(true);
-    const [scrollToBottomFn, setScrollToBottomFn] = useState<
-      (() => void) | null
-    >(null);
 
     const handleScrollContainerReady = useCallback(
       (ref: React.RefObject<HTMLElement>) => {
@@ -42,16 +37,6 @@ export const Chat = memo(
       []
     );
 
-    const handleScrollStateChange = useCallback(
-      (isAtBottomValue: boolean, scrollToBottom: () => void) => {
-        setIsAtBottom(isAtBottomValue);
-        setScrollToBottomFn(() => scrollToBottom);
-      },
-      []
-    );
-
-    const showScrollButton = !isAtBottom && messages.length > 0;
-
     return (
       <div className="flex h-full flex-col bg-white overflow-hidden relative">
         {!hideHeader && <ChatHeader />}
@@ -61,15 +46,13 @@ export const Chat = memo(
             isLoading={isLoading}
             isCompact={isCompact}
             onScrollContainerReady={handleScrollContainerReady}
-            onScrollStateChange={handleScrollStateChange}
           />
-          {scrollToBottomFn && (
-            <ScrollToBottomButton
-              show={showScrollButton}
-              onClick={scrollToBottomFn}
+          {!isCompact && (
+            <MessageLadder
+              messages={messages}
+              scrollContainerRef={scrollContainerRef}
             />
           )}
-          <MessageLadder messages={messages} />
         </div>
         <ChatInput
           onSend={onSendMessage}

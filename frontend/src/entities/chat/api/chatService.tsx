@@ -123,7 +123,6 @@ class ChatService {
 
         try {
           const json = JSON.parse(data);
-          console.log(json);
           if (!isInitialReceived) {
             const initialData = json as StreamInitialResponse;
             callbacks.onInitial?.(initialData);

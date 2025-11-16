@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/shared/lib/mergeClass";
 
 export interface ScrollToBottomButtonProps {
+  isCompact?: boolean;
   show: boolean;
   onClick: () => void;
 }
 
 export const ScrollToBottomButton = memo(
-  ({ show, onClick }: ScrollToBottomButtonProps) => {
+  ({ isCompact, show, onClick }: ScrollToBottomButtonProps) => {
     return (
       <AnimatePresence>
         {show && (
@@ -26,8 +27,8 @@ export const ScrollToBottomButton = memo(
               damping: 25,
             }}
             className={cn(
-              "absolute bottom-4 right-4 md:right-8 z-10 md:hidden",
-              "w-10 h-10 rounded-full",
+              "absolute bottom-2 right-6 md:right-9 z-10",
+              "w-9 h-9 rounded-full",
               "bg-gradient-to-br from-white to-gray-50",
               "border-2 border-gray-200",
               "text-gray-700 shadow-xl",
@@ -37,7 +38,9 @@ export const ScrollToBottomButton = memo(
               "hover:shadow-2xl",
               "focus:outline-none",
               "transition-colors duration-200",
-              "cursor-pointer"
+              "cursor-pointer",
+
+              isCompact && ""
             )}
             aria-label="Прокрутить вниз"
           >

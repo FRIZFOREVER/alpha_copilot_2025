@@ -123,7 +123,6 @@ export const TelegramAuthModal = () => {
       },
       {
         onSuccess: (response) => {
-          console.log("response", response);
           if (response.status === "password_required") {
             setStep("password");
           } else if (response.status === "ok") {
