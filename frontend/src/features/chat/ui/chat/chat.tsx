@@ -27,6 +27,7 @@ export const Chat = memo(
     isCompact = false,
   }: ChatProps) => {
     const scrollContainerRef = useRef<HTMLElement | null>(null);
+    const scrollButtonContainerRef = useRef<HTMLDivElement>(null);
 
     const handleScrollContainerReady = useCallback(
       (ref: React.RefObject<HTMLElement>) => {
@@ -46,6 +47,7 @@ export const Chat = memo(
             isLoading={isLoading}
             isCompact={isCompact}
             onScrollContainerReady={handleScrollContainerReady}
+            scrollButtonContainerRef={scrollButtonContainerRef}
           />
           {!isCompact && (
             <MessageLadder
@@ -55,6 +57,7 @@ export const Chat = memo(
           )}
         </div>
         <ChatInput
+          ref={scrollButtonContainerRef}
           onSend={onSendMessage}
           onSendVoice={onSendVoice}
           disabled={isLoading}

@@ -90,17 +90,20 @@ export const Message = ({
 
     openModal(EModalVariables.TELEGRAM_CONTACTS_MODAL, {
       ...request_data,
-      onSelect: async (contact: TelegramContact) => {
+      message_text: content,
+      onSelect: async (contact: TelegramContact, truncatedText?: string) => {
         if (!phone_number || !content.trim()) {
           return;
         }
+
+        const textToSend = truncatedText || content;
 
         setIsSendingTelegram(true);
         try {
           await sendTelegramMessage({
             phone_number,
             recipient_id: contact.id,
-            text: content,
+            text: textToSend,
           });
         } catch (error) {
           console.error("Failed to send Telegram message:", error);

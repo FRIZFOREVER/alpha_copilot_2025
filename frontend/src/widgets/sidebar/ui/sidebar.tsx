@@ -294,7 +294,7 @@ export const Sidebar = () => {
                           isExpanded ? (
                             <ChevronRight className="h-[18px] w-[18px] text-gray-400 cursor-pointer" />
                           ) : (
-                            <ChevronDown className="h-4 w-4 text-gray-400 cursor-pointer" />
+                            <ChevronDown className="h-[18px] w-[18px] text-gray-400 cursor-pointer" />
                           )
                         ) : (
                           <Clock className="h-[18px] w-[18px] text-gray-400" />
