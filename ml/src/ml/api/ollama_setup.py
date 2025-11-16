@@ -1,9 +1,8 @@
-
 import asyncio
 import logging
 import os
 from collections.abc import Iterator
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import ollama
 from fastapi.encoders import jsonable_encoder
@@ -23,7 +22,7 @@ _MODEL_ENV_VARS: list[str] = [
 _PROGRESS_BAR_LENGTH = 24
 
 
-def _format_bytes(bytes_value: Optional[int]) -> str:
+def _format_bytes(bytes_value: int | None) -> str:
     if bytes_value is None:
         return "unknown"
     size = float(bytes_value)
