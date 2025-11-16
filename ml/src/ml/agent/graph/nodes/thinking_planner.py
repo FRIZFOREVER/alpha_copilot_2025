@@ -46,6 +46,19 @@ def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> Gr
     logger.info("Thinking planner summary: %s", structured_plan.plan_summary)
     logger.info("Thinking planner steps: %s", structured_plan.plan_steps)
 
+    if structured_plan.tool_calls:
+        for position, call in enumerate(structured_plan.tool_calls, start=1):
+            logger.info(
+                "Thinking planner tool call #%s -> name=%s, rationale=%s, expected_evidence=%s, arguments=%s",
+                position,
+                call.tool_name,
+                call.rationale,
+                call.expected_evidence,
+                call.arguments,
+            )
+    else:
+        logger.info("Thinking planner returned no tool calls and will rely on existing context")
+
     state.thinking_plan_summary = structured_plan.plan_summary
     state.thinking_plan_steps = structured_plan.plan_steps
     state.final_answer_draft = structured_plan.final_draft
