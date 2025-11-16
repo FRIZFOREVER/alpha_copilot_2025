@@ -54,22 +54,22 @@ git clone https://github.com/FRIZFOREVER/alfa_copilot_2025.git
 
 ## <a name="5">Стек </a>
 <div align="center">
-  <img src="https://github.com/devicons/devicon/blob/master/icons/python/python-original-wordmark.svg" title="Python" alt="Python" height="40"/>&nbsp;
-  <img src="./assets/ollama.svg" title="lama" alt="lama" height="40"/>&nbsp;
-  <img src="./assets/uvicorn.svg" title="uvi" alt="uvi" height="40"/>&nbsp;
-  <img src="./assets/langchain.svg" title="langchain" alt="langchain" height="40"/>&nbsp;
-  <img src="https://github.com/devicons/devicon/blob/master/icons/fastapi/fastapi-plain-wordmark.svg" title="fastapi" alt="fastapi" height="40"/>&nbsp;
-  <img src="https://fronty.com/static/uploads/1.11-30.11/languages%20in%202022/go.png" title="GO" alt="GO" height="40"/>&nbsp;
-  <img src="./assets/websocket.svg" title="websocket" alt="websocket" height="40"/>&nbsp;
-  <img src="https://github.com/devicons/devicon/blob/master/icons/fiber/fiber-plain.svg" title="Fiber" alt="Fiber" height="40"/>&nbsp;
-  <img src="https://github.com/devicons/devicon/blob/master/icons/postgresql/postgresql-plain.svg" title="postgres" alt="postgres" height="40"/>&nbsp;
-  <img src="https://github.com/devicons/devicon/blob/master/icons/react/react-original.svg" title="react" alt="react" height="40"/>&nbsp;
-  <img src="https://github.com/devicons/devicon/blob/master/icons/typescript/typescript-plain.svg" title="ts" alt="ts" height="40"/>&nbsp;
-  <img src="https://github.com/devicons/devicon/blob/master/icons/tailwindcss/tailwindcss-original-wordmark.svg" title="tw" alt="tw" height="40"/>&nbsp;
-  <img src="https://github.com/devicons/devicon/blob/master/icons/vitejs/vitejs-original.svg" title="vite" alt="vite" height="40"/>&nbsp;
-  <img src="https://github.com/devicons/devicon/blob/master/icons/lodash/lodash-original.svg" title="lodash" alt="lodash" height="40"/>&nbsp;
-  <img src="https://github.com/devicons/devicon/blob/master/icons/redux/redux-original.svg" title="redux" alt="redux" height="40"/>&nbsp;
-  <img src="https://github.com/devicons/devicon/blob/master/icons/vitest/vitest-original.svg" title="vitest" alt="vitest" height="40"/>&nbsp;
+  <img src="https://github.com/devicons/devicon/blob/master/icons/python/python-original-wordmark.svg" title="Python" alt="Python" height="40"/>
+  <img src="./assets/ollama.svg" title="lama" alt="lama" height="40"/>
+  <img src="./assets/uvicorn.svg" title="uvicorn" alt="uvicorn" height="40"/>
+  <img src="./assets/langchain.svg" title="langchain" alt="langchain" height="40"/>
+  <img src="https://github.com/devicons/devicon/blob/master/icons/fastapi/fastapi-plain-wordmark.svg" title="fastapi" alt="fastapi" height="40"/>
+  <img src="https://fronty.com/static/uploads/1.11-30.11/languages%20in%202022/go.png" title="GO" alt="GO" height="40"/>
+  <img src="./assets/websocket.svg" title="websocket" alt="websocket" height="40"/>
+  <img src="https://github.com/devicons/devicon/blob/master/icons/fiber/fiber-plain.svg" title="Fiber" alt="Fiber" height="40"/>
+  <img src="https://github.com/devicons/devicon/blob/master/icons/postgresql/postgresql-plain.svg" title="postgres" alt="postgres" height="40"/>
+  <img src="https://github.com/devicons/devicon/blob/master/icons/react/react-original.svg" title="react" alt="react" height="40"/>
+  <img src="https://github.com/devicons/devicon/blob/master/icons/typescript/typescript-plain.svg" title="typescript" alt="typescript" height="40"/>
+  <img src="https://github.com/devicons/devicon/blob/master/icons/tailwindcss/tailwindcss-original.svg" title="tailwind" alt="tailwind" height="40"/>
+  <img src="https://github.com/devicons/devicon/blob/master/icons/vitejs/vitejs-original.svg" title="vite" alt="vite" height="40"/>
+  <img src="https://github.com/devicons/devicon/blob/master/icons/lodash/lodash-original.svg" title="lodash" alt="lodash" height="40"/>
+  <img src="https://github.com/devicons/devicon/blob/master/icons/redux/redux-original.svg" title="redux" alt="redux" height="40"/>
+  <img src="https://github.com/devicons/devicon/blob/master/icons/vitest/vitest-original.svg" title="vitest" alt="vitest" height="40"/>
 </div>
 
 ## <a name="6">Команда </a>
