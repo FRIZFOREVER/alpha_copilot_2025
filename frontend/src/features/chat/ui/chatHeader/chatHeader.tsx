@@ -33,8 +33,8 @@ const modelOptions = [
   },
   {
     value: "research",
-    label: "Fin Ai Research",
-    description: "Исследует тему глубоко",
+    label: "Fin Ai Deep Research",
+    description: "Может думать достаточно долго",
     icon: Sparkles,
   },
   {

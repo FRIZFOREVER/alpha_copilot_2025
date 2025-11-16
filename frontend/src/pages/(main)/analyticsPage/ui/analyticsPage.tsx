@@ -15,22 +15,30 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/shared/lib/mergeClass";
 import { analyticsData } from "../lib/constants";
 import { Header } from "@/widgets/header";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { Image } from "@/shared/ui/image/image";
 
 const AnalyticsPage = () => {
   const navigate = useNavigate();
+
+  const categoryChartData = analyticsData.categoryDistribution.map((cat) => ({
+    name: cat.category,
+    value: cat.percentage,
+    color: cat.color.replace("bg-", ""),
+  }));
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80">
       <Header />
       <div className="overflow-hidden md:px-6 md:pb-6">
         <div className="flex-1 overflow-y-auto scrollbar-hide bg-zinc-100 rounded-t-3xl md:rounded-4xl h-full">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-4 sm:space-y-6">
+          <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
             <div className="flex items-center gap-3 sm:gap-4 mb-6">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate(-1)}
-                className="h-10 w-10 rounded-xl bg-white hover:bg-gray-50 shadow-sm transition cursor-pointer"
+                className="h-10 w-10 rounded-4xl bg-white hover:bg-gray-50 shadow-sm transition cursor-pointer"
               >
                 <ArrowLeft className="h-5 w-5 text-gray-700" />
               </Button>
@@ -38,9 +46,6 @@ const AnalyticsPage = () => {
                 <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
                   Аналитика
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">
-                  Обзор эффективности использования AI Copilot
-                </p>
               </div>
             </div>
 
@@ -48,12 +53,12 @@ const AnalyticsPage = () => {
               {analyticsData.businessMetrics.map((metric, i) => (
                 <div
                   key={i}
-                  className="rounded-xl p-4 sm:p-5 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all"
+                  className="rounded-4xl p-4 sm:p-5 bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 shadow-sm hover:shadow-md transition-all"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div
                       className={cn(
-                        "h-10 w-10 rounded-lg flex items-center justify-center",
+                        "h-10 w-10 rounded-4xl flex items-center justify-center",
                         metric.color
                           .replace("text-", "bg-")
                           .replace("-600", "-100")
@@ -85,228 +90,182 @@ const AnalyticsPage = () => {
               ))}
             </div>
 
-            <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Статистика использования
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {[
-                  {
-                    icon: MessageSquare,
-                    value: analyticsData.usage.chats,
-                    label: "Диалогов",
-                  },
-                  {
-                    icon: BarChart3,
-                    value: analyticsData.usage.messages,
-                    label: "Сообщений",
-                  },
-                  {
-                    icon: Clock,
-                    value: analyticsData.usage.daysActive,
-                    label: "Дней активен",
-                  },
-                ].map((stat, i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                {
+                  icon: MessageSquare,
+                  value: analyticsData.usage.chats,
+                  label: "Диалогов",
+                  color: "text-blue-600",
+                  bgColor: "bg-blue-100",
+                },
+                {
+                  icon: BarChart3,
+                  value: analyticsData.usage.messages,
+                  label: "Сообщений",
+                  color: "text-purple-600",
+                  bgColor: "bg-purple-100",
+                },
+                {
+                  icon: Clock,
+                  value: analyticsData.usage.daysActive,
+                  label: "Дней активен",
+                  color: "text-pink-600",
+                  bgColor: "bg-pink-100",
+                },
+              ].map((stat, i) => (
+                <div
+                  key={i}
+                  className="rounded-4xl cursor-pointer p-5 bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 hover:border-gray-300 transition-all text-center shadow-sm hover:shadow-md"
+                >
                   <div
-                    key={i}
-                    className="rounded-xl cursor-pointer p-4 bg-gray-50/50 hover:bg-gray-100/50 transition-all text-center border border-gray-100"
+                    className={cn(
+                      "h-12 w-12 rounded-4xl flex items-center justify-center mx-auto mb-3",
+                      stat.bgColor
+                    )}
                   >
-                    <stat.icon className="h-6 w-6 text-gray-700 mx-auto mb-2" />
-                    <p className="text-xl font-medium text-gray-900">
-                      {stat.value}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
+                    <stat.icon className={cn("h-6 w-6", stat.color)} />
                   </div>
-                ))}
-              </div>
+                  <p className="text-2xl font-bold text-gray-900 mb-1">
+                    {stat.value}
+                  </p>
+                  <p className="text-xs text-gray-500">{stat.label}</p>
+                </div>
+              ))}
             </div>
 
-            <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Продуктивность
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[
-                  {
-                    icon: CheckCircle2,
-                    value: analyticsData.overview.totalTasks,
-                    label: "Задач выполнено",
-                    color: "text-green-600",
-                  },
-                  {
-                    icon: Clock,
-                    value: analyticsData.overview.timeSaved,
-                    label: "Сэкономлено времени",
-                    color: "text-blue-600",
-                  },
-                  {
-                    icon: FileText,
-                    value: analyticsData.overview.documentsCreated,
-                    label: "Документов создано",
-                    color: "text-purple-600",
-                  },
-                  {
-                    icon: Sparkles,
-                    value: analyticsData.overview.templatesUsed,
-                    label: "Шаблонов использовано",
-                    color: "text-pink-600",
-                  },
-                ].map((stat, i) => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                {
+                  icon: CheckCircle2,
+                  value: analyticsData.overview.totalTasks,
+                  label: "Задач выполнено",
+                  color: "text-green-600",
+                  bgColor: "bg-green-100",
+                },
+                {
+                  icon: Clock,
+                  value: analyticsData.overview.timeSaved,
+                  label: "Сэкономлено времени",
+                  color: "text-blue-600",
+                  bgColor: "bg-blue-100",
+                },
+                {
+                  icon: FileText,
+                  value: analyticsData.overview.documentsCreated,
+                  label: "Документов создано",
+                  color: "text-purple-600",
+                  bgColor: "bg-purple-100",
+                },
+                {
+                  icon: Sparkles,
+                  value: analyticsData.overview.templatesUsed,
+                  label: "Шаблонов использовано",
+                  color: "text-pink-600",
+                  bgColor: "bg-pink-100",
+                },
+              ].map((stat, i) => (
+                <div
+                  key={i}
+                  className="rounded-4xl p-4 bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 text-center shadow-sm hover:shadow-md transition-all"
+                >
                   <div
-                    key={i}
-                    className="rounded-xl p-4 bg-gradient-to-br from-gray-50 to-white border border-gray-200 text-center"
+                    className={cn(
+                      "h-10 w-10 rounded-4xl flex items-center justify-center mx-auto mb-2",
+                      stat.bgColor
+                    )}
                   >
-                    <stat.icon
-                      className={`h-6 w-6 ${stat.color} mx-auto mb-2`}
-                    />
-                    <p className="text-xl font-medium text-gray-900">
-                      {stat.value}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
+                    <stat.icon className={cn("h-5 w-5", stat.color)} />
                   </div>
-                ))}
-              </div>
+                  <p className="text-xl font-bold text-gray-900 mb-1">
+                    {stat.value}
+                  </p>
+                  <p className="text-xs text-gray-500">{stat.label}</p>
+                </div>
+              ))}
             </div>
 
-            <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Динамика по периодам
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {analyticsData.trends.map((trend, i) => (
-                  <div
-                    key={i}
-                    className="rounded-xl p-4 bg-gradient-to-br from-gray-50 to-white border border-gray-200"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium text-gray-600">
-                        {trend.period}
-                      </p>
-                      <div
-                        className={cn(
-                          "flex items-center gap-1 text-xs font-medium",
-                          trend.isPositive ? "text-green-600" : "text-red-600"
-                        )}
-                      >
-                        {trend.isPositive ? (
-                          <ArrowUp className="h-3 w-3" />
-                        ) : (
-                          <ArrowDown className="h-3 w-3" />
-                        )}
-                        {Math.abs(trend.change)}%
-                      </div>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {trend.tasks}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      задач выполнено
-                    </p>
-                  </div>
-                ))}
+            <div className="relative rounded-4xl overflow-hidden border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-white shadow-sm">
+              <div className="absolute inset-0 opacity-5">
+                <Image
+                  src="/images/D03_CardPromo1_210325.webp"
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
               </div>
-            </div>
-
-            <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Популярные функции
-              </h3>
-              <div className="space-y-2">
-                {analyticsData.topFeatures.map((feature, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 hover:bg-gray-100/50 transition-all cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                        <feature.icon className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {feature.name}
-                        </p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <p className="text-xs text-gray-500">
-                            Использовано {feature.count} раз
-                          </p>
-                          <div
-                            className={cn(
-                              "flex items-center gap-0.5 text-xs font-medium",
-                              "text-green-600"
-                            )}
-                          >
-                            <ArrowUp className="h-3 w-3" />+{feature.trend}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Активность по дням недели
-              </h3>
-              <div className="space-y-3">
-                {analyticsData.weeklyActivity.map((day, i) => {
-                  const maxTasks = Math.max(
-                    ...analyticsData.weeklyActivity.map((d) => d.tasks)
-                  );
-                  const taskPercentage = (day.tasks / maxTasks) * 100;
-
-                  return (
-                    <div key={i} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-gray-700">
-                          {day.day}
-                        </span>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>{day.tasks} задач</span>
-                          <span>{day.documents} документов</span>
-                        </div>
-                      </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-red-500 to-pink-500 rounded-full transition-all"
-                          style={{ width: `${taskPercentage}%` }}
+              <div className="relative z-10 p-4 sm:p-6">
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={categoryChartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) =>
+                        `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`
+                      }
+                      outerRadius={90}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {categoryChartData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            entry.color === "purple-500"
+                              ? "#8b5cf6"
+                              : entry.color === "blue-500"
+                              ? "#3b82f6"
+                              : entry.color === "pink-500"
+                              ? "#ec4899"
+                              : entry.color === "green-500"
+                              ? "#10b981"
+                              : "#6b7280"
+                          }
                         />
-                      </div>
-                    </div>
-                  );
-                })}
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "white",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "12px",
+                        padding: "8px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Распределение по категориям
-              </h3>
-              <div className="space-y-3">
-                {analyticsData.categoryDistribution.map((category, i) => (
-                  <div key={i} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-gray-700">
-                        {category.category}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {category.percentage}%
-                      </span>
+            {/* Популярные функции */}
+            <div className="space-y-3">
+              {analyticsData.topFeatures.map((feature, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-4 rounded-4xl bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 hover:border-gray-300 transition-all cursor-pointer shadow-sm hover:shadow-md"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-4xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                      <feature.icon className="h-6 w-6 text-white" />
                     </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          category.color
-                        )}
-                        style={{ width: `${category.percentage}%` }}
-                      />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {feature.name}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-gray-500">
+                          Использовано {feature.count} раз
+                        </p>
+                        <div className="flex items-center gap-0.5 text-xs font-medium text-green-600">
+                          <ArrowUp className="h-3 w-3" />+{feature.trend}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                </div>
+              ))}
             </div>
           </div>
         </div>

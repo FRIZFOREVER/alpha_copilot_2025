@@ -1,4 +1,4 @@
-import { Mail, Calendar, Settings, LogOut } from "lucide-react";
+import { Mail, Calendar, Settings, LogOut, ArrowLeft } from "lucide-react";
 import { Avatar, AvatarImage } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge/badge";
@@ -70,6 +70,22 @@ const ProfilePage = () => {
       <div className="overflow-hidden md:px-6 md:pb-6">
         <div className="flex-1 overflow-y-auto scrollbar-hide bg-zinc-100 rounded-t-3xl md:rounded-4xl h-full">
           <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
+            <div className="flex items-center gap-3 sm:gap-4 mb-6">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="h-10 w-10 rounded-4xl bg-white hover:bg-gray-50 shadow-sm transition cursor-pointer"
+              >
+                <ArrowLeft className="h-5 w-5 text-gray-700" />
+              </Button>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+                  Профиль
+                </h1>
+              </div>
+            </div>
+
             <div className="relative rounded-4xl overflow-hidden border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-white transition-all duration-300">
               <div className="relative z-10 p-6 md:p-8 lg:p-10">
                 <div className="flex flex-col md:flex-row items-start gap-6 md:gap-8">
