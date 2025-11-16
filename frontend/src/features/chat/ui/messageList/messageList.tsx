@@ -24,12 +24,8 @@ export const MessageList = ({
   onScrollContainerReady,
   scrollButtonContainerRef,
 }: MessageListProps) => {
-  const lastMessage = messages[messages.length - 1];
-
   const { contentRef } = useScrollBottom([
     messages.length,
-    lastMessage?.id,
-    lastMessage && !lastMessage.isUser ? lastMessage.content.length : 0,
     isLoading ? "loading" : "loaded",
   ]);
 
@@ -50,29 +46,6 @@ export const MessageList = ({
       }
     }
   }, [onScrollContainerReady, contentRef]);
-
-  useEffect(() => {
-    if (!lastMessage || lastMessage.isUser) return;
-
-    const scrollArea = contentRef.current;
-    if (!scrollArea) return;
-
-    const scrollContainer = scrollArea.firstElementChild as HTMLElement;
-    if (!scrollContainer) return;
-
-    const scrollToBottom = () => {
-      scrollContainer.scrollTo({
-        top: scrollContainer.scrollHeight,
-        behavior: "smooth",
-      });
-    };
-
-    const rafId = requestAnimationFrame(() => {
-      requestAnimationFrame(scrollToBottom);
-    });
-
-    return () => cancelAnimationFrame(rafId);
-  }, [lastMessage?.content, lastMessage?.isUser, contentRef]);
 
   const showScrollButton = !isAtBottom && messages.length > 0;
   const [inputHeight, setInputHeight] = useState(0);
