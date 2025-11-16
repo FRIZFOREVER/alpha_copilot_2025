@@ -141,13 +141,13 @@ def ensure_model_available(client: Client, model_name: str) -> str:
 
 
 async def _send_mock_graph_log(
-    ws: websockets.WebSocketClientProtocol, tag: str, answer_id: int, message: str
+    ws: websockets.WebSocketClientProtocol, tag: str, question_id: int, message: str
 ) -> None:
     """Отправка мокового graph_log через WebSocket"""
     try:
         log_message = {
             "tag": tag,
-            "answer_id": answer_id,
+            "answer_id": question_id,  # Передаем question_id, бэкенд получит answer_id по нему
             "message": message,
         }
         await ws.send(json.dumps(log_message))
@@ -162,11 +162,18 @@ def mock_workflow(
     """Функция workflow, которая обращается к локальной Ollama и использует модель"""
     model = payload.get("model", DEFAULT_MODEL)
     messages = payload.get("messages", [])
-    answer_id = payload.get("answer_id")
     chat_id = payload.get("chat_id", "")
     tag = payload.get("tag", "general")
 
-    # Отправка моковых graph_log если есть answer_id
+    # Извлекаем question_id из последнего сообщения с role="user"
+    question_id: int | None = None
+    if messages:
+        for message in reversed(messages):
+            if message.get("role") == "user" and message.get("id") is not None:
+                question_id = message.get("id")
+                break
+
+    # Отправка моковых graph_log если есть question_id
     # Используем имя сервиса из docker-compose или переменную окружения
     # В Docker используем имя сервиса 'app', иначе 'localhost'
     # Проверяем, работаем ли мы в Docker (если есть переменная окружения или файл /.dockerenv)
@@ -200,7 +207,7 @@ def mock_workflow(
 
     ws = None
     loop = None
-    if answer_id:
+    if question_id:
         try:
             try:
                 loop = asyncio.get_event_loop()
@@ -211,7 +218,7 @@ def mock_workflow(
             # Подключаемся к WebSocket один раз для всего workflow
             ws_url = f"{backend_url}/graph_log_writer/{chat_id}"
             logger.info(
-                f"Подключение к WebSocket для graph_log: {ws_url}, answer_id={answer_id}, chat_id={chat_id}, tag={tag}"
+                f"Подключение к WebSocket для graph_log: {ws_url}, chat_id={chat_id}, tag={tag}"
             )
             logger.info(
                 f"BACKEND_URL из окружения: {os.getenv('BACKEND_URL')}, "
@@ -232,7 +239,7 @@ def mock_workflow(
                 _send_mock_graph_log(
                     ws=ws,
                     tag=tag,
-                    answer_id=answer_id,
+                    question_id=question_id,
                     message="Mock: Начало обработки запроса",
                 )
             )
@@ -324,14 +331,14 @@ def mock_workflow(
 
                             # Отправка мокового graph_log при получении чанка
                             if (
-                                answer_id and eval_count % 5 == 0 and ws and loop
+                                question_id and eval_count % 5 == 0 and ws and loop
                             ):  # Каждый 5-й чанк
                                 try:
                                     loop.run_until_complete(
                                         _send_mock_graph_log(
                                             ws=ws,
                                             tag=tag,
-                                            answer_id=answer_id,
+                                            question_id=question_id,
                                             message=f"Mock: Получен чанк #{eval_count}, накоплено символов: {len(accumulated_content)}",
                                         )
                                     )
@@ -365,13 +372,13 @@ def mock_workflow(
 
                         if done:
                             # Отправка финального мокового graph_log
-                            if answer_id and ws and loop:
+                            if question_id and ws and loop:
                                 try:
                                     loop.run_until_complete(
                                         _send_mock_graph_log(
                                             ws=ws,
                                             tag=tag,
-                                            answer_id=answer_id,
+                                            question_id=question_id,
                                             message=f"Mock: Завершена обработка запроса, всего чанков: {eval_count}, длина ответа: {len(accumulated_content)}",
                                         )
                                     )
