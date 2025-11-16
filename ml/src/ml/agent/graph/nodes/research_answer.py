@@ -95,7 +95,7 @@ def research_answer_node(state: GraphState) -> GraphState:
 
     profile: UserProfile = state.payload.profile
     turn_highlights = _summarize_turn_highlights(state.turn_history)
-    latest_notes = state.latest_reasoning or ""
+    latest_notes = state.latest_reasoning_text or ""
     state.final_answer_draft = latest_notes
 
     prompt: ChatHistory = get_research_answer_prompt(

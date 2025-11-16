@@ -128,9 +128,21 @@ class GraphState(BaseModel):
         default=None,
         description="Latest observation received from an external tool",
     )
-    latest_reasoning: str | None = Field(
+    latest_reasoning_text: str | None = Field(
         default=None,
         description="Latest reasoning summary emitted by the agent",
+    )
+    suggested_tool_name: str | None = Field(
+        default=None,
+        description="Identifier of the tool proposed by the reasoning model",
+    )
+    suggested_tool_args: dict[str, str] = Field(
+        default_factory=dict,
+        description="Arguments proposed for the next tool call",
+    )
+    suggested_objective: str | None = Field(
+        default=None,
+        description="High-level objective associated with the suggested tool",
     )
     loop_counter: int = Field(
         default=0,

@@ -10,9 +10,9 @@ from ml.agent.graph.nodes import (
     fast_answer_node,
     flash_memories_node,
     graph_mode_node,
+    reason_node,
     research_answer_node,
     research_observer_node,
-    research_react_node,
     research_tool_call_node,
     thinking_answer_node,
     thinking_planner_node,
@@ -49,7 +49,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow.add_node("Flash Memories", flash_memories_node)
     workflow.add_node("Thinking planner", partial(thinking_planner_node, client=client))
     workflow.add_node("Thinking answer", thinking_answer_node)
-    workflow.add_node("Research react", partial(research_react_node, client=client))
+    workflow.add_node("Research reason", partial(reason_node, client=client))
     workflow.add_node("Research tool call", partial(research_tool_call_node, client=client))
     workflow.add_node("Research observer", partial(research_observer_node, client=client))
     workflow.add_node("Research answer", research_answer_node)
@@ -68,7 +68,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
         {
             "fast": "Flash Memories",
             "thinking": "Thinking planner",
-            "research": "Research react",
+            "research": "Research reason",
         },
     )
 
@@ -84,10 +84,10 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
 
     # Research
     workflow.add_conditional_edges(
-        "Research react",
+        "Research reason",
         _extract_research_route,
         {
-            NextAction.THINK.value: "Research react",
+            NextAction.THINK.value: "Research reason",
             NextAction.REQUEST_TOOL.value: "Research tool call",
             NextAction.ANSWER.value: "Research answer",
             NextAction.FINISH.value: "Research answer",
@@ -98,7 +98,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
         "Research observer",
         _extract_research_route,
         {
-            NextAction.THINK.value: "Research react",
+            NextAction.THINK.value: "Research reason",
             NextAction.ANSWER.value: "Research answer",
             NextAction.FINISH.value: "Research answer",
         },
