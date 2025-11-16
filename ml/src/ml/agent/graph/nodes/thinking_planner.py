@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 from ml.agent.graph.state import GraphState, NextAction, PlannerToolExecution
 from ml.agent.prompts import ThinkingPlannerAction, get_thinking_planner_prompt
-from ml.agent.tools.base import BaseTool, ToolResult
+from ml.agent.tools.base import BaseTool
 from ml.agent.tools.registry import get_tool_registry
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory, Role
@@ -28,24 +28,6 @@ def _latest_user_request(conversation: ChatHistory) -> str:
     return ""
 
 
-def _preview_payload(result: ToolResult) -> str:
-    payload = result.data if result.success else result.error
-    if payload is None:
-        return ""
-    text = str(payload)
-    if len(text) > 600:
-        return text[:600]
-    return text
-
-
-def _execute_tool(tool: BaseTool, arguments: dict[str, str]) -> ToolResult:
-    return tool.execute(**arguments)
-
-
-def _build_prompt(user_request: str, tools: Sequence[BaseTool]) -> ChatHistory:
-    return get_thinking_planner_prompt(user_request=user_request, available_tools=tools)
-
-
 def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Thinking planner node")
     user_request = _latest_user_request(state.payload.messages)
@@ -58,11 +40,14 @@ def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> Gr
     available_tools: Sequence[BaseTool] = list(registry.values())
 
     executions: list[PlannerToolExecution] = []
+    last_used_tool: str | None = None
     collected_evidence: list[str] = []
 
     for iteration in range(2):
         logger.info("Planner iteration %s", iteration + 1)
-        prompt = _build_prompt(user_request, available_tools)
+        prompt = get_thinking_planner_prompt(
+            user_request=user_request, available_tools=available_tools
+        )
         action: ThinkingPlannerAction = client.call_structured(prompt, ThinkingPlannerAction)
         tool_name = action.tool_name
         if not tool_name:
@@ -74,8 +59,13 @@ def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> Gr
             logger.warning("Requested tool '%s' is not registered", tool_name)
             break
 
-        result = _execute_tool(tool, action.arguments)
-        preview = _preview_payload(result)
+        if last_used_tool == tool_name:
+            logger.info("Skipping duplicate tool '%s' to avoid re-execution", tool_name)
+            break
+
+        result = tool.execute(**action.arguments)
+        payload = result.data if result.success else result.error
+        preview = str(payload) if payload is not None else ""
         executions.append(
             PlannerToolExecution(
                 tool_name=tool_name,
@@ -84,6 +74,7 @@ def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> Gr
                 output_preview=preview,
             )
         )
+        last_used_tool = tool_name
 
         if preview:
             collected_evidence.append(preview)
@@ -100,5 +91,4 @@ def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> Gr
     state.thinking_plan_summary = None
     state.thinking_plan_steps = []
     state.final_answer_draft = None
-    state.next_action = NextAction.ANSWER
     return state
