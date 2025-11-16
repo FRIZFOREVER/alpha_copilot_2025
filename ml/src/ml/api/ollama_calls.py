@@ -20,9 +20,9 @@ class ReasoningModelClient:
         self.settings: ReasoningClientSettings = settings
 
     def call(self, messages: ChatHistory, **kwargs: Any) -> str:
-        logger.info(
+        logger.debug(
             "Calling Reasoner with messages as payload: %s",
-            messages.messages_list(),
+            messages.model_dump_json(ensure_ascii=False, indent=2),
         )
 
         try:
