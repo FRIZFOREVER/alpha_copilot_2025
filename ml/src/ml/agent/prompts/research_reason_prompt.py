@@ -4,6 +4,7 @@ from collections.abc import Sequence
 
 from ml.agent.graph.state import ResearchObservation, ResearchToolRequest, ResearchTurn
 from ml.agent.prompts.context_blocks import build_persona_block
+from ml.agent.tools.base import BaseTool
 from ml.configs.message import ChatHistory, Role, UserProfile
 
 
@@ -43,11 +44,26 @@ def _format_conversation_context(conversation: ChatHistory) -> str:
     return header + "\n" + "\n\n".join(lines)
 
 
+def _format_tool_catalog(tools: Sequence[BaseTool]) -> str:
+    if not tools:
+        return "Доступных инструментов не зарегистрировано."
+
+    lines: list[str] = []
+    for tool in tools:
+        schema_text = str(tool.schema)
+        lines.append(
+            f"- {tool.name}: {tool.description}\n"
+            f"  Схема аргументов: {schema_text}"
+        )
+    return "Доступные инструменты:\n" + "\n".join(lines)
+
+
 def get_research_reason_prompt(
     profile: UserProfile,
     conversation: ChatHistory,
     turn_history: Sequence[ResearchTurn],
     latest_reasoning: str | None = None,
+    available_tools: Sequence[BaseTool] = (),
 ) -> ChatHistory:
     """Создать подсказку для рассуждений с учётом профиля и предыдущих ходов."""
 
@@ -65,7 +81,8 @@ def get_research_reason_prompt(
 
     sections: list[str] = [
         (
-            "Вы — эксперт по исследовательским стратегиям, координирующий многошаговое расследование.\n"
+            "Вы — эксперт по исследовательским стратегиям, "
+            "координирующий многошаговое расследование.\n"
             "Изучи профиль пользователя, текущий диалог и накопленные доказательства, "
             "чтобы определить оптимальный следующий шаг."
         ),
@@ -81,13 +98,20 @@ def get_research_reason_prompt(
         "Всегда ссылайся на доступные факты из диалога и прошлых ходов, избегай повторного "
         "запроса одной и той же информации и фиксируй пробелы в данных."
     )
+    sections.append(_format_tool_catalog(available_tools))
+    sections.append(
+        "Информация о доступных инструментах дана выше, но их вызов выполняется на следующем этапе. "
+        "Если выбираешь действие TOOL, просто укажи инструмент и обоснуй, почему он нужен, "
+        "не описывая технические детали вызова."
+    )
 
     prompt = ChatHistory()
     prompt.add_or_change_system("\n\n".join(sections))
 
     prompt.add_user(
         "Определи следующий шаг исследования. Укажи новую сводку рассуждений, выбери одно "
-        "из действий THINK (продолжить анализ), TOOL (подготовить запрос к инструменту) или FINALIZE "
-        "(перейти к ответу), и объясни, какие сведения обосновывают выбор."
+        "из действий THINK (продолжить анализ), TOOL (подготовить запрос к инструменту) или"
+        " FINALIZE (прейти к ответу), и объясни, какие сведения обосновывают выбор. "
+        "Если выбрал TOOL, просто назови инструмент и зачем он необходим."
     )
     return prompt
