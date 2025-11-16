@@ -6,9 +6,12 @@ import asyncio
 import logging
 from contextvars import ContextVar, Token
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, TYPE_CHECKING
 
 from ml.api.graph_history import GraphLogClient, PicsTags
+
+if TYPE_CHECKING:
+    from ml.agent.graph.state import GraphState
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +24,6 @@ class _GraphLogItem:
 
 
 _SHUTDOWN: Final[object] = object()
-
-GraphLogContext = tuple["GraphLogDispatcher", int | None]
-graph_log_context: ContextVar[GraphLogContext | None] = ContextVar(
-    "graph_log_context", default=None
-)
 
 
 class GraphLogDispatcher:
@@ -64,8 +62,14 @@ class GraphLogDispatcher:
                     logger.exception("Failed to dispatch graph_log message")
 
 
+GraphLogContext = tuple[GraphLogDispatcher | None, int | None]
+graph_log_context: ContextVar[GraphLogContext | None] = ContextVar(
+    "graph_log_context", default=None
+)
+
+
 def set_graph_log_context(
-    dispatcher: GraphLogDispatcher, answer_id: int | None
+    dispatcher: GraphLogDispatcher | None, answer_id: int | None
 ) -> Token[GraphLogContext | None]:
     """Persist dispatcher context for the lifetime of the request."""
 
@@ -78,19 +82,50 @@ def reset_graph_log_context(token: Token[GraphLogContext | None]) -> None:
     graph_log_context.reset(token)
 
 
-def send_graph_log(tag: PicsTags, message: str, answer_id: int | None = None) -> None:
+def _log_dispatcher_skip(reason: str, message: str) -> None:
+    logger.debug("Graph log skipped (%s): %s", reason, message)
+
+
+def send_graph_log(tag: PicsTags, answer_id: int | None, message: str) -> bool:
     """Fire-and-forget helper for synchronous graph code."""
 
     context_value = graph_log_context.get()
     if context_value is None:
-        return
+        _log_dispatcher_skip("no-context", message)
+        return False
 
     dispatcher, context_answer_id = context_value
     if dispatcher is None:
-        return
+        _log_dispatcher_skip("no-dispatcher", message)
+        return False
 
     target_answer_id = answer_id if answer_id is not None else context_answer_id
     if target_answer_id is None:
-        return
+        _log_dispatcher_skip("no-answer-id", message)
+        return False
 
     dispatcher.submit(tag=tag, answer_id=target_answer_id, message=message)
+    return True
+
+
+def get_context_answer_id() -> int | None:
+    """Return the answer id stored in the current dispatcher context."""
+
+    context_value = graph_log_context.get()
+    if context_value is None:
+        return None
+    _, answer_id = context_value
+    return answer_id
+
+
+def log_state_event(state: GraphState, tag: PicsTags, message: str) -> None:
+    """Send a graph log event derived from a LangGraph state object."""
+
+    answer_id = state.payload.messages.get_answer_id()
+    send_graph_log(tag=tag, answer_id=answer_id, message=message)
+
+
+def log_think(state: GraphState, message: str) -> None:
+    """Shortcut helper for emitting PicsTags.Think graph log events."""
+
+    log_state_event(state=state, tag=PicsTags.Think, message=message)
