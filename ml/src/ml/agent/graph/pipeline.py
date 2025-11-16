@@ -147,8 +147,13 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
     raw_result: dict[str, Any] = app.invoke(state)
     try:
         result: GraphState = GraphState.model_validate(raw_result)
-    except:
-        RuntimeError("GraphState parse Failed")
+    except Exception as exc:  # pragma: no cover - validation should succeed
+        logger.error(
+            "Failed to validate GraphState from graph output: %s; raw_result=%s",
+            exc,
+            raw_result,
+        )
+        raise RuntimeError("GraphState validation failed") from exc
 
     logging.debug(
         "Started final prompt generation with payload: \n%s",
