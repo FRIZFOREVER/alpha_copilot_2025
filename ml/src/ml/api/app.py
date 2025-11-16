@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager, suppress
+from contextlib import AsyncExitStack, asynccontextmanager, suppress
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -14,6 +14,12 @@ from ml.agent.router import (
     StreamError,
     async_stream_workflow,
     workflow_collected_async,
+)
+from ml.api.graph_history import GraphLogClient, get_backend_url
+from ml.api.graph_logging import (
+    GraphLogDispatcher,
+    reset_graph_log_context,
+    set_graph_log_context,
 )
 from ml.api.ollama_setup import (
     download_missing_models,
@@ -96,11 +102,47 @@ def create_app() -> FastAPI:
         if not app.state.models_ready.is_set():
             raise HTTPException(status_code=503, detail="Models are still initialising")
 
+        backend_url = get_backend_url()
+        exit_stack = AsyncExitStack()
+        dispatcher: GraphLogDispatcher | None = None
+        dispatcher_task: asyncio.Task[None] | None = None
+        stream_handle: AsyncStreamHandle
+        context_token = None
+
         try:
-            stream_handle: AsyncStreamHandle = await async_stream_workflow(payload)
+            client = await exit_stack.enter_async_context(
+                GraphLogClient(backend_url=backend_url, chat_id=payload.chat_id)
+            )
+            loop = asyncio.get_running_loop()
+            dispatcher = GraphLogDispatcher(loop=loop, client=client)
+            dispatcher_task = asyncio.create_task(dispatcher.run())
+            context_token = set_graph_log_context(
+                dispatcher=dispatcher, answer_id=payload.messages.get_answer_id()
+            )
+
+            stream_handle = await async_stream_workflow(payload)
         except HTTPException:
+            if context_token is not None:
+                reset_graph_log_context(context_token)
+            if dispatcher:
+                dispatcher.stop()
+            if dispatcher_task:
+                with suppress(Exception):
+                    await dispatcher_task
+            with suppress(Exception):
+                await exit_stack.aclose()
             raise
         except Exception as exc:
+            if context_token is not None:
+                reset_graph_log_context(context_token)
+                context_token = None
+            if dispatcher:
+                dispatcher.stop()
+            if dispatcher_task:
+                with suppress(Exception):
+                    await dispatcher_task
+            with suppress(Exception):
+                await exit_stack.aclose()
             logger.exception("Failed to start streaming workflow")
             raise HTTPException(
                 status_code=500, detail="Failed to start streaming workflow"
@@ -124,6 +166,15 @@ def create_app() -> FastAPI:
                 _drain_async_queue(stream_handle.queue)
                 with suppress(Exception):
                     await stream_handle.worker_task
+                if dispatcher:
+                    dispatcher.stop()
+                if dispatcher_task:
+                    with suppress(Exception):
+                        await dispatcher_task
+                if context_token is not None:
+                    reset_graph_log_context(context_token)
+                with suppress(Exception):
+                    await exit_stack.aclose()
 
         headers: dict[str, Any] = {"tag": stream_handle.tag.value}
         return StreamingResponse(
