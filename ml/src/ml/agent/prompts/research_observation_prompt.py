@@ -52,7 +52,6 @@ def _format_documents(tool_name: str, documents: Sequence[str]) -> str:
 def get_research_observation_prompt(
     profile: UserProfile,
     conversation_summary: str,
-    turn_history_summary: str,
     tool_name: str,
     documents: Sequence[str],
 ) -> ChatHistory:
@@ -64,11 +63,7 @@ def get_research_observation_prompt(
         if conversation_summary
         else "Контекст диалога:\nПредыдущие сообщения отсутствуют."
     )
-    history_block = (
-        "Завершённые исследовательские ходы:\n" + turn_history_summary
-        if turn_history_summary
-        else "Завершённые исследовательские ходы:\nНет записей перед текущим наблюдением."
-    )
+
     documents_block = "Последние данные от инструмента:\n" + _format_documents(tool_name, documents)
 
     system_sections: list[str] = [

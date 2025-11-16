@@ -7,7 +7,6 @@ from ml.agent.graph.state import GraphState, ResearchTurn
 from ml.agent.prompts import (
     get_research_observation_prompt,
     summarize_conversation_for_observer,
-    summarize_turn_history_for_observer,
 )
 from ml.api.ollama_calls import ReasoningModelClient
 
@@ -78,12 +77,10 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
         state.final_answer_evidence = collected
 
     conversation_summary = summarize_conversation_for_observer(state.payload.messages)
-    turn_history_summary = summarize_turn_history_for_observer(state.turn_history)
 
     prompt = get_research_observation_prompt(
         profile=state.payload.profile,
         conversation_summary=conversation_summary,
-        turn_history_summary=turn_history_summary,
         tool_name=observation.tool_name,
         documents=documents,
     )
