@@ -15,17 +15,82 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/shared/lib/mergeClass";
 import { analyticsData } from "../lib/constants";
 import { Header } from "@/widgets/header";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Image } from "@/shared/ui/image/image";
+import { Suspense, lazy, useMemo } from "react";
+
+// Динамический импорт recharts для code splitting
+const PieChartComponent = lazy(async () => {
+  const recharts = await import("recharts");
+  return {
+    default: ({
+      categoryChartData,
+    }: {
+      categoryChartData: Array<{
+        name: string;
+        value: number;
+        color: string;
+      }>;
+    }) => {
+      const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } = recharts;
+      return (
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={categoryChartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={({ name, percent }) =>
+                `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`
+              }
+              outerRadius={90}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {categoryChartData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={
+                    entry.color === "purple-500"
+                      ? "#8b5cf6"
+                      : entry.color === "blue-500"
+                      ? "#3b82f6"
+                      : entry.color === "pink-500"
+                      ? "#ec4899"
+                      : entry.color === "green-500"
+                      ? "#10b981"
+                      : "#6b7280"
+                  }
+                />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "white",
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "8px",
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      );
+    },
+  };
+});
 
 const AnalyticsPage = () => {
   const navigate = useNavigate();
 
-  const categoryChartData = analyticsData.categoryDistribution.map((cat) => ({
-    name: cat.category,
-    value: cat.percentage,
-    color: cat.color.replace("bg-", ""),
-  }));
+  const categoryChartData = useMemo(
+    () =>
+      analyticsData.categoryDistribution.map((cat) => ({
+        name: cat.category,
+        value: cat.percentage,
+        color: cat.color.replace("bg-", ""),
+      })),
+    []
+  );
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80">
@@ -194,47 +259,15 @@ const AnalyticsPage = () => {
                 />
               </div>
               <div className="relative z-10 p-4 sm:p-6">
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={categoryChartData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) =>
-                        `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`
-                      }
-                      outerRadius={90}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {categoryChartData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={
-                            entry.color === "purple-500"
-                              ? "#8b5cf6"
-                              : entry.color === "blue-500"
-                              ? "#3b82f6"
-                              : entry.color === "pink-500"
-                              ? "#ec4899"
-                              : entry.color === "green-500"
-                              ? "#10b981"
-                              : "#6b7280"
-                          }
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "12px",
-                        padding: "8px",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center h-[300px]">
+                      <div className="text-gray-500">Загрузка графика...</div>
+                    </div>
+                  }
+                >
+                  <PieChartComponent categoryChartData={categoryChartData} />
+                </Suspense>
               </div>
             </div>
 

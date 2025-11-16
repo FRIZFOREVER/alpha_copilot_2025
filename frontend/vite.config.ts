@@ -64,4 +64,30 @@ export default defineConfig(({ mode }) => ({
       conditions: ["development", "browser"],
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Разделение vendor библиотек на отдельные чанки
+          if (id.includes("node_modules")) {
+            if (id.includes("react") || id.includes("react-dom") || id.includes("react-router")) {
+              return "react-vendor";
+            }
+            if (id.includes("@tanstack/react-query")) {
+              return "query-vendor";
+            }
+            if (id.includes("recharts")) {
+              return "recharts-vendor";
+            }
+            if (id.includes("lucide-react") || id.includes("framer-motion")) {
+              return "ui-vendor";
+            }
+            // Остальные node_modules в отдельный чанк
+            return "vendor";
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
 }));
