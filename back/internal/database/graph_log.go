@@ -53,7 +53,11 @@ func (s *GraphLogService) GetGraphLog(answerID int) ([]GraphLog, error) {
 		s.logger.WithError(err).Error("Failed to query graph log")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			s.logger.Error("Ошибка закрытия строк: ", err)
+		}
+	}()
 
 	var logs []GraphLog
 	for rows.Next() {

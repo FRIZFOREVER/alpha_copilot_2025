@@ -55,7 +55,11 @@ func (wc *WhisperClient) SendVoice(voiceURL []byte) (*WhisperOut, error) {
 	if err != nil {
 		return nil, fmt.Errorf("whisper request error: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			println("Ошибка при закрытии тела запроса: ", err.Error())
+		}
+	}()
 
 	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -84,14 +88,16 @@ func (wc *WhisperClient) Ping() (out bool) {
 		fmt.Println("Ошибка запроса:", err)
 		out = false
 	} else {
-		if resp.StatusCode == 200 {
+		if resp.StatusCode == http.StatusOK {
 			wc.logger.Debug("OK:", resp.StatusCode)
 			out = true
 		} else {
 			wc.logger.Debug("Не OK:", resp.StatusCode)
 			out = false
 		}
-		resp.Body.Close()
+		if err := resp.Body.Close(); err != nil {
+			wc.logger.Error("Ошибка при закрытии тела запроса: ", err)
+		}
 	}
 	return out
 }

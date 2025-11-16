@@ -83,7 +83,6 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 		for {
 			a = recognizerWhisper.Ping()
 			isWisperServiceAlive = &a
-			println(a)
 			time.Sleep(4 * time.Second)
 		}
 	}()

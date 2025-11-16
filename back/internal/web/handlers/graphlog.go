@@ -91,7 +91,7 @@ func GraphLogHandlerWS(secret string, repo database.GraphLogRepository, logger *
 			}
 
 			if err := repo.UpdateGraphLog(msg.Message, msg.Tag, msg.AnswerID); err != nil {
-				logger.Errorf("Ошибка записи данных в бд: ", err.Error())
+				logger.Errorf("Ошибка записи данных в бд: %v\n", err.Error())
 			}
 			// Выводим сообщение в консоль
 			logger.Debugf("Чат %s | Пользователь %s: %s\n", chatID, userUUID, msg.Message)

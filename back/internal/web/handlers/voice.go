@@ -78,7 +78,9 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 	jsonBytes := fmt.Sprintf("{\"voice_url\":\"%s\"}", url)
 
 	var question string
-	if *vh.isWipserEnable {
+
+	switch {
+	case *vh.isWipserEnable:
 		whisperOut, err := vh.clientWhisper.SendVoice([]byte(jsonBytes))
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -87,7 +89,9 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 			})
 		}
 		question = whisperOut.Message
-	} else if vh.isAssamblyEnable {
+
+	case vh.isAssamblyEnable:
+		var err error
 		question, err = vh.clientAssemblyAI.MessageToRecognizer(fileBytes)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -95,10 +99,11 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 				"details": err.Error(),
 			})
 		}
-	} else {
+
+	default:
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Нет подключенных распознавателей голоса",
-			"details": err.Error(),
+			"details": "no available recognizers",
 		})
 	}
 
