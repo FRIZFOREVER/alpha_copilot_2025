@@ -53,9 +53,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow.add_node("Research tool call", partial(research_tool_call_node, client=client))
     workflow.add_node("Research observer", partial(research_observer_node, client=client))
     workflow.add_node("Research answer", partial(research_answer_node, client=client))
-    workflow.add_node(
-        "Fast answer", fast_answer_node
-    )  # not passing model cuz forming a final prompt
+    workflow.add_node("Fast answer", fast_answer_node)
     workflow.add_node("Final answer", final_answer_node)
 
     # entrypoint
