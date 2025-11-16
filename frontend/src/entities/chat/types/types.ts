@@ -1,3 +1,5 @@
+import { MessageData } from "@/shared/types/message";
+
 export interface CreateChatDto {
   name: string;
 }
@@ -91,16 +93,8 @@ export interface SendMessageStreamCallbacks {
   onError?: (error: Error) => void;
 }
 
-export interface SearchMessageResult {
-  question_id: number;
-  answer_id: number;
-  question: string;
-  answer: string;
-  question_time: string;
-  answer_time: string;
-  voice_url: string;
+export interface SearchMessageResult extends Omit<HistoryMessage, "tag"> {
   file_url: string;
-  rating: number | null;
 }
 
 export type SearchMessagesResponse = SearchMessageResult[] | null;

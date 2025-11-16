@@ -1,12 +1,12 @@
+import { ApiStatus, TelegramAuthStatus } from "@/shared/types/api";
+
 export interface LoginDto {
   login: string;
   password: string;
 }
 
-export interface RegisterDto {
-  login: string;
+export interface RegisterDto extends Pick<LoginDto, "login" | "password"> {
   username: string;
-  password: string;
 }
 
 export interface AuthResponse {
@@ -28,14 +28,21 @@ export interface UpdateProfileDto {
   additional_instructions: string;
 }
 
-// Telegram Integration Types
+export interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name: string | null;
+  username: string | null;
+  phone_number: string;
+}
+
 export interface TelegramAuthStartRequest {
   user_id: string;
   phone_number: string;
 }
 
 export interface TelegramAuthStartResponse {
-  status: "ok" | "error" | "code_sent";
+  status: Extract<TelegramAuthStatus, "ok" | "error" | "code_sent">;
   phone_code_hash?: string;
   message?: string;
   error?: string;
@@ -48,16 +55,10 @@ export interface TelegramAuthVerifyRequest {
 }
 
 export interface TelegramAuthVerifyResponse {
-  status: "ok" | "error" | "password_required";
+  status: Extract<TelegramAuthStatus, "ok" | "error" | "password_required">;
   message?: string;
   error?: string;
-  user?: {
-    id: number;
-    first_name: string;
-    last_name: string | null;
-    username: string | null;
-    phone_number: string;
-  };
+  user?: TelegramUser;
 }
 
 export interface TelegramStatusRequest {
@@ -67,21 +68,10 @@ export interface TelegramStatusRequest {
 export interface TelegramStatusResponse {
   status: "ok";
   authorized: boolean;
-  user_info?: {
-    id: number;
-    first_name: string;
-    last_name: string | null;
-    username: string | null;
-    phone_number: string;
-  };
+  user_info?: TelegramUser;
 }
 
-export interface TelegramContact {
-  id: number;
-  first_name: string;
-  last_name: string;
-  username: string;
-  phone_number: string;
+export interface TelegramContact extends TelegramUser {
   is_contact: boolean;
 }
 
@@ -91,7 +81,7 @@ export interface TelegramContactsRequest {
 }
 
 export interface TelegramContactsResponse {
-  status: "ok" | "error";
+  status: ApiStatus;
   contacts: TelegramContact[];
   error?: string;
 }
@@ -103,21 +93,20 @@ export interface TelegramSendMessageRequest {
 }
 
 export interface TelegramSendMessageResponse {
-  status: "ok" | "error";
+  status: ApiStatus;
   success?: boolean;
   message_id?: number;
   date?: string;
   error?: string;
 }
 
-// Todoist Integration Types
 export interface TodoistAuthSaveRequest {
   user_id: string;
   token: string;
 }
 
 export interface TodoistAuthSaveResponse {
-  status: "ok" | "error";
+  status: ApiStatus;
   message?: string;
   error?: string;
 }
@@ -139,7 +128,7 @@ export interface TodoistCreateTaskRequest {
 }
 
 export interface TodoistCreateTaskResponse {
-  status: "ok" | "error";
+  status: ApiStatus;
   task_id?: string;
   content?: string;
   url?: string;
