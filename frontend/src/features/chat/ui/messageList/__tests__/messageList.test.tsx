@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MessageList, MessageData } from "../messageList";
+import { MessageList } from "../messageList";
+import type { MessageData } from "@/shared/types/message";
 
 vi.mock("@/shared/hooks/useScrollBottom", () => ({
   useScrollBottom: () => ({

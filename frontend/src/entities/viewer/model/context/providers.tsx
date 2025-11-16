@@ -6,9 +6,9 @@ import {
   useState,
 } from "react";
 import { deleteAccessToken, setAccessToken } from "@/entities/token";
-import { IViewerHandler, IViewerState } from "./types";
+import { IViewerContext, IViewerState } from "./types";
 
-const ViewerContext = createContext<IViewerState & IViewerHandler>({
+const ViewerContext = createContext<IViewerContext>({
   isAuthenticated: false,
   loginViewer: () => {},
   logoutViewer: () => {},

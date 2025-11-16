@@ -7,3 +7,5 @@ export interface IViewerHandler {
   loginViewer: (accessToken: string) => void;
   logoutViewer: () => void;
 }
+
+export type IViewerContext = IViewerState & IViewerHandler;

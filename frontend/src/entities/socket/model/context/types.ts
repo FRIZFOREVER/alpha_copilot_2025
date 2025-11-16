@@ -13,3 +13,5 @@ export interface SocketHandler {
   connectGraphLog: (params: { chatId: number; token: string }) => Promise<void>;
   disconnectGraphLog: () => void;
 }
+
+export type SocketContext = SocketState & SocketHandler;

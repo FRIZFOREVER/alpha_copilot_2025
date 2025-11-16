@@ -1,7 +1,8 @@
+import { memo } from "react";
 import { Chat } from "@/features/chat";
 import { useChatMessages } from "@/features/chat/hooks/useChatMessages";
 
-const CopilotChatPage = () => {
+const CopilotChatPage = memo(() => {
   const {
     messages,
     handleSendMessage,
@@ -19,5 +20,8 @@ const CopilotChatPage = () => {
       suggestions={suggestions}
     />
   );
-};
+});
+
+CopilotChatPage.displayName = "CopilotChatPage";
+
 export default CopilotChatPage;

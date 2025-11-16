@@ -22,8 +22,12 @@ import { useTodoistStatusQuery } from "@/entities/auth/hooks/useTodoistStatus";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
 import { sendTelegramMessage } from "@/entities/auth/api/authService";
 import { TelegramContact } from "@/entities/auth/types/types";
+import { useGraphLogsContext } from "../chat/chat";
+import { useGraphLogsQuery } from "@/entities/chat/hooks/useGraphLogs";
+import { SourcesButton } from "./sourcesButton";
 
 export interface MessageProps {
+  id: string;
   content: string;
   isUser: boolean;
   answerId?: number;
@@ -35,6 +39,7 @@ export interface MessageProps {
 }
 
 export const Message = ({
+  id,
   content,
   isUser,
   answerId,
@@ -51,6 +56,15 @@ export const Message = ({
   const { handleCopyClick, isCopied } = useCopied();
 
   const [isSendingTelegram, setIsSendingTelegram] = useState(false);
+
+  const graphLogsContext = useGraphLogsContext();
+
+  const shouldCheckLogs = !!answerId && !!graphLogsContext;
+  const { data: graphLogs } = useGraphLogsQuery(
+    shouldCheckLogs ? answerId : undefined
+  );
+
+  const hasGraphLogs = graphLogs && graphLogs.length > 0;
 
   const getStoredPhoneNumber = (): string | undefined => {
     try {
@@ -88,17 +102,20 @@ export const Message = ({
 
     openModal(EModalVariables.TELEGRAM_CONTACTS_MODAL, {
       ...request_data,
-      onSelect: async (contact: TelegramContact) => {
+      message_text: content,
+      onSelect: async (contact: TelegramContact, truncatedText?: string) => {
         if (!phone_number || !content.trim()) {
           return;
         }
+
+        const textToSend = truncatedText || content;
 
         setIsSendingTelegram(true);
         try {
           await sendTelegramMessage({
             phone_number,
             recipient_id: contact.id,
-            text: content,
+            text: textToSend,
           });
         } catch (error) {
           console.error("Failed to send Telegram message:", error);
@@ -133,6 +150,7 @@ export const Message = ({
 
   return (
     <div
+      data-message-id={id}
       className={cn(
         "flex gap-4 px-4 md:px-8 py-4 md:py-6",
         isUser ? "justify-end" : "justify-start",
@@ -273,6 +291,16 @@ export const Message = ({
             >
               <RefreshCw className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </button>
+            {!isCompact &&
+              answerId &&
+              graphLogsContext &&
+              hasGraphLogs &&
+              graphLogs && (
+                <SourcesButton
+                  count={graphLogs.length}
+                  onClick={() => graphLogsContext?.openGraphLogs(answerId)}
+                />
+              )}
           </div>
         )}
       </div>

@@ -1,12 +1,13 @@
 """Observation processing node for the research workflow."""
 
+import logging
 from typing import Any
 
-from ml.agent.graph.state import GraphState, NextAction, ResearchTurn
+from ml.agent.graph.state import GraphState, ResearchTurn
 from ml.agent.prompts import get_research_observation_prompt
 from ml.api.ollama_calls import ReasoningModelClient
 
-MAX_RESEARCH_ITERATIONS = 6
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _extract_result_documents(payload: dict[str, Any]) -> list[str]:
@@ -14,9 +15,13 @@ def _extract_result_documents(payload: dict[str, Any]) -> list[str]:
     results: Any | None = payload.get("results") if payload else None
     if results:
         for index, item in enumerate(results, start=1):
+            is_viable = item.get("is_viable") if hasattr(item, "get") else None
+            if is_viable is False:
+                continue
             lines: list[str] = []
             title = item.get("title")
             url = item.get("url")
+            summary = item.get("summary")
             excerpt = item.get("excerpt")
             if not excerpt:
                 snippet = item.get("snippet")
@@ -26,6 +31,8 @@ def _extract_result_documents(payload: dict[str, Any]) -> list[str]:
                     content = item.get("content")
                     if content:
                         excerpt = content
+            if is_viable and summary:
+                excerpt = summary
             if title:
                 lines.append(f"Title: {title}")
             if url:
@@ -54,21 +61,39 @@ def _collect_documents(observation_metadata: dict[str, Any]) -> list[str]:
 
 
 def research_observer_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
+    logger.info("Entered Research observer node")
     observation = state.active_observation
     if observation is None:
-        state.next_action = NextAction.THINK
         return state
 
     documents = _collect_documents(observation.metadata)
 
+    if documents:
+        collected: list[str] = list(state.final_answer_evidence)
+        collected.extend(documents)
+        state.final_answer_evidence = collected
+
+    latest_reasoning_text = state.latest_reasoning_text
+    if latest_reasoning_text is None:
+        logger.exception("Latest reasoning text is missing before observation handling")
+        raise ValueError("Latest reasoning text must be set before processing observations")
+
+    try:
+        latest_request = state.payload.messages.messages[-1].content
+    except IndexError as exc:  # pragma: no cover - not expected in normal runs
+        logger.exception("Conversation history is empty, cannot extract the latest request")
+        raise ValueError("Conversation history is empty") from exc
+
     prompt = get_research_observation_prompt(
         conversation=state.payload.messages,
-        turn_history=state.turn_history,
+        latest_reasoning=latest_reasoning_text,
+        latest_request=latest_request,
         tool_name=observation.tool_name,
         documents=documents,
     )
 
     summary: str = client.call(messages=prompt)
+    logger.info("Research observer summary: %s", summary)
 
     current_turn: ResearchTurn
     if state.turn_history:
@@ -79,15 +104,9 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
     current_turn.observation = observation
     current_turn.reasoning_summary = summary
 
-    state.latest_reasoning = summary
+    state.latest_reasoning_text = summary
     state.active_observation = None
-    state.loop_counter = state.loop_counter + 1
 
     state.turn_history.append(current_turn)
-
-    if state.loop_counter < MAX_RESEARCH_ITERATIONS and state.final_prompt is None:
-        state.next_action = NextAction.THINK
-    else:
-        state.next_action = NextAction.FINISH
 
     return state

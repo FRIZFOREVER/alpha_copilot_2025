@@ -21,10 +21,7 @@ export interface IModalState {
   data: ModalData;
 }
 
-export interface IModalContext {
-  isOpen: boolean;
-  selectType: EModalVariables | null;
-  data: ModalData;
+export interface IModalContext extends IModalState {
   openModal: (type: EModalVariables, data?: ModalData) => void;
   closeModal: () => void;
 }

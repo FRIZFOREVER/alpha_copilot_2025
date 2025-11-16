@@ -8,6 +8,7 @@ import (
 
 type Settings struct {
 	Port         string `envconfig:"PORT"                 default:":8080"`
+	Debug        string `envconfig:"DEBUG"                default:"INFO"`
 	SecretSerice string `envconfig:"SECRET_SERVICE"       default:"secret_service"`
 	SecretUser   string `envconfig:"SECRET_USER"          default:"secret_user"`
 
