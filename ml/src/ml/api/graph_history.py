@@ -29,6 +29,8 @@ class PicsTags(str, Enum):
 
 
 class GraphLogMessage(TypedDict):
+    """Serialized payload for graph log WebSocket messages."""
+
     tag: PicsTags
     answer_id: int
     message: str
@@ -128,13 +130,13 @@ class GraphLogClient:
             self._reset_connection()
             return False
 
-    async def send_log(self, tag: PicsTags, question_id: int, message: str) -> bool:
+    async def send_log(self, tag: PicsTags, answer_id: int, message: str) -> bool:
         """
         Отправка лога через WebSocket.
 
         Args:
             tag: Тег лога
-            question_id: ID вопроса (из последнего сообщения с role="user")
+            answer_id: ID ответа, связанного с сообщением
             message: Сообщение лога
 
         Returns:
@@ -146,7 +148,7 @@ class GraphLogClient:
 
         log_message: GraphLogMessage = {
             "tag": tag,
-            "answer_id": question_id,  # Передаем question_id, бэкенд получит answer_id по нему
+            "answer_id": answer_id,
             "message": message,
         }
 

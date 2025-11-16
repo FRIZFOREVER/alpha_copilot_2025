@@ -56,7 +56,7 @@ class GraphLogDispatcher:
             if isinstance(item, _GraphLogItem):
                 try:
                     await self._client.send_log(
-                        tag=item.tag, question_id=item.answer_id, message=item.message
+                        tag=item.tag, answer_id=item.answer_id, message=item.message
                     )
                 except Exception:
                     logger.exception("Failed to dispatch graph_log message")
