@@ -1,14 +1,10 @@
 """Утилиты для работы с Ollama"""
-
-import asyncio
 import json
 import logging
-import os
 import time
 from typing import Any, Generator
 
 import httpx
-import websockets
 from ollama import Client
 
 from config import OLLAMA_HOST, DEFAULT_MODEL
@@ -140,105 +136,12 @@ def ensure_model_available(client: Client, model_name: str) -> str:
         raise
 
 
-async def _send_mock_graph_log(
-    ws: websockets.WebSocketClientProtocol, tag: str, answer_id: int, message: str
-) -> None:
-    """Отправка мокового graph_log через WebSocket"""
-    try:
-        log_message = {
-            "tag": tag,
-            "answer_id": answer_id,
-            "message": message,
-        }
-        await ws.send(json.dumps(log_message))
-        logger.debug(f"Отправлен моковый graph_log: {log_message}")
-    except Exception as e:
-        logger.warning(f"Ошибка отправки мокового graph_log: {e}")
-
-
 def mock_workflow(
     payload: dict[str, Any], streaming: bool = True
 ) -> Generator[StreamChunk, None, None]:
     """Функция workflow, которая обращается к локальной Ollama и использует модель"""
     model = payload.get("model", DEFAULT_MODEL)
     messages = payload.get("messages", [])
-    answer_id = payload.get("answer_id")
-    chat_id = payload.get("chat_id", "")
-    tag = payload.get("tag", "general")
-
-    # Отправка моковых graph_log если есть answer_id
-    # Используем имя сервиса из docker-compose или переменную окружения
-    # В Docker используем имя сервиса 'app', иначе 'localhost'
-    # Проверяем, работаем ли мы в Docker (если есть переменная окружения или файл /.dockerenv)
-    has_dockerenv = os.path.exists("/.dockerenv")
-    has_docker_env = bool(os.getenv("DOCKER_ENV"))
-    is_docker = has_dockerenv or has_docker_env
-
-    # Приоритет: переменная окружения > автоматическое определение
-    backend_url_env = os.getenv("BACKEND_URL")
-    if backend_url_env:
-        backend_url = backend_url_env
-        logger.info(f"Используется BACKEND_URL из переменной окружения: {backend_url}")
-    else:
-        # Автоматическое определение
-        default_backend = "http://app:8080" if is_docker else "http://localhost:8080"
-        backend_url = default_backend
-        logger.info(
-            f"BACKEND_URL не установлен. Определение окружения: "
-            f"is_docker={is_docker} (/.dockerenv={has_dockerenv}, DOCKER_ENV={has_docker_env}), "
-            f"используется: {backend_url}"
-        )
-
-    # Преобразуем http:// в ws:// для WebSocket
-    if backend_url.startswith("http://"):
-        backend_url = backend_url.replace("http://", "ws://")
-    elif backend_url.startswith("https://"):
-        backend_url = backend_url.replace("https://", "wss://")
-    elif not backend_url.startswith("ws://") and not backend_url.startswith("wss://"):
-        # Если протокол не указан, добавляем ws://
-        backend_url = f"ws://{backend_url}"
-
-    ws = None
-    loop = None
-    if answer_id:
-        try:
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-
-            # Подключаемся к WebSocket один раз для всего workflow
-            ws_url = f"{backend_url}/graph_log_writer/{chat_id}"
-            logger.info(
-                f"Подключение к WebSocket для graph_log: {ws_url}, answer_id={answer_id}, chat_id={chat_id}, tag={tag}"
-            )
-            logger.info(
-                f"BACKEND_URL из окружения: {os.getenv('BACKEND_URL')}, "
-                f"финальный backend_url: {backend_url}, "
-                f"ws_url: {ws_url}"
-            )
-            try:
-                ws = loop.run_until_complete(websockets.connect(ws_url))
-                logger.info("WebSocket подключен для graph_log")
-            except Exception as connect_error:
-                logger.error(
-                    f"Ошибка подключения к WebSocket {ws_url}: {connect_error}"
-                )
-                raise
-
-            # Отправляем начальный лог
-            loop.run_until_complete(
-                _send_mock_graph_log(
-                    ws=ws,
-                    tag=tag,
-                    answer_id=answer_id,
-                    message="Mock: Начало обработки запроса",
-                )
-            )
-        except Exception as e:
-            logger.warning(f"Ошибка подключения/отправки мокового graph_log: {e}")
-            ws = None
 
     ollama_messages = []
     for msg in messages:
@@ -291,7 +194,9 @@ def mock_workflow(
                         if error_lines:
                             error_text = " ".join(error_lines)[:500]
                     except Exception as e:
-                        error_text = f"Status {response.status_code}, could not read error: {str(e)}"
+                        error_text = (
+                            f"Status {response.status_code}, could not read error: {str(e)}"
+                        )
                     logger.error(f"Chat request failed: {error_text}")
                     raise Exception(
                         f"Ollama API returned status {response.status_code}: {error_text}"
@@ -322,24 +227,6 @@ def mock_workflow(
                             accumulated_content += chunk_content
                             eval_count += 1
 
-                            # Отправка мокового graph_log при получении чанка
-                            if (
-                                answer_id and eval_count % 5 == 0 and ws and loop
-                            ):  # Каждый 5-й чанк
-                                try:
-                                    loop.run_until_complete(
-                                        _send_mock_graph_log(
-                                            ws=ws,
-                                            tag=tag,
-                                            answer_id=answer_id,
-                                            message=f"Mock: Получен чанк #{eval_count}, накоплено символов: {len(accumulated_content)}",
-                                        )
-                                    )
-                                except Exception as e:
-                                    logger.warning(
-                                        f"Ошибка отправки мокового graph_log: {e}"
-                                    )
-
                             chunk = StreamChunk(
                                 model=model,
                                 done=done,
@@ -364,33 +251,6 @@ def mock_workflow(
                             yield chunk
 
                         if done:
-                            # Отправка финального мокового graph_log
-                            if answer_id and ws and loop:
-                                try:
-                                    loop.run_until_complete(
-                                        _send_mock_graph_log(
-                                            ws=ws,
-                                            tag=tag,
-                                            answer_id=answer_id,
-                                            message=f"Mock: Завершена обработка запроса, всего чанков: {eval_count}, длина ответа: {len(accumulated_content)}",
-                                        )
-                                    )
-                                except Exception as e:
-                                    logger.warning(
-                                        f"Ошибка отправки финального мокового graph_log: {e}"
-                                    )
-                                finally:
-                                    # Закрываем WebSocket соединение
-                                    try:
-                                        loop.run_until_complete(ws.close())
-                                        logger.info(
-                                            "WebSocket соединение для graph_log закрыто"
-                                        )
-                                    except Exception as e:
-                                        logger.warning(
-                                            f"Ошибка закрытия WebSocket: {e}"
-                                        )
-
                             if chunk is None or not chunk.done:
                                 final_chunk = StreamChunk(
                                     model=model,
@@ -427,14 +287,6 @@ def mock_workflow(
         logger.error(f"Model: {model}")
         logger.error(f"Messages count: {len(ollama_messages)}")
 
-        # Закрываем WebSocket соединение при ошибке
-        if ws and loop:
-            try:
-                loop.run_until_complete(ws.close())
-                logger.info("WebSocket соединение для graph_log закрыто после ошибки")
-            except Exception as close_error:
-                logger.warning(f"Ошибка закрытия WebSocket после ошибки: {close_error}")
-
         error_chunk = StreamChunk(
             model=model,
             done=True,
@@ -445,3 +297,4 @@ def mock_workflow(
             ),
         )
         yield error_chunk
+
