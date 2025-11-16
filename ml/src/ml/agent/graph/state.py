@@ -1,9 +1,12 @@
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
 from ml.configs.message import ChatHistory, RequestPayload
+
+if TYPE_CHECKING:
+    from ml.utils.graph_logger import GraphLogClient
 
 
 class MemoriesEvidance(BaseModel):
@@ -100,4 +103,14 @@ class GraphState(BaseModel):
     next_action: NextAction = Field(
         default=NextAction.THINK,
         description="Routing hint that indicates how downstream nodes should proceed",
+    )
+    graph_log_client: Optional["GraphLogClient"] = Field(
+        default=None,
+        description="WebSocket client for sending graph logs to backend",
+        exclude=True,
+    )
+    graph_log_loop: Optional[Any] = Field(
+        default=None,
+        description="Event loop for sending graph logs asynchronously",
+        exclude=True,
     )

@@ -1,10 +1,14 @@
 """Observation processing node for the research workflow."""
 
+import asyncio
+import logging
 from typing import Any
 
 from ml.agent.graph.state import GraphState, NextAction, ResearchTurn
 from ml.agent.prompts import get_research_observation_prompt
 from ml.api.ollama_calls import ReasoningModelClient
+
+logger = logging.getLogger(__name__)
 
 MAX_RESEARCH_ITERATIONS = 6
 
@@ -35,7 +39,9 @@ def _extract_result_documents(payload: dict[str, Any]) -> list[str]:
             if lines:
                 documents.append("\n".join(lines))
             else:
-                documents.append(f"Result {index}: No additional details were provided.")
+                documents.append(
+                    f"Result {index}: No additional details were provided."
+                )
     return documents
 
 
@@ -47,13 +53,17 @@ def _collect_documents(observation_metadata: dict[str, Any]) -> list[str]:
         query = payload.get("query")
         if query:
             documents.append(f"Original query: {query}")
-    comparison_note = observation_metadata.get("comparison_text") if observation_metadata else None
+    comparison_note = (
+        observation_metadata.get("comparison_text") if observation_metadata else None
+    )
     if comparison_note:
         documents.append(f"Comparison guidance: {comparison_note}")
     return documents
 
 
-def research_observer_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
+def research_observer_node(
+    state: GraphState, client: ReasoningModelClient
+) -> GraphState:
     observation = state.active_observation
     if observation is None:
         state.next_action = NextAction.THINK
@@ -84,6 +94,28 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
     state.loop_counter = state.loop_counter + 1
 
     state.turn_history.append(current_turn)
+
+    # Логирование наблюдения
+    if (
+        state.graph_log_client
+        and state.payload.answer_id
+        and state.payload.tag
+        and state.graph_log_loop
+    ):
+        try:
+            observation_info = (
+                f"Observation from {observation.tool_name}: {summary[:300]}"
+            )
+            # Используем event loop для отправки лога
+            state.graph_log_loop.run_until_complete(
+                state.graph_log_client.send_log(
+                    tag=state.payload.tag.value,
+                    answer_id=state.payload.answer_id,
+                    message=f"Research Observer - {observation_info}",
+                )
+            )
+        except Exception as e:
+            logger.warning(f"Ошибка отправки graph_log: {e}")
 
     if state.loop_counter < MAX_RESEARCH_ITERATIONS and state.final_prompt is None:
         state.next_action = NextAction.THINK

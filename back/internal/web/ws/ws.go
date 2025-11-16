@@ -36,7 +36,6 @@ func BroadcastMessage(chatID, senderUUID string, message Message) {
 	}
 
 	for userUUID, connInfo := range chatConnections {
-		// Пропускаем отправителя
 		if userUUID == senderUUID {
 			continue
 		}
@@ -44,6 +43,8 @@ func BroadcastMessage(chatID, senderUUID string, message Message) {
 		err := connInfo.Conn.WriteJSON(message)
 		if err != nil {
 			fmt.Printf("Ошибка отправки сообщения пользователю %s: %v\n", userUUID, err)
+		} else {
+			fmt.Printf("BroadcastMessage: Сообщение успешно отправлено пользователю %s\n", userUUID)
 		}
 	}
 }

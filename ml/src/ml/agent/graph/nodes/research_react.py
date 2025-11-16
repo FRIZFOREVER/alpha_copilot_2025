@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 
 from ml.agent.graph.state import (
@@ -10,6 +11,8 @@ from ml.agent.prompts import get_research_reason_prompt
 from ml.api.ollama_calls import ReasoningModelClient
 from ml.configs.message import ChatHistory
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class ResearchReactAction(str, Enum):
@@ -33,7 +36,9 @@ class ResearchReactResponse(BaseModel):
     )
     comparison_text: str | None = Field(
         default=None,
-        description=("Optional additional instructions for comparing or validating tool output"),
+        description=(
+            "Optional additional instructions for comparing or validating tool output"
+        ),
     )
     final_answer: str | None = Field(
         default=None,
@@ -55,6 +60,25 @@ def research_react_node(state: GraphState, client: ReasoningModelClient) -> Grap
 
     state.loop_counter = state.loop_counter + 1
     state.latest_reasoning = response.thought
+
+    # Логирование reasoning
+    if (
+        state.graph_log_client
+        and state.payload.answer_id
+        and state.payload.tag
+        and state.graph_log_loop
+    ):
+        try:
+            # Используем event loop для отправки лога
+            state.graph_log_loop.run_until_complete(
+                state.graph_log_client.send_log(
+                    tag=state.payload.tag.value,
+                    answer_id=state.payload.answer_id,
+                    message=f"Research React - Reasoning: {response.thought[:500]}",
+                )
+            )
+        except Exception as e:
+            logger.warning(f"Ошибка отправки graph_log: {e}")
 
     turn = ResearchTurn(reasoning_summary=response.thought)
 
