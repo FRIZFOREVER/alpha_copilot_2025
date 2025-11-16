@@ -3,33 +3,44 @@
 from collections.abc import Mapping, Sequence
 
 from ml.agent.graph.state import ResearchToolRequest, ResearchTurn
-from ml.configs.message import ChatHistory, Role
+from ml.agent.prompts.context_blocks import build_persona_block
+from ml.configs.message import ChatHistory, Role, UserProfile
 
 
-def _format_conversation(conversation: ChatHistory) -> str:
-    lines: list[str] = []
+def _build_dialogue_snapshot(conversation: ChatHistory) -> str:
+    """Summarize the dialogue for quick reference."""
+
+    messages = conversation.messages
     role_labels = {
         Role.system: "System",
         Role.user: "User",
         Role.assistant: "Assistant",
     }
-    for message in conversation.messages:
+    lines: list[str] = []
+    for message in messages:
         role_label = role_labels.get(message.role, message.role.value)
         lines.append(f"{role_label}: {message.content}")
-    return "\n".join(lines)
+    return "Dialogue snapshot:\n" + "\n".join(lines)
 
 
-def _format_turn_history(turn_history: Sequence[ResearchTurn]) -> str:
+def _format_turn_highlights(turn_history: Sequence[ResearchTurn], *, limit: int = 3) -> str:
+    """Return a compact summary of the most recent research turns."""
+
+    recent_turns = list(turn_history)[-limit:]
+    start_index = len(turn_history) - len(recent_turns) + 1
     lines: list[str] = []
-    for index, turn in enumerate(turn_history, start=1):
+    for offset, turn in enumerate(recent_turns):
+        turn_number = start_index + offset
         if turn.reasoning_summary:
-            lines.append(f"Turn {index} reasoning: {turn.reasoning_summary}")
+            lines.append(f"Turn {turn_number} reasoning: {turn.reasoning_summary}")
         if turn.request:
             request = turn.request
-            lines.append(f"Turn {index} tool request: {request.tool_name} -> {request.input_text}")
+            lines.append(
+                f"Turn {turn_number} tool request: {request.tool_name} -> {request.input_text}"
+            )
         if turn.observation:
             observation = turn.observation
-            lines.append(f"Turn {index} observation: {observation.content}")
+            lines.append(f"Turn {turn_number} observation: {observation.content}")
     return "\n".join(lines)
 
 
@@ -40,55 +51,61 @@ def _format_metadata(metadata: Mapping[str, object]) -> str:
     return "\n".join(lines)
 
 
+def _build_pending_request_block(pending_request: ResearchToolRequest) -> str:
+    lines: list[str] = [
+        "Pending tool request:",
+        f"Tool name: {pending_request.tool_name}",
+        f"Proposed input: {pending_request.input_text}",
+    ]
+    metadata_block = _format_metadata(pending_request.metadata)
+    if metadata_block:
+        lines.append("Metadata:")
+        lines.append(metadata_block)
+    return "\n".join(lines)
+
+
 def get_research_tool_prompt(
     conversation: ChatHistory,
     turn_history: Sequence[ResearchTurn],
     pending_request: ResearchToolRequest,
     comparison_note: str | None = None,
+    profile: UserProfile | None = None,
 ) -> ChatHistory:
     """Build a prompt for validating and finalizing the next tool request."""
 
-    prompt = ChatHistory()
-    prompt.add_or_change_system(
-        "You are responsible for crafting the exact tool call for the research agent.\n"
-        "Use the conversation and research history to justify the request.\n"
-        "Confirm the best tool, refine the input, and explain why this call moves the investigation forward."
-    )
+    persona_block = build_persona_block(profile) if profile else None
+    conversation_block = _build_dialogue_snapshot(conversation)
+    history_block = _format_turn_highlights(turn_history) if turn_history else ""
+    request_block = _build_pending_request_block(pending_request)
 
-    conversation_block = _format_conversation(conversation)
-    history_block = _format_turn_history(turn_history)
-    metadata_block = _format_metadata(pending_request.metadata)
-
-    user_sections: list[str] = []
-    if conversation_block:
-        user_sections.append("Conversation context:\n" + conversation_block)
-    else:
-        user_sections.append("Conversation context:\nNo prior dialogue available.")
-
+    evidence_sections: list[str] = []
+    if persona_block:
+        evidence_sections.append(persona_block)
+    evidence_sections.append(conversation_block)
     if history_block:
-        user_sections.append("Completed research turns:\n" + history_block)
+        evidence_sections.append("Recent research turns:\n" + history_block)
     else:
-        user_sections.append(
-            "Completed research turns:\nNone. This is the first tool call under consideration."
+        evidence_sections.append(
+            "Recent research turns:\nNone. This is the first tool call under consideration."
         )
-
-    request_lines: list[str] = [
-        "Pending tool request:",
-        f"Tool name: {pending_request.tool_name}",
-        f"Proposed input: {pending_request.input_text}",
-    ]
-    if metadata_block:
-        request_lines.append("Metadata:")
-        request_lines.append(metadata_block)
-    user_sections.append("\n".join(request_lines))
-
+    evidence_sections.append(request_block)
     if comparison_note:
-        user_sections.append("Comparison notes:\n" + comparison_note)
+        evidence_sections.append("Comparison notes:\n" + comparison_note)
 
-    user_sections.append(
-        "Decide how to execute the tool call.\n"
-        "Respond with a structured summary that includes the final tool name, the refined input, and a short justification referencing the context."
+    system_sections: list[str] = [
+        (
+            "You are responsible for crafting the exact tool call for the research agent.\n"
+            "Use the persona, dialogue snapshot, and evidence list to justify or adjust the request.\n"
+            "Confirm the best tool, refine the input, and ensure the call advances the investigation."
+        ),
+        "\n\n".join(evidence_sections),
+    ]
+
+    prompt = ChatHistory()
+    prompt.add_or_change_system("\n\n".join(system_sections))
+
+    prompt.add_user(
+        "Validate the pending tool call using the evidence above. "
+        "Return the finalized tool name, refined input, and a concise justification that cites the relevant context."
     )
-
-    prompt.add_user("\n\n".join(user_sections))
     return prompt
