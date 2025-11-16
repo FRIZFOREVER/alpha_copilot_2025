@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable
-from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlparse
@@ -19,7 +18,6 @@ DEFAULT_FETCH_TIMEOUT = 5.0
 DEFAULT_MAX_BYTES = 500_000
 DEFAULT_EXCERPT_WINDOW = 160
 DEFAULT_CONTENT_PREVIEW = 2_000
-MAX_FETCH_WORKERS = 5
 
 
 SearchResult = dict[str, Any]
@@ -140,49 +138,40 @@ class WebSearchTool(BaseTool):
         if not results:
             return
 
-        max_workers = min(len(results), MAX_FETCH_WORKERS)
-        if max_workers <= 0:
-            return
+        for result in results:
+            url = result.get("url")
+            if not url:
+                continue
 
-        futures: dict[Future[FetchedPage], SearchResult] = {}
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            for result in results:
-                url = result.get("url")
-                if not url:
-                    continue
-                futures[executor.submit(self._fetch_text, url, query)] = result
+            try:
+                page = self._fetch_text(url, query)
+            except Exception as exc:  # pragma: no cover - defensive fallback
+                errors = result.setdefault("errors", [])
+                if isinstance(errors, list):
+                    errors.append(str(exc))
+                else:
+                    result["errors"] = [str(exc)]
+                continue
 
-            for future in as_completed(futures):
-                result = futures[future]
-                try:
-                    page = future.result()
-                except Exception as exc:  # pragma: no cover - defensive fallback
-                    errors = result.setdefault("errors", [])
-                    if isinstance(errors, list):
-                        errors.append(str(exc))
-                    else:
-                        result["errors"] = [str(exc)]
-                    continue
+            if not page.text:
+                continue
 
-                if not page.text:
-                    continue
+            excerpt = page_text.build_excerpt(
+                page.text,
+                query,
+                window=self._excerpt_window,
+            )
+            if excerpt:
+                result["excerpt"] = excerpt
 
-                excerpt = page_text.build_excerpt(
-                    page.text,
-                    query,
-                    window=self._excerpt_window,
-                )
-                if excerpt:
-                    result["excerpt"] = excerpt
+            preview = page.text[: self._content_preview]
+            if preview:
+                result["content"] = preview
 
-                preview = page.text[: self._content_preview]
-                if preview:
-                    result["content"] = preview
-
-                result["is_viable"] = page.is_viable
-                if page.summary and page.is_viable:
-                    result["summary"] = page.summary
-                    result["content"] = page.summary
+            result["is_viable"] = page.is_viable
+            if page.summary and page.is_viable:
+                result["summary"] = page.summary
+                result["content"] = page.summary
 
         for result in results:
             if not result.get("excerpt"):

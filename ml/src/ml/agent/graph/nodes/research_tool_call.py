@@ -167,6 +167,11 @@ def research_tool_call_node(state: GraphState, client: ReasoningModelClient) -> 
         logger.exception("Failed to obtain tool decision")
         raise
 
+    try:
+        logger.info("Structured tool decision received: %s", decision.model_dump())
+    except Exception:  # pragma: no cover - defensive logging
+        logger.exception("Failed to log tool decision")
+
     if decision.action == "finalize_answer":
         return _finalize_from_justification(state, decision.justification)
 
@@ -196,6 +201,16 @@ def research_tool_call_node(state: GraphState, client: ReasoningModelClient) -> 
     )
 
     tool_result = tool.execute(**request.arguments)
+    try:
+        logger.info(
+            "Tool '%s' execution finished: success=%s, error=%s, data_type=%s",
+            tool_name,
+            tool_result.success,
+            tool_result.error,
+            type(tool_result.data).__name__ if tool_result.data is not None else None,
+        )
+    except Exception:  # pragma: no cover - defensive logging
+        logger.exception("Failed to log tool execution result")
     observation = _build_observation(request, tool_result)
 
     if state.turn_history:
