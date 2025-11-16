@@ -12,13 +12,38 @@ from ml.agent.tools.base import BaseTool
 from ml.configs.message import ChatHistory, UserProfile
 
 
-def _format_tool_names(tools: Sequence[BaseTool]) -> str:
+def _summarize_turn_history(turn_history: Sequence[ResearchTurn]) -> str:
+    if not turn_history:
+        return "Сводка предыдущих шагов:\nотсутствуют"
+    max_turns = 3
+    selected = list(turn_history)[-max_turns:]
+    start_index = len(turn_history) - len(selected) + 1
+    lines: list[str] = ["Сводка предыдущих шагов:"]
+    for offset, turn in enumerate(selected):
+        index = start_index + offset
+        summary = turn.reasoning_summary or "нет заметок"
+        request = turn.request
+        observation = turn.observation
+        parts: list[str] = [f"Шаг {index}: {summary}"]
+        if request:
+            parts.append("Инструмент: " + request.tool_name)
+        if observation and observation.content:
+            parts.append("Наблюдение: " + observation.content)
+        lines.append(" | ".join(parts))
+    return "\n".join(lines)
+
+
+def _format_tool_catalog(tools: Sequence[BaseTool]) -> str:
     if not tools:
-        return "нет доступных инструментов"
-    names: list[str] = []
+        return "Доступные инструменты:\nнет зарегистрированных инструментов"
+    lines: list[str] = ["Доступные инструменты:"]
     for tool in tools:
-        names.append(tool.name)
-    return ", ".join(names)
+        description = tool.description
+        entry = "- " + tool.name
+        if description:
+            entry = entry + ": " + description
+        lines.append(entry)
+    return "\n".join(lines)
 
 
 def get_research_reason_prompt(
@@ -35,15 +60,19 @@ def get_research_reason_prompt(
     persona_block = build_persona_block(profile)
     conversation_block = build_conversation_context_block(conversation)
     evidence_block = build_evidence_snippet_block(evidence_snippets)
+    turn_summary = _summarize_turn_history(turn_history)
+    tools_block = _format_tool_catalog(available_tools)
 
     sections: list[str] = [
         (
             "Ты эксперт по многошаговым исследованиям. "
-            "Изучи диалог и накопленные подтверждения, чтобы подготовить следующий вызов инструмента."
+            "Изучи диалог и подтверждения, затем сформулируй только рассуждение и рекомендацию по инструменту."
         ),
         persona_block,
         conversation_block,
         evidence_block,
+        turn_summary,
+        tools_block,
     ]
 
     if latest_reasoning:
@@ -52,22 +81,16 @@ def get_research_reason_prompt(
     prompt = ChatHistory()
     prompt.add_or_change_system("\n\n".join(sections))
 
-    tool_names = _format_tool_names(available_tools)
     response_format = (
         "Reason:\n<краткое объяснение логики>\n"
-        "Suggested tool:\n<название инструмента из списка>\n"
-        "Call plan:\nObjective: <цель вызова>\n"
-        "<ключ1>: <значение1>\n<ключ2>: <значение2>\n..."
+        "Suggested tool:\n<название инструмента или 'finalize_answer'>\n"
+        "Expected information:\n<что нужно узнать от вызова или почему можно завершать>"
     )
     user_instruction = (
-        "Используй доступные инструменты: "
-        + tool_names
-        + "\n"
-        + "Никогда не вставляй прямые стенограммы наблюдений. "
-        + "Ответь строго по шаблону ниже, не добавляя других секций.\n"
+        "Сформулируй рассуждение и предложи один инструмент из списка выше. "
+        "Не придумывай аргументы или запросы — только цель сбора информации.\n"
+        + "Ответь строго по шаблону:\n"
         + response_format
-        + "\nОбязательно перечисли аргументы для выбранного инструмента в Call plan,"
-        + " а также укажи Comparison_text, если нужно сверить будущие результаты."
     )
     prompt.add_user(user_instruction)
     return prompt
