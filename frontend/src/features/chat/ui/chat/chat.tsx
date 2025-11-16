@@ -5,6 +5,7 @@ import { ChatInput } from "../chatInput";
 import { ScrollToBottomButton } from "../scrollToBottomButton";
 import { type Suggestion } from "../suggestions";
 import type { MessageData } from "@/shared/types/message";
+import { MessageLadder } from "../message/messageLadder";
 
 export interface ChatProps {
   messages?: MessageData[];
@@ -68,6 +69,7 @@ export const Chat = memo(
               onClick={scrollToBottomFn}
             />
           )}
+          <MessageLadder messages={messages} />
         </div>
         <ChatInput
           onSend={onSendMessage}
