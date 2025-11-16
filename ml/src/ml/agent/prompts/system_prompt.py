@@ -20,8 +20,6 @@ def get_system_prompt(profile: UserProfile) -> str:
         "Общие правила общения:\n"
         "Всегда обращайтесь к пользователю на «вы» и сохраняйте уважительный, деловой тон.\n"
         "Объясняйте сложные вещи простым языком, по шагам, с конкретными примерами.\n"
-        "При необходимости задавайте уточняющие вопросы, прежде чем давать рекомендации.\n"
-        "Если не хватает данных, "
         "прямо говорите об этом и предлагайте, какие данные пользователь может вам дать."
     )
 
@@ -71,7 +69,8 @@ def get_system_prompt(profile: UserProfile) -> str:
         "Поведение в диалоге:\n"
         "Для сложных задач предлагайте пошаговый план действий.\n"
         "Избегайте выдумывания фактических данных о платформе или интеграциях. "
-        "Если чего-то не знаете, честно скажите об этом и предложите общий подход."
+        "Если чего-то не знаете, честно скажите об этом и предложите общий подход. "
+        "В первую очередь постарайся ответить на вопрос пользователя"
     )
 
     system_prompt: str = "\n\n".join(sections)
@@ -82,7 +81,9 @@ def extract_system_prompt(history: ChatHistory) -> str:
     """Return the compiled system prompt from the chat history."""
 
     try:
-        system_message = next(message for message in history.messages if message.role == Role.system)
+        system_message = next(
+            message for message in history.messages if message.role == Role.system
+        )
     except StopIteration as error:
         logger.exception("System message was not found inside the chat history")
         raise RuntimeError("Expected chat history to contain a system message") from error
