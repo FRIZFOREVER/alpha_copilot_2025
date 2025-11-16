@@ -1,26 +1,28 @@
 """Prompt builder and structured schema for selecting the reasoning mode."""
 
-from pydantic import BaseModel, Field, field_validator
+from enum import Enum
+
+from pydantic import BaseModel, Field
 
 from ml.configs.message import ChatHistory, ModelMode, UserProfile
+
+
+class ModeDecisionChoice(str, Enum):
+    """Allowable reasoning modes for automatic selection."""
+
+    Fast = ModelMode.Fast.value
+    Thinking = ModelMode.Thiking.value
 
 
 class ModeDecisionResponse(BaseModel):
     """Structured response returned by the mode decision model."""
 
-    mode: ModelMode = Field(
+    mode: ModeDecisionChoice = Field(
         description=(
             "The reasoning mode that should be used by the assistant. "
-            "Must be one of: fast, thiking, research."
+            "Must be one of: fast, thinking."
         ),
     )
-
-    @field_validator("mode")
-    @classmethod
-    def _ensure_concrete_mode(cls, value: ModelMode) -> ModelMode:
-        if value is ModelMode.Auto:
-            raise ValueError("Mode decision must not return auto")
-        return value
 
 
 def _format_personal_info(profile: UserProfile) -> str | None:
@@ -44,16 +46,19 @@ def get_mode_decision_prompt(*, profile: UserProfile, history: ChatHistory) -> C
     prompt = history.model_copy(deep=True)
 
     system_sections: list[str] = [
-        "Вы — диспетчер, выбирающий стратегию ответа (fast/thinking/research) для ассистента.",
+        "Вы — диспетчер, выбирающий стратегию ответа (fast/thinking) для ассистента.",
         (
             "Отвечайте ТОЛЬКО одним JSON-объектом с единственным полем mode, "
             'например {"mode":"thinking"}.'
         ),
         (
-            "Fast — когда ответ уже есть в истории, и от пользователя требуется лишь уточнение, "
-            "либо зарпос пользователяочень простой и не требует уточнения информации в интернете. "
-            "Thinking — для рассуждений, планов и рекомендаций. "
-            "Research — для генерации новых идей или глубокого анализа, требующих инструментов."
+            "Thinking — основной режим для рассуждений, планов и рекомендаций; "
+            "выбирайте его по умолчанию."
+        ),
+        (
+            "Fast допускается только когда ответ уже есть в истории, и от пользователя требуется "
+            "лишь уточнение, либо запрос пользователя очень простой и не требует уточнения "
+            "информации в интернете."
         ),
         "Не добавляйте пояснений, только поставьте нужный режим.",
     ]
