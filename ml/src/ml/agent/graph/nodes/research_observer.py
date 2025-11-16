@@ -11,9 +11,6 @@ from ml.agent.prompts import (
 )
 from ml.api.ollama_calls import ReasoningModelClient
 
-MAX_RESEARCH_ITERATIONS = 6
-
-
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -78,9 +75,7 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
 
     if documents:
         collected: list[str] = list(state.final_answer_evidence)
-        for doc in documents:
-            if doc not in collected:
-                collected.append(doc)
+        collected.extend(documents)
         state.final_answer_evidence = collected
 
     conversation_summary = summarize_conversation_for_observer(state.payload.messages)
@@ -108,13 +103,8 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
 
     state.latest_reasoning_text = summary
     state.active_observation = None
-    state.loop_counter = state.loop_counter + 1
 
     state.turn_history.append(current_turn)
-
-    if state.loop_counter < MAX_RESEARCH_ITERATIONS:
-        state.next_action = NextAction.THINK
-    else:
-        state.next_action = NextAction.ANSWER
+    state.next_action = NextAction.THINK
 
     return state
