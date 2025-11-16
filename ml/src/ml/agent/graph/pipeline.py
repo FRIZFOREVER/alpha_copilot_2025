@@ -53,9 +53,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow.add_node("Research tool call", partial(research_tool_call_node, client=client))
     workflow.add_node("Research observer", partial(research_observer_node, client=client))
     workflow.add_node("Research answer", partial(research_answer_node, client=client))
-    workflow.add_node(
-        "Fast answer", fast_answer_node
-    )  # not passing model cuz forming a final prompt
+    workflow.add_node("Fast answer", fast_answer_node)
     workflow.add_node("Final answer", final_answer_node)
 
     # entrypoint
@@ -106,6 +104,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
 def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
     # Create Reasoning model client
     client: ReasoningModelClient = ReasoningModelClient()
+    answer_id: int | None = payload.messages.get_answer_id()
 
     # validate user request if voice
     if payload.is_voice:
@@ -113,6 +112,7 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
         voice_is_valid: bool = validate_voice(
             voice_decoding=voice_history,
             reasoning_client=client,
+            answer_id=answer_id,
         )
         if not voice_is_valid:
             logger.warning(
@@ -128,7 +128,9 @@ def run_pipeline(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
     if not payload.tag:
         logger.info("Tag not found. Starting tag definition")
         payload.tag = define_tag(
-            last_message=payload.messages.last_message_as_history(), reasoning_client=client
+            last_message=payload.messages.last_message_as_history(),
+            reasoning_client=client,
+            answer_id=answer_id,
         )
         logger.info("Defined a tag: %s", payload.tag.value)
 

@@ -56,6 +56,14 @@ class ChatHistory(BaseModel):
     def model_dump_string(self) -> str:
         return "\n\n".join(f"{msg.role.value}: {msg.content}" for msg in self.messages)
 
+    def get_answer_id(self) -> int:
+        id: int | None = self.messages[-1].id
+        if id:
+            return id
+        else:
+            logger.error("last user message ID is none, which is impossible")
+            raise RuntimeError("last user message ID is none, which is impossible")
+
 
 class ModelMode(str, Enum):
     Fast = "fast"
