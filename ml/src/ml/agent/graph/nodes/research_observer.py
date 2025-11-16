@@ -106,7 +106,7 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
     current_turn.observation = observation
     current_turn.reasoning_summary = summary
 
-    state.latest_reasoning = summary
+    state.latest_reasoning_text = summary
     state.active_observation = None
     state.loop_counter = state.loop_counter + 1
 
