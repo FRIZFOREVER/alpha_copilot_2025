@@ -4,19 +4,22 @@ import asyncio
 import logging
 from typing import Any
 
+from config import OLLAMA_HOST
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from telegram_user_service import TelegramUserService
-from todoist_service import TodoistService
-
-from config import OLLAMA_HOST
 from handlers import (
     ollama as ollama_handlers,
+)
+from handlers import (
     telegram as telegram_handlers,
+)
+from handlers import (
     todoist as todoist_handlers,
 )
 from models.schemas import TelegramAuthStartRequest, TelegramAuthVerifyRequest
+from telegram_user_service import TelegramUserService
+from todoist_service import TodoistService
 from utils.ollama_utils import check_ollama_available, mock_workflow
 
 logging.basicConfig(level=logging.INFO)
@@ -41,9 +44,7 @@ async def startup_event():
         app.state.models_ready.set()
         logger.info("Mock ML Service is ready and Ollama is available")
     else:
-        logger.warning(
-            "Ollama is not available, but service will continue. Requests may fail."
-        )
+        logger.warning("Ollama is not available, but service will continue. Requests may fail.")
         app.state.models_ready.set()
 
 
@@ -171,16 +172,12 @@ async def get_todoist_status(request: Request):
 
 @app.post("/todoist/projects")
 async def get_todoist_projects(request: Request):
-    return await todoist_handlers.get_todoist_projects(
-        request, app.state.todoist_service
-    )
+    return await todoist_handlers.get_todoist_projects(request, app.state.todoist_service)
 
 
 @app.post("/todoist/create/task")
 async def create_todoist_task(request: Request):
-    return await todoist_handlers.create_todoist_task(
-        request, app.state.todoist_service
-    )
+    return await todoist_handlers.create_todoist_task(request, app.state.todoist_service)
 
 
 app.add_middleware(
