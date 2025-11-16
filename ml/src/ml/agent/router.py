@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Iterator
 
 from ollama import ChatResponse
@@ -23,3 +24,11 @@ def workflow_collected(payload: RequestPayload) -> tuple[str, Tag]:
             buffer_string += content
 
     return buffer_string, tag
+
+
+async def workflow_async(payload: RequestPayload) -> tuple[Iterator[ChatResponse], Tag]:
+    return await asyncio.to_thread(workflow, payload)
+
+
+async def workflow_collected_async(payload: RequestPayload) -> tuple[str, Tag]:
+    return await asyncio.to_thread(workflow_collected, payload)
