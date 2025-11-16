@@ -1,10 +1,30 @@
-import { axiosAuth, axiosNoAuth } from "@/shared/api/baseQueryInstance";
+import {
+  axiosAuth,
+  axiosNoAuth,
+  axiosMockML,
+} from "@/shared/api/baseQueryInstance";
 import {
   AuthResponse,
   LoginDto,
   RegisterDto,
   ProfileResponse,
   UpdateProfileDto,
+  TelegramAuthStartRequest,
+  TelegramAuthStartResponse,
+  TelegramAuthVerifyRequest,
+  TelegramAuthVerifyResponse,
+  TelegramStatusRequest,
+  TelegramStatusResponse,
+  TelegramContactsRequest,
+  TelegramContactsResponse,
+  TelegramSendMessageRequest,
+  TelegramSendMessageResponse,
+  TodoistAuthSaveRequest,
+  TodoistAuthSaveResponse,
+  TodoistStatusRequest,
+  TodoistStatusResponse,
+  TodoistCreateTaskRequest,
+  TodoistCreateTaskResponse,
 } from "../types/types";
 
 class AuthService {
@@ -34,15 +54,110 @@ class AuthService {
   }
 
   public async updateProfile(
-    requestDto: Partial<UpdateProfileDto>,
+    requestDto: Partial<UpdateProfileDto>
   ): Promise<UpdateProfileDto> {
     const { data } = await axiosAuth.put<UpdateProfileDto>(
       "/profile_other_info",
-      requestDto,
+      requestDto
+    );
+    return data;
+  }
+
+  public async getTelegramStatus(
+    request: TelegramStatusRequest
+  ): Promise<TelegramStatusResponse> {
+    const { data } = await axiosMockML.post<TelegramStatusResponse>(
+      "/telegram/user/status",
+      { ...request }
+    );
+    return data;
+  }
+
+  public async startTelegramAuth(
+    request: TelegramAuthStartRequest
+  ): Promise<TelegramAuthStartResponse> {
+    const { data } = await axiosMockML.post<TelegramAuthStartResponse>(
+      "/telegram/user/auth/start",
+      { ...request }
+    );
+    return data;
+  }
+
+  public async verifyTelegramAuth(
+    request: TelegramAuthVerifyRequest
+  ): Promise<TelegramAuthVerifyResponse> {
+    const { data } = await axiosMockML.post<TelegramAuthVerifyResponse>(
+      "/telegram/user/auth/verify",
+      { ...request }
+    );
+    return data;
+  }
+
+  public async getTelegramContacts(
+    request: TelegramContactsRequest
+  ): Promise<TelegramContactsResponse> {
+    const { data } = await axiosMockML.post<TelegramContactsResponse>(
+      "/telegram/user/contacts",
+      { ...request }
+    );
+    return data;
+  }
+
+  public async sendTelegramMessage(
+    request: TelegramSendMessageRequest
+  ): Promise<TelegramSendMessageResponse> {
+    const { data } = await axiosMockML.post<TelegramSendMessageResponse>(
+      "/telegram/user/send/message",
+      { ...request }
+    );
+    return data;
+  }
+
+  public async saveTodoistToken(
+    request: TodoistAuthSaveRequest
+  ): Promise<TodoistAuthSaveResponse> {
+    const { data } = await axiosMockML.post<TodoistAuthSaveResponse>(
+      "/todoist/auth/save",
+      { ...request }
+    );
+    return data;
+  }
+
+  public async getTodoistStatus(
+    request: TodoistStatusRequest
+  ): Promise<TodoistStatusResponse> {
+    const { data } = await axiosMockML.post<TodoistStatusResponse>(
+      "/todoist/status",
+      { ...request }
+    );
+    return data;
+  }
+
+  public async createTodoistTask(
+    request: TodoistCreateTaskRequest
+  ): Promise<TodoistCreateTaskResponse> {
+    const { data } = await axiosMockML.post<TodoistCreateTaskResponse>(
+      "/todoist/create/task",
+      { ...request }
     );
     return data;
   }
 }
 
-export const { userLogin, userRegister, logout, getProfile, updateProfile } =
-  new AuthService();
+const authService = new AuthService();
+
+export const {
+  userLogin,
+  userRegister,
+  logout,
+  getProfile,
+  updateProfile,
+  getTelegramStatus,
+  startTelegramAuth,
+  verifyTelegramAuth,
+  sendTelegramMessage,
+  getTelegramContacts,
+  saveTodoistToken,
+  getTodoistStatus,
+  createTodoistTask,
+} = authService;

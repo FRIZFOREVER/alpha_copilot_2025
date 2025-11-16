@@ -15,6 +15,14 @@ export const AVAILABLE_TAGS: TagConfig[] = [
   { id: "managment", label: "#managment", color: "#8b5cf6" },
 ] as const;
 
+export const TAG_COLORS = {
+  general: "#6366f1",
+  finance: "#10b981",
+  law: "#f59e0b",
+  marketing: "#ef4444",
+  managment: "#8b5cf6",
+};
+
 export type TagId = (typeof AVAILABLE_TAGS)[number]["id"];
 
 export const getTagConfig = (tagId: TagId): TagConfig | undefined => {
@@ -69,7 +77,7 @@ export const TagSelector = ({
         "bg-white/90 backdrop-blur-xl",
         "rounded-4xl",
         "p-1 min-w-[240px] max-h-[320px] overflow-y-auto",
-        className,
+        className
       )}
       style={{
         ...(position.top !== undefined && { top: `${position.top}px` }),
@@ -91,7 +99,7 @@ export const TagSelector = ({
             "hover:shadow-sm hover:scale-[0.99]",
             "active:scale-95",
             "focus:outline-none focus:ring-2 focus:ring-blue-200",
-            "flex items-center gap-3 group",
+            "flex items-center gap-3 group"
           )}
         >
           <span

@@ -50,58 +50,42 @@ const getFileNameFromUrl = (url: string): string => {
   return fileName || "Файл";
 };
 
+const truncateFileName = (fileName: string, maxLength: number = 25): string => {
+  if (fileName.length <= maxLength) {
+    return fileName;
+  }
+
+  const lastDotIndex = fileName.lastIndexOf(".");
+  if (lastDotIndex === -1) {
+    return fileName.substring(0, maxLength) + "...";
+  }
+
+  const extension = fileName.substring(lastDotIndex);
+  const nameWithoutExtension = fileName.substring(0, lastDotIndex);
+
+  const availableLength = maxLength - extension.length - 3;
+
+  if (availableLength <= 0) {
+    return fileName;
+  }
+
+  return nameWithoutExtension.substring(0, availableLength) + "..." + extension;
+};
+
 export const FileMessage = ({ fileUrl, className }: FileMessageProps) => {
   const fileType = getFileTypeFromUrl(fileUrl);
   const fileTypeLabel = getFileTypeLabel(fileType);
   const Icon = getFileIcon(fileType);
   const fileName = getFileNameFromUrl(fileUrl);
 
-  const handleClick = async () => {
-    try {
-      const baseUrl = "http://localhost:8080";
-      const fullUrl = fileUrl.startsWith("http")
-        ? fileUrl
-        : fileUrl.startsWith("/")
-          ? `${baseUrl}${fileUrl}`
-          : `${baseUrl}/${fileUrl}`;
-
-      const response = await fetch(fullUrl);
-      if (!response.ok) {
-        throw new Error("Не удалось загрузить файл");
-      }
-
-      const blob = await response.blob();
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Ошибка при скачивании файла:", error);
-      const baseUrl = "http://localhost:8080";
-      const fullUrl = fileUrl.startsWith("http")
-        ? fileUrl
-        : fileUrl.startsWith("/")
-          ? `${baseUrl}${fileUrl}`
-          : `${baseUrl}/${fileUrl}`;
-      window.open(fullUrl, "_blank");
-    }
-  };
-
   return (
     <button
-      onClick={handleClick}
       className={cn(
-        "flex items-center gap-3 rounded-2xl px-4 py-3",
+        "flex items-center gap-3 rounded-2xl px-3 py-2.5",
         "bg-gray-50 border border-gray-200",
         "hover:bg-gray-100 transition-colors",
         "cursor-pointer text-left w-full",
-        className,
+        className
       )}
     >
       <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center">
@@ -109,7 +93,9 @@ export const FileMessage = ({ fileUrl, className }: FileMessageProps) => {
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 truncate">{fileName}</p>
+        <p className="text-sm font-medium text-gray-900 truncate">
+          {truncateFileName(fileName, 25)}
+        </p>
         <p className="text-xs text-gray-500">{fileTypeLabel}</p>
       </div>
     </button>

@@ -33,14 +33,14 @@ export const useSendMessageMutation = () => {
           (item) =>
             item.question_id < 0 &&
             item.answer_id < 0 &&
-            item.question === sendMessageDto.question,
+            item.question === sendMessageDto.question
         );
 
         if (tempMessages.length > 0) {
           const lastTemp = tempMessages.reduce(
             (latest, current) =>
               current.question_id > latest.question_id ? current : latest,
-            tempMessages[0],
+            tempMessages[0]
           );
           tempQuestionId = lastTemp.question_id;
           tempAnswerId = lastTemp.answer_id;
@@ -91,6 +91,7 @@ export const useSendMessageMutation = () => {
         answer_id: tempAnswerId,
         question: sendMessageDto.question,
         answer: "",
+        tag: sendMessageDto.tag ?? "general",
         question_time: new Date().toISOString(),
         answer_time: new Date().toISOString(),
         voice_url: sendMessageDto.voice_url || "",
@@ -103,7 +104,7 @@ export const useSendMessageMutation = () => {
         (old) => {
           if (!old) return [optimisticQuestion];
           return [...old, optimisticQuestion];
-        },
+        }
       );
 
       return {
@@ -116,7 +117,7 @@ export const useSendMessageMutation = () => {
       if (context?.previousHistory !== undefined && context?.chatId) {
         queryClient.setQueryData(
           [GET_HISTORY_QUERY, context.chatId],
-          context.previousHistory,
+          context.previousHistory
         );
       }
     },

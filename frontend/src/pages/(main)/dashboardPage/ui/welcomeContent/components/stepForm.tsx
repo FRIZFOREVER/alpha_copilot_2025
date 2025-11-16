@@ -82,15 +82,15 @@ export const StepForm = ({
                 "w-full resize-none",
                 "px-4 py-3 md:px-5 md:py-4",
                 "text-sm md:text-base text-gray-900",
-                "bg-white rounded-3xl",
+                "bg-white rounded-xl md:rounded-3xl",
                 "border border-[#f0f3f7]",
                 "shadow-sm",
                 "placeholder:text-gray-400",
-                "focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500",
+                "focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500",
                 "transition-all duration-200",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
-                "min-h-[20px] md:min-h-[120px]",
-                "max-h-[80px] md:max-h-[300px] overflow-y-auto",
+                "min-h-[20px] md:min-h-[80px]",
+                "max-h-[60px] md:max-h-[100px] overflow-y-auto"
               )}
             />
           </div>
@@ -108,7 +108,7 @@ export const StepForm = ({
                   "text-white font-medium",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                   "transition-all duration-200",
-                  "flex items-center justify-center",
+                  "flex items-center justify-center"
                 )}
               >
                 <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
@@ -125,7 +125,7 @@ export const StepForm = ({
                 "text-white font-medium",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
                 "transition-all duration-200",
-                "flex items-center justify-center",
+                "flex items-center justify-center"
               )}
             >
               <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />

@@ -3,6 +3,7 @@ import { cn } from "@/shared/lib/mergeClass";
 
 interface IntegrationCardProps {
   name: string;
+  isDevelopment: boolean;
   connected: boolean;
   imageSrc: string;
   description?: string;
@@ -17,19 +18,20 @@ export const IntegrationCard = ({
   imageSrc,
   description,
   category,
+  isDevelopment,
   onClick,
   className,
 }: IntegrationCardProps) => {
   return (
     <div
-      onClick={onClick}
+      onClick={isDevelopment ? undefined : onClick}
       className={cn(
-        "relative rounded-4xl p-6 md:p-8 cursor-pointer",
+        "relative rounded-4xl p-6 md:p-8",
         "border-2 transition-all duration-300",
         "min-h-[280px] md:min-h-[320px]",
         "overflow-hidden",
-        "border-gray-200 bg-gradient-to-br from-gray-50 to-white hover:border-gray-300 hover:shadow-md",
-        className,
+        "cursor-pointer border-gray-200 bg-gradient-to-br from-gray-50 to-white hover:border-gray-300 hover:shadow-md",
+        className
       )}
       style={{
         backgroundImage: `url(${imageSrc})`,
@@ -41,11 +43,18 @@ export const IntegrationCard = ({
       <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none" />
 
       <div className="relative z-10 flex flex-col h-full">
-        {category && (
-          <div className="mb-4">
-            <span className="inline-block px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-700 bg-gray-100/90 backdrop-blur-sm uppercase tracking-wide">
-              {category}
-            </span>
+        {(category || isDevelopment) && (
+          <div className="mb-4 flex gap-2 flex-wrap">
+            {category && (
+              <span className="inline-block px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-700 bg-gray-100/90 backdrop-blur-sm uppercase tracking-wide">
+                {category}
+              </span>
+            )}
+            {isDevelopment && (
+              <span className="inline-block px-3 py-1.5 rounded-lg text-xs font-semibold text-orange-700 bg-orange-100/90 backdrop-blur-sm uppercase tracking-wide">
+                В разработке
+              </span>
+            )}
           </div>
         )}
 
@@ -73,14 +82,19 @@ export const IntegrationCard = ({
           <button
             className={cn(
               "self-start px-5 py-2.5 rounded-3xl text-sm font-medium transition-all duration-200",
-              connected
+              isDevelopment
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : connected
                 ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                : "bg-red-600 text-white hover:bg-red-700",
+                : "bg-red-600 text-white hover:bg-red-700"
             )}
             onClick={(e) => {
               e.stopPropagation();
-              onClick?.();
+              if (!isDevelopment) {
+                onClick?.();
+              }
             }}
+            disabled={isDevelopment}
           >
             {connected ? "Настроить" : "Подключить"}
           </button>

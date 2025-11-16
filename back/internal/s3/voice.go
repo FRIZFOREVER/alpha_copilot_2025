@@ -18,16 +18,29 @@ var (
 	ErrFileIsNotAnAudioMpegFile     = errors.New("file is not an audio/mpeg file")
 )
 
-func UploadMP3ToMinIO(s3 *minio.Client, bucketName, uuid string, mp3Data []byte) (string, error) {
+// MinIOAudioFileManager реализует интерфейс AudioFileManager для работы с MinIO.
+type MinIOAudioFileManager struct {
+	client *minio.Client
+}
+
+// NewMinIOAudioFileManager создает новый экземпляр MinIOAudioFileManager.
+func NewMinIOAudioFileManager(client *minio.Client) *MinIOAudioFileManager {
+	return &MinIOAudioFileManager{
+		client: client,
+	}
+}
+
+// Upload загружает WEBM файл в объектное хранилище
+// Возвращает путь к файлу или ошибку в случае неудачи.
+func (m *MinIOAudioFileManager) Upload(bucketName, uuid string, mp3Data []byte) (string, error) {
 	fileName := fmt.Sprintf("%s_%d.webm", uuid, time.Now().Unix())
 
 	reader := bytes.NewReader(mp3Data)
 
-	info, err := s3.PutObject(bucketName, fileName, reader, int64(len(mp3Data)), minio.PutObjectOptions{
+	info, err := m.client.PutObject(bucketName, fileName, reader, int64(len(mp3Data)), minio.PutObjectOptions{
 		ContentType: "audio/mpeg",
 	})
 	if err != nil {
-		// TODO обернуть fmt.Errorf
 		return "", fmt.Errorf("ошибка загрузки файла в MinIO: %w", err)
 	}
 
@@ -38,30 +51,32 @@ func UploadMP3ToMinIO(s3 *minio.Client, bucketName, uuid string, mp3Data []byte)
 	return fmt.Sprintf("/%s/%s", bucketName, fileName), nil
 }
 
-func GetMpegFile(s3 *minio.Client, backet, fileName string) (*minio.Object, error) {
+// Get получает MP3 файл из объектного хранилища
+// Возвращает объект файла или ошибку, если файл не найден или не является MP3.
+func (m *MinIOAudioFileManager) Get(bucket, fileName string) (*minio.Object, error) {
 	if fileName == "" {
 		return nil, ErrFilenameIsRequired
 	}
 
 	// Проверяем существование бакета
-	exists, err := s3.BucketExists(backet)
+	exists, err := m.client.BucketExists(bucket)
 	if err != nil {
-		return nil, ErrFailedToCheckBucketExistence
+		return nil, fmt.Errorf("%w: %w", ErrFailedToCheckBucketExistence, err)
 	}
 	if !exists {
 		return nil, ErrBucketNotFound
 	}
 
 	// Получаем объект из MinIO
-	object, err := s3.GetObject(backet, fileName, minio.GetObjectOptions{})
+	object, err := m.client.GetObject(bucket, fileName, minio.GetObjectOptions{})
 	if err != nil {
-		return nil, ErrFileNotFound
+		return nil, fmt.Errorf("%w: %w", ErrFileNotFound, err)
 	}
 
 	// Получаем информацию об объекте
 	objectInfo, err := object.Stat()
 	if err != nil {
-		return nil, ErrFailedToGetFileInfo
+		return nil, fmt.Errorf("%w: %w", ErrFailedToGetFileInfo, err)
 	}
 
 	// Проверяем, что файл имеет audio/mpeg тип

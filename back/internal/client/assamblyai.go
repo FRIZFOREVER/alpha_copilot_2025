@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type RecognizerClient struct {
+type AssamblyAIClient struct {
 	baseURL string
 	path    string
 	apiKey  string
@@ -20,8 +20,8 @@ type RecognizerClient struct {
 	logger  *logrus.Logger
 }
 
-func NewRecognizerClient(baseURL, path, apiKey string, logger *logrus.Logger) *RecognizerClient {
-	return &RecognizerClient{
+func NewRecognizerClient(baseURL, path, apiKey string, logger *logrus.Logger) *AssamblyAIClient {
+	return &AssamblyAIClient{
 		baseURL: baseURL,
 		path:    path,
 		apiKey:  apiKey,
@@ -49,7 +49,7 @@ type TranscriptStatusResponse struct {
 	Error  string `json:"error"`
 }
 
-func (c *RecognizerClient) MessageToRecognizer(audioData []byte) (string, error) {
+func (c *AssamblyAIClient) MessageToRecognizer(audioData []byte) (string, error) {
 	// 1. Загрузка аудио файла
 	uploadURL, err := c.uploadAudio(audioData)
 	if err != nil {
@@ -71,7 +71,7 @@ func (c *RecognizerClient) MessageToRecognizer(audioData []byte) (string, error)
 	return transcript, nil
 }
 
-func (c *RecognizerClient) uploadAudio(audioData []byte) (string, error) {
+func (c *AssamblyAIClient) uploadAudio(audioData []byte) (string, error) {
 	// Валидация API ключа
 	if strings.TrimSpace(c.apiKey) == "" {
 		return "", fmt.Errorf("API ключ AssemblyAI не установлен (ASSEMBLYAI_API_KEY пустой)")
@@ -133,7 +133,7 @@ func (c *RecognizerClient) uploadAudio(audioData []byte) (string, error) {
 	return uploadResp.UploadURL, nil
 }
 
-func (c *RecognizerClient) requestTranscript(uploadURL string) (string, error) {
+func (c *AssamblyAIClient) requestTranscript(uploadURL string) (string, error) {
 	// Валидация API ключа
 	if strings.TrimSpace(c.apiKey) == "" {
 		return "", fmt.Errorf("API ключ AssemblyAI не установлен (ASSEMBLYAI_API_KEY пустой)")
@@ -204,7 +204,7 @@ func (c *RecognizerClient) requestTranscript(uploadURL string) (string, error) {
 	return transcriptResp.ID, nil
 }
 
-func (c *RecognizerClient) waitForTranscript(transcriptID string) (string, error) {
+func (c *AssamblyAIClient) waitForTranscript(transcriptID string) (string, error) {
 	// Валидация API ключа
 	if strings.TrimSpace(c.apiKey) == "" {
 		return "", fmt.Errorf("API ключ AssemblyAI не установлен (ASSEMBLYAI_API_KEY пустой)")

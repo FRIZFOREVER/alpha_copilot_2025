@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/minio/minio-go"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,76 +17,39 @@ var (
 	ErrInvalidFilePath          = errors.New("invalid file path format")
 )
 
-type Proxy struct {
-	s3     *minio.Client
-	logger *logrus.Logger
+type FileProxy struct {
+	fileManager s3.FileManager
+	logger      *logrus.Logger
 }
 
-func NewProxy(s3 *minio.Client, logger *logrus.Logger) *Proxy {
-	return &Proxy{
-		s3:     s3,
-		logger: logger,
+func NewFileProxy(fileManager s3.FileManager, logger *logrus.Logger) *FileProxy {
+	return &FileProxy{
+		fileManager: fileManager,
+		logger:      logger,
 	}
 }
 
-func (ph *Proxy) HandlerWebm(c *fiber.Ctx) error {
+func (fp *FileProxy) HandlerFile(c *fiber.Ctx) error {
 	fileName := c.Params("file_name")
-
-	// Проверяем что файл имеет расширение .webm
-	if !strings.HasSuffix(fileName, ".webm") {
-		fileName += ".webm"
-	}
-
-	bucket := "voices"
-
-	object, err := s3.GetMpegFile(ph.s3, bucket, fileName)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-	defer func() {
-		if err := object.Close(); err != nil {
-			ph.logger.Error("Error close s3 object", err)
-		}
-	}()
-
-	c.Set("Content-Type", "audio/mpeg")
-	c.Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", fileName))
-	c.Set("Cache-Control", "public, max-age=3600")
-
-	_, err = io.Copy(c.Response().BodyWriter(), object)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": fmt.Sprintf("Failed to stream file: %v", err),
-		})
-	}
-
-	return nil
-}
-
-func (ph *Proxy) HandlerFile(c *fiber.Ctx) error {
-	fileName := c.Params("file_name")
-
 	bucket := "files"
 
-	object, err := s3.GetFile(ph.s3, bucket, fileName)
+	object, err := fp.fileManager.GetFile(bucket, fileName)
 	if err != nil {
-		ph.logger.WithError(err).Errorf("Failed to get file from S3: bucket=%s, file=%s", bucket, fileName)
+		fp.logger.WithError(err).Errorf("Failed to get file from S3: bucket=%s, file=%s", bucket, fileName)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "File not found",
 		})
 	}
 	defer func() {
 		if err := object.Close(); err != nil {
-			ph.logger.Error("Error close s3 object", err)
+			fp.logger.Error("Error close s3 object", err)
 		}
 	}()
 
 	// Получаем информацию о файле для определения Content-Type
 	objectInfo, err := object.Stat()
 	if err != nil {
-		ph.logger.WithError(err).Errorf("Failed to get file stats: bucket=%s, file=%s", bucket, fileName)
+		fp.logger.WithError(err).Errorf("Failed to get file stats: bucket=%s, file=%s", bucket, fileName)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to get file information",
 		})
@@ -104,7 +66,7 @@ func (ph *Proxy) HandlerFile(c *fiber.Ctx) error {
 	// Потоковая передача файла
 	_, err = io.Copy(c.Response().BodyWriter(), object)
 	if err != nil {
-		ph.logger.WithError(err).Error("Failed to stream file")
+		fp.logger.WithError(err).Error("Failed to stream file")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to stream file",
 		})
@@ -173,4 +135,52 @@ func getContentTypeByExtension(ext string) string {
 	default:
 		return "application/octet-stream"
 	}
+}
+
+type AudioProxy struct {
+	audioManager s3.AudioFileManager
+	logger       *logrus.Logger
+}
+
+func NewAudioProxy(audioManager s3.AudioFileManager, logger *logrus.Logger) *AudioProxy {
+	return &AudioProxy{
+		audioManager: audioManager,
+		logger:       logger,
+	}
+}
+
+func (ap *AudioProxy) HandlerWebm(c *fiber.Ctx) error {
+	fileName := c.Params("file_name")
+
+	// Проверяем что файл имеет расширение .webm
+	if !strings.HasSuffix(fileName, ".webm") {
+		fileName += ".webm"
+	}
+
+	bucket := "voices"
+
+	object, err := ap.audioManager.Get(bucket, fileName)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	defer func() {
+		if err := object.Close(); err != nil {
+			ap.logger.Error("Error close s3 object", err)
+		}
+	}()
+
+	c.Set("Content-Type", "audio/mpeg")
+	c.Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", fileName))
+	c.Set("Cache-Control", "public, max-age=3600")
+
+	_, err = io.Copy(c.Response().BodyWriter(), object)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": fmt.Sprintf("Failed to stream file: %v", err),
+		})
+	}
+
+	return nil
 }

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"jabki/internal/database"
 	"jabki/pkg"
@@ -11,14 +10,14 @@ import (
 )
 
 type Reg struct {
-	db     *sql.DB
+	repo   database.RegistrationManager
 	secret string
 	logger *logrus.Logger
 }
 
-func NewReg(db *sql.DB, secret string, logger *logrus.Logger) *Reg {
+func NewReg(repo database.RegistrationManager, secret string, logger *logrus.Logger) *Reg {
 	return &Reg{
-		db:     db,
+		repo:   repo,
 		secret: secret,
 		logger: logger,
 	}
@@ -41,7 +40,7 @@ func (rh *Reg) Handler(c *fiber.Ctx) error {
 	}
 	var regOut regOut
 
-	userUUID, err := database.RegistrateUser(rh.db, regIn.Login, regIn.Password, regIn.FIO, rh.logger)
+	userUUID, err := rh.repo.RegistrateUser(regIn.Login, regIn.Password, regIn.FIO)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "fail registration",

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"jabki/internal/client"
 	"jabki/internal/database"
 	"strconv"
@@ -13,13 +12,13 @@ import (
 )
 
 type History struct {
-	db     *sql.DB
+	repo   database.HistoryRepository
 	logger *logrus.Logger
 }
 
-func NewHistory(db *sql.DB, logger *logrus.Logger) *History {
+func NewHistory(repo database.HistoryRepository, logger *logrus.Logger) *History {
 	return &History{
-		db:     db,
+		repo:   repo,
 		logger: logger,
 	}
 }
@@ -35,14 +34,14 @@ func (hh *History) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	isCorresponds, err := database.CheckChat(hh.db, uuid.String(), chatID, hh.logger)
+	isCorresponds, err := hh.repo.CheckChat(uuid.String(), chatID)
 	if err != nil || !isCorresponds {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Chat ID is not corresponds to user uuid",
 		})
 	}
 
-	messages, err := database.GetHistory(hh.db, chatID, uuid.String(), hh.logger, -1, "")
+	messages, err := hh.repo.GetHistory(chatID, uuid.String(), -1, "")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error in database",

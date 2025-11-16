@@ -46,6 +46,7 @@ export const createStreamCallbacks = ({
             voice_url: sendMessageDto.voice_url || "",
             file_url: sendMessageDto.file_url,
             rating: null,
+            tag: sendMessageDto.tag ?? "general",
           };
 
           if (!old) {
@@ -61,11 +62,11 @@ export const createStreamCallbacks = ({
                 item.answer_id === tempAnswerId
               ) &&
               item.question_id !== data.question_id &&
-              item.answer_id !== data.answer_id,
+              item.answer_id !== data.answer_id
           );
 
           return [...filtered, newMessage];
-        },
+        }
       );
     },
     onChunk: (chunk: StreamChunk) => {
@@ -75,7 +76,6 @@ export const createStreamCallbacks = ({
         [GET_HISTORY_QUERY, chatId],
         (old) => {
           if (!old) return old;
-
           let hasChanges = false;
           const updated = old.map((item) => {
             if (
@@ -94,7 +94,7 @@ export const createStreamCallbacks = ({
           });
 
           return hasChanges ? updated : old;
-        },
+        }
       );
     },
     onComplete: () => {
@@ -110,9 +110,9 @@ export const createStreamCallbacks = ({
           return old.filter(
             (item) =>
               item.question_id !== initialData?.question_id &&
-              item.answer_id !== initialData?.answer_id,
+              item.answer_id !== initialData?.answer_id
           );
-        },
+        }
       );
       onError?.(error);
     },

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"jabki/internal/database"
 	"jabki/pkg"
@@ -11,14 +10,14 @@ import (
 )
 
 type Auth struct {
-	db     *sql.DB
+	repo   database.Authenticator
 	secret string
 	logger *logrus.Logger
 }
 
-func NewAuth(db *sql.DB, secret string, logger *logrus.Logger) *Auth {
+func NewAuth(repo database.Authenticator, secret string, logger *logrus.Logger) *Auth {
 	return &Auth{
-		db:     db,
+		repo:   repo,
 		secret: secret,
 		logger: logger,
 	}
@@ -39,7 +38,7 @@ func (ah *Auth) Handler(c *fiber.Ctx) (err error) {
 	}
 	var authOut authOut
 
-	userUUID, err := database.AuthenticatUser(ah.db, authIn.Login, authIn.Password, ah.logger)
+	userUUID, err := ah.repo.AuthenticateUser(authIn.Login, authIn.Password)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "fail authentication",
