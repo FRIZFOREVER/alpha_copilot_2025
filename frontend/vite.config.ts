@@ -5,7 +5,7 @@ import svgr from "vite-plugin-svgr";
 import path from "path";
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     tailwindcss(),
     react({
@@ -36,4 +36,32 @@ export default defineConfig({
       "@lib": path.resolve(__dirname, "src/lib"),
     },
   },
-});
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.ts"],
+    css: true,
+    server: {
+      deps: {
+        inline: ["@tanstack/react-query"],
+      },
+    },
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      exclude: [
+        "node_modules/",
+        "src/test/",
+        "**/*.d.ts",
+        "**/*.config.*",
+        "**/dist/",
+      ],
+    },
+  },
+  ssr: {
+    noExternal: ["@tanstack/react-query"],
+    resolve: {
+      conditions: ["development", "browser"],
+    },
+  },
+}));

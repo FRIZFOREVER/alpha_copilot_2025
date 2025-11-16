@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"jabki/internal/database"
@@ -13,13 +12,13 @@ import (
 )
 
 type Chat struct {
-	db     *sql.DB
+	repo   database.ChatManager
 	logger *logrus.Logger
 }
 
-func NewChat(db *sql.DB, logger *logrus.Logger) *Chat {
+func NewChat(repo database.ChatManager, logger *logrus.Logger) *Chat {
 	return &Chat{
-		db:     db,
+		repo:   repo,
 		logger: logger,
 	}
 }
@@ -44,7 +43,7 @@ func (ch *Chat) CreateHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	chatID, err := database.CreateChat(ch.db, chatIn.Name, userUUID.String(), ch.logger)
+	chatID, err := ch.repo.CreateChat(chatIn.Name, userUUID.String())
 	if err != nil {
 		if errors.Is(err, database.ErrUserNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -66,7 +65,7 @@ func (ch *Chat) CreateHandler(c *fiber.Ctx) error {
 func (ch *Chat) GetHandler(c *fiber.Ctx) error {
 	userUUID := c.Locals("uuid").(uuid.UUID)
 
-	chats, err := database.GetChats(ch.db, userUUID.String(), ch.logger)
+	chats, err := ch.repo.GetChats(userUUID.String())
 	if err != nil {
 		ch.logger.WithFields(logrus.Fields{
 			"user_uuid": userUUID,
@@ -111,7 +110,7 @@ func (ch *Chat) RenameHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	if err = database.RenameChat(ch.db, chatID, chatIn.Name, ch.logger); err != nil {
+	if err = ch.repo.RenameChat(chatID, chatIn.Name); err != nil {
 		if errors.Is(err, database.ErrUserNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error":   "User not found",

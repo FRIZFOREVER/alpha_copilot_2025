@@ -180,4 +180,17 @@ body {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  .markdown-content {
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+  }
+
+  .markdown-content * {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+  }
 }

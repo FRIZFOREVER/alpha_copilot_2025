@@ -1,14 +1,11 @@
 import { Mail, Calendar, Settings, LogOut } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
+import { Avatar, AvatarImage } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge/badge";
 import { Progress } from "@/shared/ui/progress/progress";
 import { useNavigate } from "react-router-dom";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
-import {
-  getUserInitials,
-  getDisplayName,
-} from "@/shared/lib/utils/userHelpers";
+import { getDisplayName } from "@/shared/lib/utils/userHelpers";
 import { mockData } from "../lib/constants";
 import { deleteAccessToken } from "@/entities/token";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,13 +13,34 @@ import { ERouteNames } from "@/shared/lib/routeVariables";
 import { useChatCollapse } from "@/shared/lib/chatCollapse";
 import { Header } from "@/widgets/header";
 import { IntegrationCard } from "./components/integrationCard";
+import { useTelegramStatusQuery } from "@/entities/auth/hooks/useTelegramStatus";
+import { useTodoistStatusQuery } from "@/entities/auth/hooks/useTodoistStatus";
+import { useModal } from "@/shared/lib/modal/context";
+import { EModalVariables } from "@/shared/lib/modal/constants";
 
 const ProfilePage = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { resetChatState } = useChatCollapse();
+  const { openModal } = useModal();
   const { data: profileData, isLoading: isLoadingProfile } =
     useGetProfileQuery();
+
+  const user_id = profileData?.id?.toString();
+
+  const getStoredPhoneNumber = (): string | undefined => {
+    try {
+      const stored = localStorage.getItem("telegram_phone_number");
+      return stored || undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const phone_number = getStoredPhoneNumber();
+
+  const { data: telegramStatus } = useTelegramStatusQuery(phone_number);
+  const { data: todoistStatus } = useTodoistStatusQuery(user_id);
 
   if (isLoadingProfile) {
     return (
@@ -36,9 +54,6 @@ const ProfilePage = () => {
     ? getDisplayName(profileData.username)
     : "Пользователь";
   const displayEmail = profileData?.login || "";
-  const userInitials = profileData?.username
-    ? getUserInitials(profileData.username)
-    : "П";
 
   const progress = (mockData.xp / mockData.xpToNext) * 100;
 
@@ -65,9 +80,6 @@ const ProfilePage = () => {
                         alt={displayName}
                         className="object-cover rounded-2xl"
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-red-500 to-pink-500 text-white text-4xl md:text-5xl font-bold rounded-2xl">
-                        {userInitials}
-                      </AvatarFallback>
                     </Avatar>
                   </div>
 
@@ -137,19 +149,40 @@ const ProfilePage = () => {
                 </h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {mockData.integrations.map((integration, i) => (
-                  <IntegrationCard
-                    key={i}
-                    name={integration.name}
-                    connected={integration.connected}
-                    imageSrc={integration.imageSrc}
-                    description={integration.description}
-                    category={integration.category}
-                    onClick={() => {
-                      console.log(`Click on ${integration.name}`);
-                    }}
-                  />
-                ))}
+                {mockData.integrations.map((integration, i) => {
+                  const isTelegram = integration.name === "Telegram";
+                  const isTodoist = integration.name === "Todoist";
+                  const isConnected = isTelegram
+                    ? telegramStatus?.authorized ?? false
+                    : isTodoist
+                    ? todoistStatus?.authorized ?? false
+                    : integration.connected;
+
+                  return (
+                    <IntegrationCard
+                      key={i}
+                      isDevelopment={integration.isDevelopment}
+                      name={integration.name}
+                      connected={isConnected}
+                      imageSrc={integration.imageSrc}
+                      description={integration.description}
+                      category={integration.category}
+                      onClick={() => {
+                        if (isTelegram && !isConnected && user_id) {
+                          openModal(EModalVariables.TELEGRAM_AUTH_MODAL, {
+                            user_id,
+                          });
+                        } else if (isTodoist && user_id && !isConnected) {
+                          openModal(EModalVariables.TODOIST_AUTH_MODAL, {
+                            user_id,
+                          });
+                        } else {
+                          console.log(`Click on ${integration.name}`);
+                        }
+                      }}
+                    />
+                  );
+                })}
               </div>
             </div>
 

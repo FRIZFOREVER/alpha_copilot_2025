@@ -12,47 +12,57 @@ export const MarkdownContent = ({
   className,
 }: MarkdownContentProps) => {
   return (
-    <div className={cn("markdown-content", className)}>
+    <div
+      className={cn(
+        "markdown-content w-full break-words overflow-wrap-anywhere",
+        className
+      )}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ ...props }) => (
             <h1
-              className="text-2xl font-bold mt-4 mb-2 text-foreground first:mt-0"
+              className="text-2xl font-bold mt-4 mb-2 text-foreground first:mt-0 break-words"
               {...props}
             />
           ),
           h2: ({ ...props }) => (
             <h2
-              className="text-xl font-bold mt-3 mb-2 text-foreground first:mt-0"
+              className="text-xl font-bold mt-3 mb-2 text-foreground first:mt-0 break-words"
               {...props}
             />
           ),
           h3: ({ ...props }) => (
             <h3
-              className="text-lg font-semibold mt-3 mb-2 text-foreground first:mt-0"
+              className="text-lg font-semibold mt-3 mb-2 text-foreground first:mt-0 break-words"
               {...props}
             />
           ),
           p: ({ ...props }) => (
             <p
-              className="mb-3 last:mb-0 text-foreground leading-relaxed"
+              className="mb-3 last:mb-0 text-foreground leading-relaxed break-words overflow-wrap-anywhere"
               {...props}
             />
           ),
           ul: ({ ...props }) => (
             <ul
-              className="list-disc list-outside mb-3 ml-4 space-y-1 text-foreground"
+              className="list-disc list-outside mb-3 ml-4 space-y-1 text-foreground break-words"
               {...props}
             />
           ),
           ol: ({ ...props }) => (
             <ol
-              className="list-decimal list-outside mb-3 ml-4 space-y-1 text-foreground"
+              className="list-decimal list-outside mb-3 ml-4 space-y-1 text-foreground break-words"
               {...props}
             />
           ),
-          li: ({ ...props }) => <li className="text-foreground" {...props} />,
+          li: ({ ...props }) => (
+            <li
+              className="text-foreground break-words overflow-wrap-anywhere"
+              {...props}
+            />
+          ),
           code: ({ className, children, ...props }: any) => {
             const match = /language-(\w+)/.exec(className || "");
             const isInline = !match;

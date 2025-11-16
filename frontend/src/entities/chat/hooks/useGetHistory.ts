@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getHistory } from "../api/chatService";
 import { GetHistoryResponse, HistoryMessage } from "../types/types";
 import { GET_HISTORY_QUERY } from "../lib/constants";
-import type { MessageData } from "@/features/chat/ui/messageList/messageList";
+import type { MessageData, UserMessage, BotMessage } from "@/shared/types/message";
 
 export const useGetHistoryQuery = (chatId: number | undefined) => {
   return useQuery({
@@ -21,29 +21,31 @@ export const useGetHistoryQuery = (chatId: number | undefined) => {
       const result: MessageData[] = [];
 
       data.forEach((historyItem: HistoryMessage) => {
-        result.push({
+        const userMessage: UserMessage = {
           id: `question-${historyItem.question_id}`,
           content: historyItem.question,
           isUser: true,
           timestamp: historyItem.question_time,
-          answerId: historyItem.answer_id,
-          rating: historyItem.rating,
           file_url: historyItem.file_url,
-        });
+          tag: historyItem.tag,
+        };
+        result.push(userMessage);
 
         if (
           historyItem.answer_id &&
           historyItem.answer &&
           historyItem.answer.trim() !== ""
         ) {
-          result.push({
+          const botMessage: BotMessage = {
             id: `answer-${historyItem.answer_id}`,
             content: historyItem.answer,
             isUser: false,
             timestamp: historyItem.answer_time,
             answerId: historyItem.answer_id,
             rating: historyItem.rating,
-          });
+            tag: !historyItem.tag ? "general" : historyItem.tag,
+          };
+          result.push(botMessage);
         }
       });
 

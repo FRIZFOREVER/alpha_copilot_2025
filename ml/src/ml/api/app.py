@@ -62,10 +62,13 @@ def create_app() -> FastAPI:
             raise
         except Exception as exc:
             raise HTTPException(
-                status_code=500, detail="Failed to generate response from collect workflow"
+                status_code=500,
+                detail="Failed to generate response from collect workflow",
             ) from exc
 
-        return JSONResponse(content={"message": message_text}, headers={"Tag": tag.value})
+        return JSONResponse(
+            content={"message": message_text}, headers={"Tag": tag.value}
+        )
 
     @app.post("/message_stream")
     async def message_stream(payload: RequestPayload) -> StreamingResponse:  # type: ignore[reportUnusedFunction]
@@ -83,8 +86,12 @@ def create_app() -> FastAPI:
 
         headers: dict[str, Any] = {"tag": tag.value}
         return StreamingResponse(
-            event_generator(stream=stream), media_type="text/event-stream", headers=headers
+            event_generator(stream=stream),
+            media_type="text/event-stream",
+            headers=headers,
         )
+
+        # функция принимает стринг, отдает
 
     @app.get("/ping")
     def ping() -> dict[str, str]:  # type: ignore[reportUnusedFunction]

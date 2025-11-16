@@ -1,98 +1,51 @@
+"""Основной файл приложения FastAPI"""
+
 import asyncio
 import logging
-import time
-from datetime import datetime
 from typing import Any
 
+from config import OLLAMA_HOST
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from handlers import (
+    ollama as ollama_handlers,
+)
+from handlers import (
+    telegram as telegram_handlers,
+)
+from handlers import (
+    todoist as todoist_handlers,
+)
+from models.schemas import TelegramAuthStartRequest, TelegramAuthVerifyRequest
+from telegram_user_service import TelegramUserService
+from todoist_service import TodoistService
+from utils.ollama_utils import check_ollama_available, mock_workflow
 
-# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Mock ML Service")
 
-# Состояние приложения
 app.state.models_ready = asyncio.Event()
-app.state.models_ready.set()  # Модели всегда готовы в моке
+app.state.telegram_user_service = TelegramUserService()
+app.state.todoist_service = TodoistService()
 
 
-class Message(BaseModel):
-    role: str = "assistant"
-    content: str = ""
-    thinking: str | None = None
-    images: str | None = None
-    tool_name: str | None = None
-    tool_calls: str | None = None
+@app.on_event("startup")
+async def startup_event():
+    """Проверяем доступность Ollama при старте приложения"""
+    logger.info("Starting up Mock ML Service...")
+    logger.info(f"OLLAMA_HOST environment variable: {OLLAMA_HOST}")
 
+    await asyncio.sleep(5)
 
-class StreamChunk(BaseModel):
-    model: str = "qwen3:0.6b"
-    created_at: str = None
-    done: bool = False
-    done_reason: str | None = None
-    total_duration: int | None = None
-    load_duration: int | None = None
-    prompt_eval_count: int | None = None
-    prompt_eval_duration: int | None = None
-    eval_count: int | None = None
-    eval_duration: int | None = None
-    message: Message = None
-
-    def __init__(self, **data):
-        if "created_at" not in data:
-            data["created_at"] = datetime.utcnow().isoformat() + "Z"
-        if "message" not in data:
-            data["message"] = Message()
-        super().__init__(**data)
-
-
-def mock_workflow(payload: dict[str, Any], streaming: bool = True):
-    """Моковая функция workflow, которая генерирует поток данных посимвольно"""
-    model = payload.get("model", "qwen3:0.6b")
-    messages = payload.get("messages", [])
-
-    # Полный текст ответа
-    full_response = "Это моковый ответ от ML сервиса для тестирования потоковой передачи."
-
-    # Генерируем чанки по одному символу
-    for i, char in enumerate(full_response):
-        # Каждое сообщение содержит только текущий символ
-        chunk = StreamChunk(
-            model=model,
-            done=False,
-            message=Message(
-                role="assistant",
-                content=char,  # Только один символ!
-                thinking=f"Генерация символа {i + 1} из {len(full_response)}"
-                if i % 10 == 0
-                else None,
-            ),
-            eval_count=i + 1,
-            prompt_eval_count=len(messages) if messages else 1,
-            total_duration=int((i + 1) * 100),
-            eval_duration=int((i + 1) * 80),
-        )
-        yield chunk
-        time.sleep(0.02)  # Задержка 0.02 секунды между символами
-
-    # Финальный чанк с полным текстом (или можно оставить пустым)
-    final_chunk = StreamChunk(
-        model=model,
-        done=True,
-        done_reason="stop",
-        message=Message(
-            role="assistant",
-            content="",  # Пустой контент в финальном чанке, так как все символы уже отправлены
-        ),
-        eval_count=len(full_response),
-        prompt_eval_count=len(messages) if messages else 1,
-        total_duration=int(len(full_response) * 100),
-        eval_duration=int(len(full_response) * 80),
-    )
-    yield final_chunk
+    if check_ollama_available(max_retries=10, retry_delay=3):
+        app.state.models_ready.set()
+        logger.info("Mock ML Service is ready and Ollama is available")
+    else:
+        logger.warning("Ollama is not available, but service will continue. Requests may fail.")
+        app.state.models_ready.set()
 
 
 @app.get("/")
@@ -102,17 +55,32 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "models_ready": app.state.models_ready.is_set()}
+    return await ollama_handlers.health_check(app.state.models_ready)
 
 
 @app.get("/ping")
 async def ping():
-    """Эндпоинт для проверки доступности сервиса"""
-    return {"status": "ok", "message": "pong"}
+    return await ollama_handlers.ping()
+
+
+@app.get("/ollama/check")
+async def check_ollama():
+    return await ollama_handlers.check_ollama()
+
+
+@app.post("/ollama/pull")
+async def pull_model(request: Request):
+    return await ollama_handlers.pull_model(request)
+
+
+@app.post("/generate")
+async def generate_message(request: Request):
+    return await ollama_handlers.generate_message(request)
 
 
 @app.post("/message_stream")
 async def message_stream(request: Request) -> StreamingResponse:
+    """Потоковый endpoint для генерации сообщений"""
     models_ready = app.state.models_ready
 
     if not models_ready.is_set():
@@ -123,12 +91,19 @@ async def message_stream(request: Request) -> StreamingResponse:
 
     def event_generator():
         stream = mock_workflow(payload, streaming=True)
+        accumulated_content = ""
+
         for chunk in stream:
-            # Преобразуем в JSON и отправляем в формате SSE
             chunk_data = chunk.model_dump_json()
+            if chunk.message and chunk.message.content:
+                accumulated_content += chunk.message.content
             yield f"data: {chunk_data}\n\n"
 
-        # Отправляем [DONE] в конце стрима
+        logger.info(
+            f"Stream completed. accumulated_content length={len(accumulated_content)}, "
+            f"accumulated_content preview={accumulated_content[:100] if accumulated_content else 'empty'}"
+        )
+
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(
@@ -143,39 +118,67 @@ async def message_stream(request: Request) -> StreamingResponse:
     )
 
 
-@app.post("/generate")
-async def generate_message(request: Request):
-    """Альтернативный endpoint для не-потокового ответа"""
-    payload: dict[str, Any] = await request.json()
-    logger.info(f"Handling /generate request with payload: {payload}")
-
-    # Имитация обработки
-    await asyncio.sleep(0.1)
-
-    return {
-        "model": payload.get("model", "qwen3:0.6b"),
-        "created_at": datetime.utcnow().isoformat() + "Z",
-        "message": {
-            "role": "assistant",
-            "content": "Это моковый ответ от ML сервиса для не-потокового запроса.",
-            "thinking": "Completed mock thinking process",
-            "images": None,
-            "tool_name": None,
-            "tool_calls": None,
-        },
-        "done": True,
-        "done_reason": "stop",
-        "total_duration": 500000000,
-        "load_duration": 100000000,
-        "prompt_eval_count": 1,
-        "prompt_eval_duration": 100000000,
-        "eval_count": 10,
-        "eval_duration": 300000000,
-    }
+@app.post("/telegram/user/auth/start")
+async def start_telegram_user_auth(request: TelegramAuthStartRequest):
+    return await telegram_handlers.start_telegram_user_auth(
+        request, app.state.telegram_user_service
+    )
 
 
-# Добавляем CORS middleware если нужно тестировать из браузера
-from fastapi.middleware.cors import CORSMiddleware
+@app.post("/telegram/user/auth/verify")
+async def verify_telegram_user_auth(request: TelegramAuthVerifyRequest):
+    return await telegram_handlers.verify_telegram_user_auth(
+        request, app.state.telegram_user_service
+    )
+
+
+@app.post("/telegram/user/status")
+async def get_telegram_user_status(request: Request):
+    return await telegram_handlers.get_telegram_user_status(
+        request, app.state.telegram_user_service
+    )
+
+
+@app.post("/telegram/user/contacts")
+async def get_telegram_user_contacts(request: Request):
+    return await telegram_handlers.get_telegram_user_contacts(
+        request, app.state.telegram_user_service
+    )
+
+
+@app.post("/telegram/user/send/message")
+async def send_telegram_user_message(request: Request):
+    return await telegram_handlers.send_telegram_user_message(
+        request, app.state.telegram_user_service
+    )
+
+
+@app.post("/telegram/user/disconnect")
+async def disconnect_telegram_user(request: Request):
+    return await telegram_handlers.disconnect_telegram_user(
+        request, app.state.telegram_user_service
+    )
+
+
+@app.post("/todoist/auth/save")
+async def save_todoist_token(request: Request):
+    return await todoist_handlers.save_todoist_token(request, app.state.todoist_service)
+
+
+@app.post("/todoist/status")
+async def get_todoist_status(request: Request):
+    return await todoist_handlers.get_todoist_status(request, app.state.todoist_service)
+
+
+@app.post("/todoist/projects")
+async def get_todoist_projects(request: Request):
+    return await todoist_handlers.get_todoist_projects(request, app.state.todoist_service)
+
+
+@app.post("/todoist/create/task")
+async def create_todoist_task(request: Request):
+    return await todoist_handlers.create_todoist_task(request, app.state.todoist_service)
+
 
 app.add_middleware(
     CORSMiddleware,

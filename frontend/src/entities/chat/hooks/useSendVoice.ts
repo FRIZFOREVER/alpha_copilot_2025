@@ -125,6 +125,7 @@ export const useSendVoiceMutation = () => {
         answer_time: new Date().toISOString(),
         voice_url: "",
         rating: null,
+        tag: "general",
       };
 
       queryClient.setQueryData<GetHistoryResponse>(

@@ -126,3 +126,5 @@ export class AxiosClient {
 
 export const axiosNoAuth = new AxiosClient("http://127.0.0.1:8080/");
 export const axiosAuth = new AxiosClient("http://127.0.0.1:8080/", true);
+// Axios client for mock ML service (Telegram integration)
+export const axiosMockML = new AxiosClient("http://localhost:8000/", false);

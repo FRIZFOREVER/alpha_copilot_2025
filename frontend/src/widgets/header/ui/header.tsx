@@ -2,12 +2,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/shared/lib/mergeClass";
 import { Icon, IconTypes } from "@/shared/ui/icon";
 import { ERouteNames } from "@/shared/lib/routeVariables";
-import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
+import { Avatar, AvatarImage } from "@/shared/ui/avatar";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
-import {
-  getUserInitials,
-  getDisplayName,
-} from "@/shared/lib/utils/userHelpers";
+import { getDisplayName } from "@/shared/lib/utils/userHelpers";
 
 interface HeaderProps {
   className?: string;
@@ -19,23 +16,25 @@ export const Header = ({ className }: HeaderProps) => {
   const { data: profileData } = useGetProfileQuery();
 
   const isProfileActive = location.pathname.includes(
-    `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.PROFILE_ROUTE}`,
+    `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.PROFILE_ROUTE}`
+  );
+
+  const isDashboardActive = location.pathname.includes(
+    `/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.CHAT_ROUTE}`
   );
 
   const displayName = profileData?.username
     ? getDisplayName(profileData.username)
     : "Пользователь";
 
-  const userInitials = profileData?.username
-    ? getUserInitials(profileData.username)
-    : "П";
-
   const handleProfileClick = () => {
     navigate(`/${ERouteNames.DASHBOARD_ROUTE}/${ERouteNames.PROFILE_ROUTE}`);
   };
 
   const handleLogoClick = () => {
-    navigate(`/${ERouteNames.DASHBOARD_ROUTE}`);
+    if (!isDashboardActive) {
+      navigate(-1);
+    }
   };
 
   return (
@@ -45,7 +44,7 @@ export const Header = ({ className }: HeaderProps) => {
         "bg-transparent",
         "backdrop-blur-md",
         "shadow-lg shadow-red-500/20",
-        className,
+        className
       )}
     >
       <div className="mx-auto px-4 md:px-8 md:pr-6">
@@ -73,7 +72,7 @@ export const Header = ({ className }: HeaderProps) => {
                 "md:bg-white/95 md:backdrop-blur-sm md:shadow-sm md:hover:shadow",
                 "md:border border-white/50",
                 "md:hover:bg-white",
-                isProfileActive && "md:ring-1 ring-white/50",
+                isProfileActive && "md:ring-1 ring-white/50"
               )}
               title="Профиль"
             >
@@ -83,9 +82,6 @@ export const Header = ({ className }: HeaderProps) => {
                   alt={displayName}
                   className="object-cover rounded-full"
                 />
-                <AvatarFallback className="bg-gradient-to-br from-red-500 to-pink-500 text-white rounded-full text-xs font-medium">
-                  {userInitials}
-                </AvatarFallback>
               </Avatar>
               <div className="hidden md:flex flex-col items-start min-w-0">
                 <span className="text-xs font-medium text-gray-900 truncate max-w-[100px] leading-tight">

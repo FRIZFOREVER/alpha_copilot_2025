@@ -1,27 +1,33 @@
 package handlers
 
 import (
+	"fmt"
 	"io"
 	"jabki/internal/client"
 	"jabki/internal/s3"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/minio/minio-go"
 	"github.com/sirupsen/logrus"
 )
 
 type Voice struct {
-	recognizer *client.RecognizerClient
-	s3         *minio.Client
-	logger     *logrus.Logger
+	clientAssemblyAI client.Recognizer
+	clientWhisper    client.Whisperer
+	storage          s3.AudioFileManager
+	isWipserEnable   *bool
+	isAssamblyEnable bool
+	logger           *logrus.Logger
 }
 
-func NewVoice(recognizer *client.RecognizerClient, s3 *minio.Client, logger *logrus.Logger) *Voice {
+func NewVoice(clientAssemblyAI client.Recognizer, clientWhisper client.Whisperer, storage s3.AudioFileManager, isWipserEnable *bool, isAssamblyEnable bool, logger *logrus.Logger) *Voice {
 	return &Voice{
-		recognizer: recognizer,
-		s3:         s3,
-		logger:     logger,
+		clientAssemblyAI: clientAssemblyAI,
+		clientWhisper:    clientWhisper,
+		storage:          storage,
+		isWipserEnable:   isWipserEnable,
+		isAssamblyEnable: isAssamblyEnable,
+		logger:           logger,
 	}
 }
 
@@ -61,7 +67,7 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	url, err := s3.UploadMP3ToMinIO(vh.s3, "voices", uuid.String(), fileBytes)
+	url, err := vh.storage.Upload("voices", uuid.String(), fileBytes)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error upload to S3",
@@ -69,13 +75,35 @@ func (vh *Voice) Handler(c *fiber.Ctx) error {
 		})
 	}
 
-	// jsonBytes := fmt.Sprintf("{\"voice_url\":\"%s\"}", url)
+	jsonBytes := fmt.Sprintf("{\"voice_url\":\"%s\"}", url)
 
-	question, err := vh.recognizer.MessageToRecognizer(fileBytes)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error":   "Error send message",
-			"details": err.Error(),
+	var question string
+
+	switch {
+	case *vh.isWipserEnable:
+		whisperOut, err := vh.clientWhisper.SendVoice([]byte(jsonBytes))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error":   "Error send message",
+				"details": err.Error(),
+			})
+		}
+		question = whisperOut.Message
+
+	case vh.isAssamblyEnable:
+		var err error
+		question, err = vh.clientAssemblyAI.MessageToRecognizer(fileBytes)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error":   "Error send message",
+				"details": err.Error(),
+			})
+		}
+
+	default:
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Нет подключенных распознавателей голоса",
+			"details": "no available recognizers",
 		})
 	}
 

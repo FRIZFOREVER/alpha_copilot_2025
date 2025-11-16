@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"jabki/internal/database"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,13 +9,13 @@ import (
 )
 
 type Search struct {
-	db     *sql.DB
+	repo   database.SearchManager
 	logger *logrus.Logger
 }
 
-func NewSearch(db *sql.DB, logger *logrus.Logger) *Search {
+func NewSearch(repo database.SearchManager, logger *logrus.Logger) *Search {
 	return &Search{
-		db:     db,
+		repo:   repo,
 		logger: logger,
 	}
 }
@@ -25,7 +24,7 @@ func (sh *Search) Handler(c *fiber.Ctx) error {
 	uuid := c.Locals("uuid").(uuid.UUID)
 	pattern := c.Query("pattern")
 
-	messages, err := database.GetSerchedMessages(sh.db, uuid.String(), pattern, sh.logger)
+	messages, err := sh.repo.GetSearchedMessages(uuid.String(), pattern)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Error in database",

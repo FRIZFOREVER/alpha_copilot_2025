@@ -16,6 +16,7 @@ import {
   StreamInitialResponse,
   StreamChunk,
   SearchMessagesResponse,
+  GetGraphLogsResponse,
 } from "../types/types";
 
 const API_BASE_URL = "http://127.0.0.1:8080";
@@ -123,7 +124,6 @@ class ChatService {
 
         try {
           const json = JSON.parse(data);
-
           if (!isInitialReceived) {
             const initialData = json as StreamInitialResponse;
             callbacks.onInitial?.(initialData);
@@ -270,6 +270,14 @@ class ChatService {
 
     return data;
   }
+
+  public async getGraphLogs(answerId: number): Promise<GetGraphLogsResponse> {
+    const { data } = await axiosAuth.get<GetGraphLogsResponse>(
+      `/log/graph?answer_id=${answerId}`
+    );
+
+    return data;
+  }
 }
 
 export const {
@@ -282,4 +290,5 @@ export const {
   sendVoice,
   uploadFile,
   searchMessages,
+  getGraphLogs,
 } = new ChatService();

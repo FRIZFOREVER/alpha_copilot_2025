@@ -42,7 +42,8 @@ const LandingPage = () => {
     {
       image: "/images/PurePromo-3.webp",
       title: "Больше не нужно заниматься поиском специалистов",
-      description: "Умный ассистент поможет решить задачу",
+      description:
+        "Забудьте о долгих поисках подходящих экспертов и сложных переговорах. Просто задайте вопрос и получите профессиональный ответ мгновенно",
       textPosition: "left" as const,
     },
   ];
@@ -51,15 +52,18 @@ const LandingPage = () => {
     {
       title: "Сэкономьте на экспертах",
       description: "Каждая задача решается на уровне профессионала",
+      image: "/images/D_BenefitIcon_48x48_291024-1-min.webp",
     },
     {
       title: "Ускорьте процессы",
       description: "От запроса до готового решения за считанные минуты",
+      image: "/images/D_BenefitIcon_48x48_291024-2-min.webp",
     },
     {
       title: "Сократите операционку",
       description:
         "Просто опишите задачу своими словами — нейросеть выдаст наилучший результат",
+      image: "/images/D_BenefitIcon_48x48_291024-3-min.webp",
     },
   ];
 
@@ -77,7 +81,7 @@ const LandingPage = () => {
           >
             <motion.div
               variants={itemVariants}
-              className="flex items-center gap-3 sm:gap-4 mb-4"
+              className="flex items-center gap-3 sm:gap-4 mb-4 mr-10"
             >
               <motion.div
                 className="group cursor-pointer rounded-lg transition-all duration-300 p-2"
@@ -114,8 +118,17 @@ const LandingPage = () => {
               <motion.div
                 key={index}
                 variants={itemVariants}
-                className="rounded-2xl sm:rounded-3xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 p-4 sm:p-6 lg:p-8 hover:bg-gray-800/70 transition-all"
+                className="rounded-3xl sm:rounded-4xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 p-4 sm:p-6 lg:p-8 hover:bg-gray-800/70 transition-all"
               >
+                {card.image && (
+                  <div className="mb-4">
+                    <Image
+                      src={card.image}
+                      alt={card.title}
+                      className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
+                    />
+                  </div>
+                )}
                 <h3 className="text-white font-semibold text-base sm:text-lg mb-2">
                   {card.title}
                 </h3>
@@ -133,7 +146,7 @@ const LandingPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
         >
-          <div className="bg-white dark:bg-gray-900 rounded-t-[2rem] sm:rounded-t-[3rem] md:rounded-t-[4rem] min-h-[60vh] pt-8 sm:pt-12 pb-12 sm:pb-20">
+          <div className="bg-white dark:bg-gray-900 rounded-t-[3rem] sm:rounded-t-[4rem] md:rounded-t-[5rem] min-h-[60vh] pt-14 sm:pt-16 pb-14 sm:pb-20">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
               <motion.div
                 variants={containerVariants}
@@ -146,7 +159,7 @@ const LandingPage = () => {
                   variants={itemVariants}
                   className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 leading-tight px-2"
                 >
-                  Ваша виртуальная команда
+                  Ваша виртуальный помощник
                 </motion.h1>
                 <motion.p
                   variants={itemVariants}
@@ -161,7 +174,7 @@ const LandingPage = () => {
                 >
                   <Button
                     onClick={handleStartWork}
-                    className="w-full sm:w-auto rounded-2xl bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 lg:px-10 py-5 sm:py-6 lg:py-7 text-base sm:text-lg font-semibold shadow-lg shadow-red-600/30"
+                    className="w-full sm:w-auto rounded-4xl bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 lg:px-10 py-6 sm:py-6 lg:py-8 cursor-pointer text-base sm:text-lg font-semibold shadow-lg shadow-red-600/30"
                   >
                     Начать работу
                   </Button>
@@ -169,7 +182,7 @@ const LandingPage = () => {
                     <Button
                       variant="outline"
                       onClick={() => navigate(`/${ERouteNames.AUTH_ROUTE}`)}
-                      className="w-full sm:w-auto rounded-2xl border-2 border-gray-300 dark:border-gray-600 px-6 sm:px-8 lg:px-10 py-5 sm:py-6 lg:py-7 text-base sm:text-lg"
+                      className="w-full sm:w-auto rounded-4xl border-2 border-gray-300 dark:border-gray-600 px-6 sm:px-8 lg:px-10 py-6 sm:py-6 lg:py-8 cursor-pointer text-base sm:text-lg"
                     >
                       Войти
                     </Button>
@@ -189,7 +202,7 @@ const LandingPage = () => {
                     key={index}
                     variants={cardVariants}
                     whileHover="hover"
-                    className="rounded-2xl sm:rounded-3xl bg-gray-50 dark:bg-gray-800/50 p-6 sm:p-8 lg:p-10 border border-gray-200 dark:border-gray-700 hover:border-red-500/50 transition-all"
+                    className="rounded-3xl sm:rounded-4xl bg-gray-50 dark:bg-gray-800/50 p-6 sm:p-8 lg:p-10 border border-gray-200 dark:border-gray-700 hover:border-red-500/50 transition-all"
                   >
                     <p className="text-sm sm:text-base text-gray-900 dark:text-gray-100 font-medium text-center">
                       {benefit}
@@ -199,38 +212,46 @@ const LandingPage = () => {
               </motion.div>
 
               <motion.div
-                className="rounded-2xl sm:rounded-3xl bg-gray-50 mx-4 sm:mx-8 lg:mx-12 xl:mx-20 dark:bg-gray-800/50 p-6 sm:p-8 md:p-10 lg:p-14 mb-12 sm:mb-16 lg:mb-20 border border-gray-200 dark:border-gray-700"
+                className="relative rounded-3xl sm:rounded-4xl mx-4 sm:mx-8 lg:mx-12 xl:mx-20 p-6 sm:p-8 md:p-10 lg:p-14 mb-12 sm:mb-16 lg:mb-20 border border-gray-200 dark:border-gray-700 overflow-hidden"
                 variants={containerVariants}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
+                style={{
+                  backgroundImage: `url(https://alfabank.servicecdn.ru/site-upload/f8/43/8854/promocard-03.png)`,
+                  backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: "cover",
+                }}
               >
-                <motion.div
-                  variants={itemVariants}
-                  className="mb-8 sm:mb-10 lg:mb-12 text-center"
-                >
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 px-4">
-                    Почему выбирают нас
-                  </h2>
-                  <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto px-4">
-                    AI Copilot помогает представителям микробизнеса решать
-                    задачи быстрее и эффективнее, предоставляя качественные
-                    ответы на любые вопросы прямо в мессенджере или мобильном
-                    приложении.
-                  </p>
-                </motion.div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                  {benefits.map((benefit, index) => (
-                    <motion.div
-                      key={index}
-                      variants={itemVariants}
-                      className="rounded-xl sm:rounded-2xl bg-white dark:bg-gray-900/50 p-4 sm:p-6 border border-gray-200 dark:border-gray-700 hover:border-red-500/50 transition-all"
-                    >
-                      <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100 text-center">
-                        {benefit}
-                      </p>
-                    </motion.div>
-                  ))}
+                <div className="relative z-10">
+                  <motion.div
+                    variants={itemVariants}
+                    className="mb-8 sm:mb-10 lg:mb-12 text-center"
+                  >
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 px-4">
+                      Почему выбирают нас
+                    </h2>
+                    <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto px-4">
+                      AI Copilot помогает представителям микробизнеса решать
+                      задачи быстрее и эффективнее, предоставляя качественные
+                      ответы на любые вопросы прямо в мессенджере или мобильном
+                      приложении.
+                    </p>
+                  </motion.div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    {benefits.map((benefit, index) => (
+                      <motion.div
+                        key={index}
+                        variants={itemVariants}
+                        className="rounded-3xl sm:rounded-4xl bg-white dark:bg-gray-900/50 p-4 sm:p-6 border border-gray-200 dark:border-gray-700 hover:border-red-500/50 transition-all"
+                      >
+                        <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100 text-center">
+                          {benefit}
+                        </p>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
 
@@ -240,7 +261,7 @@ const LandingPage = () => {
                     key={index}
                     whileHover={{ y: -5 }}
                     transition={{ type: "spring", stiffness: 120 }}
-                    className="flex flex-col overflow-hidden rounded-3xl shadow-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200/30 dark:border-gray-700/30 hover:shadow-3xl transition-all"
+                    className="flex flex-col overflow-hidden rounded-4xl shadow-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200/30 dark:border-gray-700/30 hover:shadow-3xl transition-all"
                   >
                     <div className="relative h-48 sm:h-56 lg:h-64 w-full overflow-hidden">
                       <Image
@@ -265,7 +286,7 @@ const LandingPage = () => {
                         <div className="h-1 w-12 bg-gradient-to-r from-red-500 to-pink-600 rounded-full" />
                         <motion.button
                           whileHover={{ scale: 1.05 }}
-                          className="text-sm font-medium text-pink-600 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300"
+                          className="text-sm font-medium cursor-pointer text-pink-600 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300"
                         >
                           Подробнее →
                         </motion.button>
@@ -283,8 +304,15 @@ const LandingPage = () => {
               >
                 <motion.div
                   variants={itemVariants}
-                  className="rounded-2xl sm:rounded-3xl bg-gradient-to-br mx-4 sm:mx-8 lg:mx-12 xl:mx-20 from-red-600 to-pink-600 p-6 sm:p-8 md:p-12 lg:p-16 text-center shadow-2xl relative overflow-hidden"
+                  className="rounded-3xl sm:rounded-4xl mx-4 sm:mx-8 lg:mx-12 xl:mx-20 p-6 sm:p-8 md:p-12 lg:p-16 text-center shadow-2xl relative overflow-hidden"
+                  style={{
+                    backgroundImage: `url(https://alfabank.servicecdn.ru/site-upload/01/87/21405/D_PromoCard18_1140x300_26092025.png)`,
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    backgroundSize: "cover",
+                  }}
                 >
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-600/90 to-pink-600/60" />
                   <div className="relative z-10">
                     <motion.h2
                       variants={itemVariants}
@@ -306,7 +334,7 @@ const LandingPage = () => {
                     >
                       <Button
                         onClick={handleStartWork}
-                        className="rounded-2xl bg-white text-red-600 hover:bg-white/90 shadow-xl px-6 sm:px-8 lg:px-10 py-5 sm:py-6 lg:py-7 text-base sm:text-lg font-semibold"
+                        className="rounded-4xl cursor-pointer bg-white text-red-600 hover:bg-white/90 shadow-xl px-6 sm:px-8 lg:px-10 py-5 sm:py-6 lg:py-7 text-base sm:text-lg font-semibold"
                       >
                         Начать бесплатно
                       </Button>
@@ -318,6 +346,108 @@ const LandingPage = () => {
           </div>
         </motion.div>
       </section>
+
+      <div className="bg-white">
+        <footer className="relative bg-gradient-to-b rounded-t-[3rem] sm:rounded-t-[4rem] md:rounded-t-[5rem] from-gray-900 via-black to-black pt-12 sm:pt-16 pb-8 sm:pb-12">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-28">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="rounded-3xl sm:rounded-4xl  p-6 sm:p-8 lg:p-10"
+            >
+              <motion.h3
+                variants={itemVariants}
+                className="text-xl sm:text-2xl font-bold text-white mb-6 sm:mb-8 text-center"
+              >
+                Команда разработки
+              </motion.h3>
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 sm:gap-8">
+                {[
+                  {
+                    name: "Кирилл - ML",
+                    telegram: "https://t.me/FRIZFOREVER",
+                    github: "https://github.com/FRIZFOREVER/",
+                    image: "/images/developers/46590481.jpg",
+                  },
+                  {
+                    name: "Егор - Frontend",
+                    telegram: "https://t.me/egoryaaa",
+                    github: "https://github.com/developer2",
+                    image: "/images/developers/IMG_3510.webp",
+                  },
+                  {
+                    name: "Денис - Backend",
+                    telegram: "https://t.me/facT0RR",
+                    github: "https://github.com/Fact0RR",
+                    image: "/images/developers/photo_2025-11-16_01-44-57.jpg",
+                  },
+                  {
+                    name: "Лана - UI/UX",
+                    telegram: "https://t.me/Llaceyne",
+                    github: "https://github.com/VG-Greed",
+                    image: "/images/developers/photo_2025-11-16_01-50-37.jpg",
+                  },
+                ].map((developer, index) => (
+                  <motion.div
+                    key={index}
+                    variants={itemVariants}
+                    className="flex flex-col items-center gap-4 p-4 transition-all"
+                  >
+                    {developer.image && (
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-gray-700/50">
+                        <Image
+                          src={developer.image}
+                          alt={developer.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <h4 className="text-white font-semibold text-base sm:text-lg">
+                      {developer.name}
+                    </h4>
+                    <div className="flex items-center gap-4">
+                      <a
+                        href={developer.telegram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-gray-300 hover:text-red-400 transition-colors"
+                      >
+                        <Icon
+                          type={IconTypes.TELEGRAM_OUTLINED}
+                          className="w-5 h-5 sm:w-6 sm:h-6"
+                        />
+                        <span className="text-sm sm:text-base">Telegram</span>
+                      </a>
+                      <a
+                        href={developer.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-gray-300 hover:text-red-400 transition-colors"
+                      >
+                        <svg
+                          className="w-5 h-5 sm:w-6 sm:h-6"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="text-sm sm:text-base">GitHub</span>
+                      </a>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 };
