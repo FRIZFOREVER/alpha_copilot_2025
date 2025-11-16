@@ -16,10 +16,10 @@ var getGraphLogQuery string
 
 // GraphLog представляет структуру лога графа ответов.
 type GraphLog struct {
-	ID       int       `json:"id"`
-	Tag      string    `json:"tag"`
-	Message  string    `json:"message"`
-	TimeUTC  time.Time `json:"log_time"`
+	ID      int       `json:"id"`
+	Tag     string    `json:"tag"`
+	Message string    `json:"message"`
+	TimeUTC time.Time `json:"log_time"`
 }
 
 // GraphLogService - структура для работы с логами графов.

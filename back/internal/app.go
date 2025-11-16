@@ -9,6 +9,7 @@ import (
 	"jabki/internal/settings"
 	"jabki/internal/web"
 	"net/http"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/minio/minio-go"
@@ -67,13 +68,27 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 		}
 		logger.Infof("AssemblyAI API ключ установлен: %s", maskedKey)
 	}
-	recognizerClient := client.NewRecognizerClient("https://api.assemblyai.com/v2", "", config.RecognizerAPIKey, logger)
+	recognizerAssamblyAI := client.NewRecognizerClient("https://api.assemblyai.com/v2", "", config.RecognizerAPIKey, logger)
+	recognizerWhisper := client.NewWhisperClient("POST", config.Recognizer, "/att", logger)
 	streamClient := client.NewStreamMessageClient(http.MethodPost, config.Model, "/message_stream", config.HistoryLen, logger)
 
 	web.InitServiceRoutes(server, db, config.SecretSerice, logger)
 	web.InitPublicRoutes(server, db, config.SecretUser, config.FrontOrigin, logger)
 	web.InitJWTMiddleware(server, config.SecretUser, config.FrontOrigin, logger)
-	web.InitPrivateRoutes(server, db, s3client, recognizerClient, streamClient, logger)
+
+	var isWisperServiceAlive *bool
+	a := recognizerWhisper.Ping()
+	isWisperServiceAlive = &a
+	go func() {
+		for {
+			a = recognizerWhisper.Ping()
+			isWisperServiceAlive = &a
+			println(a)
+			time.Sleep(4 * time.Second)
+		}
+	}()
+
+	web.InitPrivateRoutes(server, db, s3client, recognizerAssamblyAI, config.RecognizerAPIKey != "", recognizerWhisper, isWisperServiceAlive, streamClient, logger)
 
 	return newApp(config, server, db, s3client, logger), nil
 }
