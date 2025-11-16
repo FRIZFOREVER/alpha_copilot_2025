@@ -57,7 +57,8 @@ git clone https://github.com/FRIZFOREVER/alfa_copilot_2025.git
   <img src="https://github.com/devicons/devicon/blob/master/icons/python/python-original-wordmark.svg" title="Python" alt="Python" height="40"/>
   <img src="./assets/ollama.svg" title="lama" alt="lama" height="40"/>
   <img src="./assets/uvicorn.svg" title="uvicorn" alt="uvicorn" height="40"/>
-  <img src="./assets/langchain.svg" title="langchain" alt="langchain" height="40"/>
+  <img src="https://github.com/simple-icons/simple-icons/raw/refs/heads/develop/icons/langchain.svg" title="langchain" alt="langchain" height="40"/>
+  <img src="https://github.com/simple-icons/simple-icons/raw/refs/heads/develop/icons/langgraph.svg" title="langgraph" alt="langgraph" height="40"/>
   <img src="https://github.com/devicons/devicon/blob/master/icons/fastapi/fastapi-plain-wordmark.svg" title="fastapi" alt="fastapi" height="40"/>
   <img src="https://fronty.com/static/uploads/1.11-30.11/languages%20in%202022/go.png" title="GO" alt="GO" height="40"/>
   <img src="./assets/websocket.svg" title="websocket" alt="websocket" height="40"/>
