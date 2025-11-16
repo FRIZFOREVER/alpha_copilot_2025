@@ -137,7 +137,7 @@ class GraphState(BaseModel):
             "iterations to prevent unbounded loops."
         ),
     )
-    next_action: NextAction = Field(
-        default=NextAction.THINK,
+    next_action: NextAction | None = Field(
+        default=None,
         description="Routing hint that indicates how downstream nodes should proceed",
     )

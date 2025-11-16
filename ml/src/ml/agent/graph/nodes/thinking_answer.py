@@ -2,7 +2,7 @@
 
 import logging
 
-from ml.agent.graph.state import GraphState, NextAction
+from ml.agent.graph.state import GraphState
 from ml.agent.prompts import get_thinking_answer_prompt
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -21,5 +21,4 @@ def thinking_answer_node(state: GraphState) -> GraphState:
     )
 
     state.final_prompt = prompt
-    state.next_action = NextAction.FINISH
     return state

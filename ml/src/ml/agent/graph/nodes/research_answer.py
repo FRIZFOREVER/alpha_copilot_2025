@@ -3,7 +3,7 @@
 import logging
 from collections.abc import Sequence
 
-from ml.agent.graph.state import GraphState, NextAction, ResearchObservation, ResearchTurn
+from ml.agent.graph.state import GraphState, ResearchObservation, ResearchTurn
 from ml.agent.prompts import (
     get_research_answer_prompt,
     get_research_evidence_summary_prompt,
@@ -133,5 +133,4 @@ def research_answer_node(state: GraphState, client: ReasoningModelClient) -> Gra
     )
 
     state.final_prompt = prompt
-    state.next_action = NextAction.FINISH
     return state
