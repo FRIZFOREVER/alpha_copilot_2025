@@ -27,7 +27,11 @@ def graph_mode_node(state: GraphState, *, client: ReasoningModelClient) -> Graph
             logger.exception("Failed to select mode via structured call")
             raise
 
-        state.payload.mode = decision.mode
+        try:
+            state.payload.mode = ModelMode(decision.mode.value)
+        except ValueError:
+            logger.exception("Failed to coerce mode decision into ModelMode: %s", decision.mode)
+            raise
         logger.info("Mode selected dynamically: %s", state.payload.mode.value)
 
     return state
