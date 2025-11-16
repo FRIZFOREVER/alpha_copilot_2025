@@ -1,111 +1,104 @@
+"""Minimal thinking planner node that only relies on the latest user request."""
+
+from __future__ import annotations
+
 import logging
-from typing import Any
+from collections.abc import Sequence
 
 from ml.agent.graph.state import GraphState, NextAction, PlannerToolExecution
-from ml.agent.prompts import (
-    ThinkingPlannerStructuredOutput,
-    get_thinking_planner_prompt,
-)
+from ml.agent.prompts import ThinkingPlannerAction, get_thinking_planner_prompt
+from ml.agent.tools.base import BaseTool, ToolResult
 from ml.agent.tools.registry import get_tool_registry
 from ml.api.ollama_calls import ReasoningModelClient
+from ml.configs.message import ChatHistory, Role
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def _summarize_payload(payload: Any) -> str:
+def _latest_user_request(conversation: ChatHistory) -> str:
+    try:
+        messages = conversation.messages
+    except AttributeError:
+        logger.exception("Conversation history is missing the messages attribute")
+        raise
+
+    for message in reversed(messages):
+        if message.role == Role.user:
+            return message.content
+    return ""
+
+
+def _preview_payload(result: ToolResult) -> str:
+    payload = result.data if result.success else result.error
+    if payload is None:
+        return ""
     text = str(payload)
-    max_length = 600
-    if len(text) > max_length:
-        return text[:max_length]
+    if len(text) > 600:
+        return text[:600]
     return text
 
+
+def _execute_tool(tool: BaseTool, arguments: dict[str, str]) -> ToolResult:
+    return tool.execute(**arguments)
+
+
+def _build_prompt(user_request: str, tools: Sequence[BaseTool]) -> ChatHistory:
+    return get_thinking_planner_prompt(user_request=user_request, available_tools=tools)
 
 
 def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Thinking planner node")
+    user_request = _latest_user_request(state.payload.messages)
+    if not user_request:
+        logger.warning("Planner skipped: no user request found")
+        state.next_action = NextAction.ANSWER
+        return state
+
     registry = get_tool_registry()
-    profile = state.payload.profile
-    evidence_snippets: list[str] = []
-    for bucket in (state.thinking_evidence, state.final_answer_evidence):
-        for item in bucket:
-            evidence_snippets.append(item)
-    prompt = get_thinking_planner_prompt(
-        profile=profile,
-        conversation=state.payload.messages,
-        memories=state.memories.extracted_memories,
-        evidence_snippets=evidence_snippets,
-        available_tools=list(registry.values()),
-        max_actions=2,
-    )
+    available_tools: Sequence[BaseTool] = list(registry.values())
 
-    structured_plan: ThinkingPlannerStructuredOutput = client.call_structured(
-        prompt,
-        ThinkingPlannerStructuredOutput,
-    )
+    executions: list[PlannerToolExecution] = []
+    collected_evidence: list[str] = []
 
-    logger.info("Thinking planner summary: %s", structured_plan.plan_summary)
-    logger.info("Thinking planner steps: %s", structured_plan.plan_steps)
-
-    if structured_plan.tool_calls:
-        for position, call in enumerate(structured_plan.tool_calls, start=1):
-            logger.info(
-                "Thinking planner tool call #%s -> name=%s, rationale=%s, expected_evidence=%s, arguments=%s",
-                position,
-                call.tool_name,
-                call.rationale,
-                call.expected_evidence,
-                call.arguments,
-            )
-    else:
-        logger.info("Thinking planner returned no tool calls and will rely on existing context")
-
-    state.thinking_plan_summary = structured_plan.plan_summary
-    state.thinking_plan_steps = structured_plan.plan_steps
-    state.final_answer_draft = structured_plan.final_draft
-
-    executed: list[PlannerToolExecution] = []
-    gathered_evidence: list[str] = []
-    used_tools: set[str] = set()
-
-    for call in structured_plan.tool_calls:
-        if len(used_tools) >= 2:
+    for iteration in range(2):
+        logger.info("Planner iteration %s", iteration + 1)
+        prompt = _build_prompt(user_request, available_tools)
+        action: ThinkingPlannerAction = client.call_structured(prompt, ThinkingPlannerAction)
+        tool_name = action.tool_name
+        if not tool_name:
+            logger.info("Planner returned empty tool name, stopping early")
             break
-        tool_name = call.tool_name
-        if tool_name in used_tools:
-            continue
+
         tool = registry.get(tool_name)
         if tool is None:
-            continue
+            logger.warning("Requested tool '%s' is not registered", tool_name)
+            break
 
-        used_tools.add(tool_name)
-        result = tool.execute(**call.arguments)
-
-        preview = ""
-        if result.success:
-            preview = _summarize_payload(result.data)
-            evidence_note = call.expected_evidence
-            if evidence_note and preview:
-                gathered_evidence.append(evidence_note + "\n" + preview)
-            elif preview:
-                gathered_evidence.append(preview)
-        else:
-            error_text = result.error
-            if error_text:
-                preview = error_text
-
-        executed.append(
+        result = _execute_tool(tool, action.arguments)
+        preview = _preview_payload(result)
+        executions.append(
             PlannerToolExecution(
                 tool_name=tool_name,
-                arguments=call.arguments,
+                arguments=action.arguments,
                 success=result.success,
                 output_preview=preview,
             )
         )
 
-    state.thinking_tool_executions = executed
-    state.thinking_evidence = gathered_evidence
-    if gathered_evidence:
-        state.final_answer_evidence = list(gathered_evidence)
+        if preview:
+            collected_evidence.append(preview)
 
+        if not result.success:
+            logger.warning("Tool '%s' failed, stopping planner loop", tool_name)
+            break
+
+    if collected_evidence:
+        state.thinking_evidence.extend(collected_evidence)
+        state.final_answer_evidence.extend(collected_evidence)
+
+    state.thinking_tool_executions = executions
+    state.thinking_plan_summary = None
+    state.thinking_plan_steps = []
+    state.final_answer_draft = None
     state.next_action = NextAction.ANSWER
     return state
