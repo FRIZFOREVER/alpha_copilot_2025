@@ -24,10 +24,12 @@ export const useSendVoiceMutation = () => {
       chatId,
       voiceBlob,
       profile,
+      mode,
     }: {
       chatId: number;
       voiceBlob: Blob;
       profile: SendMessageStreamDto["profile"];
+      mode?: SendMessageStreamDto["mode"];
     }): Promise<SendVoiceResult> => {
       const voiceResponse: SendVoiceResponse = await sendVoice(voiceBlob);
 
@@ -74,7 +76,7 @@ export const useSendVoiceMutation = () => {
       const sendMessageDto: SendMessageStreamDto = {
         question: voiceResponse.question,
         voice_url: voiceResponse.voice_url,
-        mode: "fast",
+        mode: mode,
         tag: "",
         profile,
       };

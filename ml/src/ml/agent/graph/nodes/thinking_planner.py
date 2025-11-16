@@ -46,7 +46,9 @@ def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> Gr
     for iteration in range(2):
         logger.info("Planner iteration %s", iteration + 1)
         prompt = get_thinking_planner_prompt(
-            user_request=user_request, available_tools=available_tools
+            profile=state.payload.profile,
+            messages=state.payload.messages,
+            available_tools=available_tools,
         )
         action: ThinkingPlannerAction = client.call_structured(prompt, ThinkingPlannerAction)
         tool_name = action.tool_name
