@@ -55,6 +55,7 @@ git clone https://github.com/FRIZFOREVER/alfa_copilot_2025.git
 ## <a name="5">Стек </a>
 <div align="center">
   <img src="https://github.com/devicons/devicon/blob/master/icons/python/python-original-wordmark.svg" title="Python" alt="Python" height="40"/>&nbsp;
+  <img src="./assets/ollama.svg" title="lama" alt="lama" height="40"/>&nbsp;
   <img src="https://fronty.com/static/uploads/1.11-30.11/languages%20in%202022/go.png" title="GO" alt="GO" height="40"/>&nbsp;
   <img src="./assets/websocket.svg" title="websocket" alt="websocket" height="40"/>&nbsp;
   <img src="https://github.com/devicons/devicon/blob/master/icons/fiber/fiber-plain.svg" title="Fiber" alt="Fiber" height="40"/>&nbsp;
