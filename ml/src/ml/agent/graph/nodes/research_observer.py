@@ -4,10 +4,7 @@ import logging
 from typing import Any
 
 from ml.agent.graph.state import GraphState, ResearchTurn
-from ml.agent.prompts import (
-    get_research_observation_prompt,
-    summarize_conversation_for_observer,
-)
+from ml.agent.prompts import get_research_observation_prompt
 from ml.api.ollama_calls import ReasoningModelClient
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -76,14 +73,17 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
         collected.extend(documents)
         state.final_answer_evidence = collected
 
-    conversation_summary = summarize_conversation_for_observer(state.payload.messages)
-
     prompt = get_research_observation_prompt(
         profile=state.payload.profile,
-        conversation_summary=conversation_summary,
+        conversation=state.payload.messages,
+        latest_reasoning=state.latest_reasoning_text,
+        latest_request=(
+            state.turn_history[-1].request.input_text
+            if state.turn_history and state.turn_history[-1].request
+            else None
+        ),
         tool_name=observation.tool_name,
         documents=documents,
-        turn_history=state.turn_history,
     )
 
     summary: str = client.call(messages=prompt)
