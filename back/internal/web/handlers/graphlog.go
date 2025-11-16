@@ -94,7 +94,7 @@ func GraphLogHandlerWS(secret string, repo database.GraphLogRepository, logger *
 				logger.Errorf("Ошибка записи данных в бд: ", err.Error())
 			}
 			// Выводим сообщение в консоль
-			logger.Infof("Получено graph_log сообщение: Чат %s | Пользователь %s | Tag: %s | AnswerID: %d | Message: %s\n", chatID, userUUID, msg.Tag, msg.AnswerID, msg.Message)
+			logger.Debugf("Получено graph_log сообщение: Чат %s | Пользователь %s | Tag: %s | AnswerID: %d | Message: %s\n", chatID, userUUID, msg.Tag, msg.AnswerID, msg.Message)
 
 			// Отправляем сообщение всем пользователям в чате, кроме отправителя
 			logger.Infof("Трансляция сообщения в чат %s, отправитель UUID: %s\n", chatID, userUUID)
