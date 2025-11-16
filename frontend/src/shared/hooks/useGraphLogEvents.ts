@@ -10,7 +10,7 @@ export interface GraphLogMessage {
 
 export const useGraphLogEvents = (
   onMessage?: (data: GraphLogWebSocketMessage) => void,
-  onConnectionEstablished?: (uuid: string) => void
+  onConnectionEstablished?: (uuid: string) => void,
 ) => {
   const { graphLogSocket } = useSocket();
 
@@ -20,17 +20,13 @@ export const useGraphLogEvents = (
     const handleMessage = (event: MessageEvent) => {
       try {
         const parsedData = JSON.parse(event.data);
-        console.log("useGraphLogEvents: Распарсенные данные:", parsedData);
 
         if (parsedData.type === "connection_established" && parsedData.uuid) {
-          console.log(
-            "useGraphLogEvents: Подключение установлено, UUID:",
-            parsedData.uuid
-          );
           onConnectionEstablished?.(parsedData.uuid);
           return;
         }
 
+        // Проверяем, является ли сообщение GraphLogWebSocketMessage
         if (
           parsedData.tag &&
           parsedData.answer_id !== undefined &&
@@ -41,24 +37,12 @@ export const useGraphLogEvents = (
           return;
         }
 
+        // Старый формат для обратной совместимости
         if (parsedData.message) {
-          console.log(
-            "useGraphLogEvents: Сообщение в старом формате:",
-            parsedData
-          );
           onMessage?.(parsedData as unknown as GraphLogWebSocketMessage);
-        } else {
-          console.log(
-            "useGraphLogEvents: Неизвестный формат сообщения:",
-            parsedData
-          );
         }
       } catch (error) {
-        console.error(
-          "Ошибка при парсинге сообщения graph_log:",
-          error,
-          event.data
-        );
+        console.error("Ошибка при парсинге сообщения graph_log:", error);
       }
     };
 
