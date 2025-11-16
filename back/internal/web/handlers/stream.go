@@ -131,6 +131,8 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 
 	messageToModel.Mode = streamIn.Mode
 
+	messageToModel.AnswerID = answerID
+
 	messageChan, tag, err := sh.client.StreamRequestToModel(messageToModel)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

@@ -97,9 +97,19 @@ const DashboardPage = () => {
   const shouldShowHeader = isCollapsed;
 
   return (
-    <div className={cn("flex h-full w-full relative flex-col bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80" , !shouldShowHeader && 'bg-white')}>
+    <div
+      className={cn(
+        "flex h-full w-full relative flex-col bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80",
+        !shouldShowHeader && "bg-white"
+      )}
+    >
       {shouldShowHeader && <Header />}
-      <div className={cn("flex flex-1 overflow-hidden", showWelcomeContent && "md:px-6 md:pb-6")}>
+      <div
+        className={cn(
+          "flex flex-1 overflow-hidden",
+          showWelcomeContent && "md:px-6 md:pb-6"
+        )}
+      >
         <Sidebar />
         <div
           className={cn(
