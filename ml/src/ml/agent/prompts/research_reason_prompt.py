@@ -6,7 +6,6 @@ from ml.agent.graph.state import ResearchTurn
 from ml.agent.prompts.context_blocks import (
     build_conversation_context_block,
     build_evidence_snippet_block,
-    build_persona_block,
 )
 from ml.agent.tools.base import BaseTool
 from ml.configs.message import ChatHistory, UserProfile
@@ -46,6 +45,35 @@ def _format_tool_catalog(tools: Sequence[BaseTool]) -> str:
     return "\n".join(lines)
 
 
+def _build_reasoning_persona_block(profile: UserProfile) -> str:
+    """Return a persona section that focuses on user-specific data."""
+
+    lines: list[str] = ["Персональный контекст пользователя для планирования:"]
+    has_details = False
+
+    if profile.username:
+        lines.append(f"- Полное имя: {profile.username}")
+        has_details = True
+
+    if profile.user_info:
+        lines.append(f"- Самоописание пользователя: {profile.user_info}")
+        has_details = True
+
+    if profile.business_info:
+        lines.append(f"- Описание бизнеса: {profile.business_info}")
+        has_details = True
+
+    if profile.additional_instructions:
+        lines.append("- Приоритетные указания пользователя:"
+                     " " + profile.additional_instructions)
+        has_details = True
+
+    if not has_details:
+        lines.append("- Дополнительных сведений нет.")
+
+    return "\n".join(lines)
+
+
 def get_research_reason_prompt(
     *,
     profile: UserProfile,
@@ -57,7 +85,7 @@ def get_research_reason_prompt(
 ) -> ChatHistory:
     """Создать подсказку для рассуждений без прямых транскриптов наблюдений."""
 
-    persona_block = build_persona_block(profile)
+    persona_block = _build_reasoning_persona_block(profile)
     conversation_block = build_conversation_context_block(conversation)
     evidence_block = build_evidence_snippet_block(evidence_snippets)
     turn_summary = _summarize_turn_history(turn_history)
