@@ -30,14 +30,13 @@ type Profile struct {
 
 // PayloadStream структура для входных данных.
 type PayloadStream struct {
-	Messages  []Message `json:"messages"`
-	ChatID    string    `json:"chat_id"`
-	Tag       string    `json:"tag"`
-	Mode      string    `json:"mode"`
-	FileURL   string    `json:"file_url"`
-	IsVoice   bool      `json:"is_voice"`
-	Profile   Profile   `json:"profile"`
-	AnswerID  int        `json:"answer_id"`
+	Messages []Message `json:"messages"`
+	ChatID   string    `json:"chat_id"`
+	Tag      string    `json:"tag"`
+	Mode     string    `json:"mode"`
+	FileURL  string    `json:"file_url"`
+	IsVoice  bool      `json:"is_voice"`
+	Profile  Profile   `json:"profile"`
 }
 
 // StreamMessage представляет структуру сообщения из стрима.

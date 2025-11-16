@@ -78,7 +78,6 @@ class RequestPayload(BaseModel):
     system: str
     file_url: str
     is_voice: bool
-    answer_id: Optional[int] = None
 
     @field_validator("messages", mode="before")
     @classmethod
