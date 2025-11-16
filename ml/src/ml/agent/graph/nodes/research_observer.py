@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from ml.agent.graph.state import GraphState, NextAction, ResearchTurn
+from ml.agent.graph.state import GraphState, ResearchTurn
 from ml.agent.prompts import (
     get_research_observation_prompt,
     summarize_conversation_for_observer,
@@ -68,7 +68,6 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
     logger.info("Entered Research observer node")
     observation = state.active_observation
     if observation is None:
-        state.next_action = NextAction.THINK
         return state
 
     documents = _collect_documents(observation.metadata)
@@ -105,6 +104,5 @@ def research_observer_node(state: GraphState, client: ReasoningModelClient) -> G
     state.active_observation = None
 
     state.turn_history.append(current_turn)
-    state.next_action = NextAction.THINK
 
     return state

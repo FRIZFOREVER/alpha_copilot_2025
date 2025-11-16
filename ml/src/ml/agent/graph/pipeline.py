@@ -35,7 +35,7 @@ def _extract_pipeline_mode(state: GraphState) -> str:
 def _route_tool_or_answer(state: GraphState) -> str:
     if state.next_action == NextAction.ANSWER:
         return NextAction.ANSWER.value
-    return NextAction.AWAIT_OBSERVATION.value
+    return NextAction.OBSERVATION.value
 
 
 def create_pipeline(client: ReasoningModelClient) -> StateGraph:
@@ -90,7 +90,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
         "Research tool call",
         _route_tool_or_answer,
         {
-            NextAction.AWAIT_OBSERVATION.value: "Research observer",
+            NextAction.OBSERVATION.value: "Research observer",
             NextAction.ANSWER.value: "Research answer",
         },
     )
