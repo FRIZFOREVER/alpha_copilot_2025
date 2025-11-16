@@ -29,6 +29,10 @@ class ResearchToolRequest(BaseModel):
         default="",
         description="Raw input or prompt that should be forwarded to the tool",
     )
+    arguments: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Structured argument dictionary prepared for the tool",
+    )
     metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Extra structured context for the downstream tool",

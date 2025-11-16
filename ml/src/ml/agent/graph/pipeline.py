@@ -16,6 +16,7 @@ from ml.agent.graph.nodes import (
     research_tool_call_node,
     thinking_answer_node,
     thinking_planner_node,
+    tool_command_node,
 )
 from ml.agent.graph.state import GraphState, NextAction
 from ml.agent.prompts.system_prompt import get_system_prompt
@@ -50,6 +51,7 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow.add_node("Thinking planner", partial(thinking_planner_node, client=client))
     workflow.add_node("Thinking answer", thinking_answer_node)
     workflow.add_node("Research reason", partial(reason_node, client=client))
+    workflow.add_node("Research tool command", partial(tool_command_node, client=client))
     workflow.add_node("Research tool call", partial(research_tool_call_node, client=client))
     workflow.add_node("Research observer", partial(research_observer_node, client=client))
     workflow.add_node("Research answer", research_answer_node)
@@ -88,6 +90,15 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
         _extract_research_route,
         {
             NextAction.THINK.value: "Research reason",
+            NextAction.REQUEST_TOOL.value: "Research tool command",
+            NextAction.ANSWER.value: "Research answer",
+            NextAction.FINISH.value: "Research answer",
+        },
+    )
+    workflow.add_conditional_edges(
+        "Research tool command",
+        _extract_research_route,
+        {
             NextAction.REQUEST_TOOL.value: "Research tool call",
             NextAction.ANSWER.value: "Research answer",
             NextAction.FINISH.value: "Research answer",

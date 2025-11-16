@@ -57,6 +57,10 @@ def _build_pending_request_block(pending_request: ResearchToolRequest) -> str:
         f"Tool name: {pending_request.tool_name}",
         f"Proposed input: {pending_request.input_text}",
     ]
+    if pending_request.arguments:
+        lines.append("Arguments:")
+        for key, value in pending_request.arguments.items():
+            lines.append(f"  - {key}: {value}")
     metadata_block = _format_metadata(pending_request.metadata)
     if metadata_block:
         lines.append("Metadata:")
@@ -106,6 +110,13 @@ def get_research_tool_prompt(
 
     prompt.add_user(
         "Validate the pending tool call using the evidence above. "
-        "Return the finalized tool name, refined input, and a concise justification that cites the relevant context."
+        "Respond ONLY with a JSON object that follows this schema: "
+        '{"action": "call_tool" | "finalize_answer", '
+        '"tool_name": string | null, "arguments": object, "justification": string}. '
+        "When action is 'call_tool', provide a registered tool name, populate arguments with the "
+        "exact strings that should be issued to the tool (include a 'query' field for web_search), "
+        "and explain the justification using the cited evidence. When action is 'finalize_answer', "
+        "omit the tool name, leave arguments empty, and justify why the current evidence is enough." 
+        "Do not add commentary outside the JSON response."
     )
     return prompt
