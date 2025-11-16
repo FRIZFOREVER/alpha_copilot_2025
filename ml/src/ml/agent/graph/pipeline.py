@@ -8,6 +8,7 @@ from ollama import ChatResponse
 
 from ml.agent.graph.nodes import (
     fast_answer_node,
+    final_answer_node,
     flash_memories_node,
     graph_mode_node,
     reason_node,
@@ -57,10 +58,11 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     workflow.add_node("Research tool command", partial(tool_command_node, client=client))
     workflow.add_node("Research tool call", partial(research_tool_call_node, client=client))
     workflow.add_node("Research observer", partial(research_observer_node, client=client))
-    workflow.add_node("Research answer", research_answer_node)
+    workflow.add_node("Research answer", partial(research_answer_node, client=client))
     workflow.add_node(
         "Fast answer", fast_answer_node
     )  # not passing model cuz forming a final prompt
+    workflow.add_node("Final answer", final_answer_node)
 
     # entrypoint
     workflow.set_entry_point("Mode Decider")
@@ -81,11 +83,11 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
 
     # Fast
     workflow.add_edge("Flash Memories", "Fast answer")
-    workflow.add_edge("Fast answer", END)
+    workflow.add_edge("Fast answer", "Final answer")
 
     # Thinking
     workflow.add_edge("Thinking planner", "Thinking answer")
-    workflow.add_edge("Thinking answer", END)
+    workflow.add_edge("Thinking answer", "Final answer")
 
     # Research
     workflow.add_conditional_edges(
@@ -109,7 +111,9 @@ def create_pipeline(client: ReasoningModelClient) -> StateGraph:
     )
     workflow.add_edge("Research tool call", "Research observer")
     workflow.add_edge("Research observer", "Research reason")
-    workflow.add_edge("Research answer", END)
+    workflow.add_edge("Research answer", "Final answer")
+
+    workflow.add_edge("Final answer", END)
 
     app: StateGraph = workflow.compile()
 
