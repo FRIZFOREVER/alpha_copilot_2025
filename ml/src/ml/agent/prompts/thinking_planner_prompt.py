@@ -2,8 +2,12 @@
 
 from collections.abc import Sequence
 
+from ml.agent.prompts.context_blocks import (
+    build_conversation_context_block,
+    build_persona_block,
+)
 from ml.agent.tools.base import BaseTool
-from ml.configs.message import ChatHistory
+from ml.configs.message import ChatHistory, UserProfile
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -96,11 +100,26 @@ def _format_plan_guidelines(max_actions: int) -> str:
     return "\n".join(points)
 
 
+def _format_memories(memories: Sequence[str]) -> str:
+    numbered: list[str] = []
+    for index, memory in enumerate(memories, start=1):
+        numbered.append(str(index) + ". " + memory)
+    return "Извлеченные заметки:\n" + "\n".join(numbered)
+
+
+def _format_evidence(evidence_snippets: Sequence[str]) -> str:
+    formatted: list[str] = []
+    for position, snippet in enumerate(evidence_snippets, start=1):
+        formatted.append("[" + str(position) + "] " + snippet)
+    return "Доступные факты из предыдущих действий:\n" + "\n".join(formatted)
+
+
 def get_thinking_planner_prompt(
     *,
-    system_prompt: str,
+    profile: UserProfile,
     conversation: ChatHistory,
     memories: Sequence[str],
+    evidence_snippets: Sequence[str] | None,
     available_tools: Sequence[BaseTool],
     max_actions: int = 2,
 ) -> ChatHistory:
@@ -108,36 +127,42 @@ def get_thinking_planner_prompt(
 
     prompt = ChatHistory()
     planner_instructions: list[str] = []
-    planner_instructions.append(system_prompt)
+    persona_block = build_persona_block(profile)
+    conversation_block = build_conversation_context_block(conversation)
+
+    system_sections: list[str] = []
+    system_sections.append(persona_block)
+    if conversation_block:
+        system_sections.append(conversation_block)
+
+    if evidence_snippets:
+        evidence_block = _format_evidence(evidence_snippets)
+        system_sections.append(evidence_block)
+
+    if memories:
+        memories_block = _format_memories(memories)
+        system_sections.append(memories_block)
+
+    tool_catalog = _format_tool_catalog(available_tools)
+    system_sections.append("Каталог инструментов:\n" + tool_catalog)
+
+    guidelines = _format_plan_guidelines(max_actions)
+    system_sections.append("Правила построения плана:\n" + guidelines)
+
     planner_instructions.append(
         "Ты отвечаешь за построение плана рассуждений и выбора инструментов."
     )
     planner_instructions.append(
         "Всегда следуй требуемой структуре JSON и выполняй ограничения на использование инструментов."
     )
-    prompt.add_or_change_system("\n".join(planner_instructions))
+    planner_block = "Инструкции планировщика:\n" + "\n".join(planner_instructions)
+    system_sections.append(planner_block)
 
-    user_sections: list[str] = []
-    conversation_dump = conversation.model_dump_string()
-    if conversation_dump:
-        user_sections.append("Контекст диалога:\n" + conversation_dump)
-    else:
-        user_sections.append("Контекст диалога:\nнет сообщений")
+    prompt.add_or_change_system("\n\n".join(system_sections))
 
-    if memories:
-        user_sections.append("Извлеченные заметки:\n" + "\n".join(memories))
-
-    tool_catalog = _format_tool_catalog(available_tools)
-    user_sections.append("Каталог инструментов:\n" + tool_catalog)
-
-    guidelines = _format_plan_guidelines(max_actions)
-    user_sections.append("Правила построения плана:\n" + guidelines)
-
-    user_sections.append(
+    prompt.add_user(
         "Верни JSON со следующими полями: plan_summary (строка), plan_steps (список строк), "
         "tool_calls (список объектов с полями tool_name, arguments, rationale, expected_evidence), "
         "final_draft (строка)."
     )
-
-    prompt.add_user("\n\n".join(user_sections))
     return prompt

@@ -6,7 +6,6 @@ from ml.agent.prompts import (
     ThinkingPlannerStructuredOutput,
     get_thinking_planner_prompt,
 )
-from ml.agent.prompts.system_prompt import extract_system_prompt
 from ml.agent.tools.registry import get_tool_registry
 from ml.api.ollama_calls import ReasoningModelClient
 
@@ -24,11 +23,16 @@ def _summarize_payload(payload: Any) -> str:
 def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Thinking planner node")
     registry = get_tool_registry()
-    system_prompt = extract_system_prompt(state.payload.messages)
+    profile = state.payload.profile
+    evidence_snippets: list[str] = []
+    for bucket in (state.thinking_evidence, state.final_answer_evidence):
+        for item in bucket:
+            evidence_snippets.append(item)
     prompt = get_thinking_planner_prompt(
-        system_prompt=system_prompt,
+        profile=profile,
         conversation=state.payload.messages,
         memories=state.memories.extracted_memories,
+        evidence_snippets=evidence_snippets,
         available_tools=list(registry.values()),
         max_actions=2,
     )
