@@ -23,7 +23,7 @@ export const CapabilityCard = ({
         className
       )}
     >
-      <div className="relative w-full h-56 flex items-center justify-center overflow-hidden">
+      <div className="relative w-full h-56 flex items-center justify-center overflow-hidden pt-4">
         <img
           src={imageSrc}
           alt={imageAlt}
