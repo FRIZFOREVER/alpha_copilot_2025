@@ -32,7 +32,7 @@ export const GraphLogsViewer = ({
     []
   );
 
-  const { isMobileView } = useResize();
+  const { isLgView } = useResize();
   const { data: initialLogs, isLoading } = useGraphLogsQuery(
     isOpen ? answerId : undefined
   );
@@ -78,7 +78,7 @@ export const GraphLogsViewer = ({
     <>
       <div
         className={cn(
-          "bg-white border-l border-gray-200 flex-shrink-0 transition-all duration-300 ease-in-out md:flex hidden flex-col h-full overflow-hidden",
+          "bg-white border-l border-gray-200 flex-shrink-0 transition-all duration-300 ease-in-out lg:flex hidden flex-col h-full overflow-hidden",
           isOpen ? "w-96 opacity-100" : "w-0 opacity-0"
         )}
       >
@@ -132,7 +132,7 @@ export const GraphLogsViewer = ({
           </div>
         )}
       </div>
-      {isOpen && isMobileView && (
+      {isOpen && isLgView && (
         <div className="md:hidden">
           <Drawer open={isOpen} onOpenChange={onClose}>
             <DrawerContent className="max-h-[80vh]">
