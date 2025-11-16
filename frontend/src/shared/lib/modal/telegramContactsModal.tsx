@@ -12,14 +12,17 @@ import { useTelegramContactsQuery } from "@/entities/auth/hooks/useTelegramConta
 import { useState, useEffect } from "react";
 import { EModalVariables } from "./constants";
 import { Input } from "@/shared/ui/input/input";
-import { Loader2, Search, User } from "lucide-react";
+import { Loader2, Search, User, AlertTriangle } from "lucide-react";
 import { TelegramContact } from "@/entities/auth/types/types";
 import { cn } from "@/shared/lib/mergeClass";
+
+const TELEGRAM_MESSAGE_MAX_LENGTH = 4096;
 
 interface TelegramContactsModalData {
   phone_number?: string;
   tg_user_id?: number;
-  onSelect: (contact: TelegramContact) => void;
+  message_text?: string;
+  onSelect: (contact: TelegramContact, truncatedText?: string) => void;
 }
 
 export const TelegramContactsModal = () => {
@@ -35,6 +38,13 @@ export const TelegramContactsModal = () => {
     "onSelect" in data
       ? (data as unknown as TelegramContactsModalData)
       : null;
+
+  const messageText = modalData?.message_text || "";
+  const messageLength = messageText.length;
+  const isMessageTooLong = messageLength > TELEGRAM_MESSAGE_MAX_LENGTH;
+  const truncatedMessage = isMessageTooLong
+    ? messageText.slice(0, TELEGRAM_MESSAGE_MAX_LENGTH)
+    : messageText;
 
   const {
     data: contactsData,
@@ -64,7 +74,24 @@ export const TelegramContactsModal = () => {
   });
 
   const handleSelectContact = (contact: TelegramContact) => {
-    modalData?.onSelect(contact);
+    if (!modalData) return;
+
+    if (isMessageTooLong) {
+      const shouldSendTruncated = window.confirm(
+        `Сообщение превышает лимит Telegram (4096 символов). Текущая длина: ${messageLength} символов.\n\n` +
+          `Отправить обрезанное сообщение (первые ${TELEGRAM_MESSAGE_MAX_LENGTH} символов)?`
+      );
+
+      if (!shouldSendTruncated) {
+        return;
+      }
+
+      modalData.onSelect(contact, truncatedMessage);
+      closeModal();
+      return;
+    }
+
+    modalData.onSelect(contact);
     closeModal();
   };
 
@@ -80,10 +107,36 @@ export const TelegramContactsModal = () => {
         )}
       >
         <DialogHeader className="flex-shrink-0 p-4 sm:p-6 pb-3 sm:pb-4">
-          <DialogTitle className="text-xl sm:text-2xl">Выберите контакт Telegram</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl">
+            Выберите контакт Telegram
+          </DialogTitle>
           <DialogDescription className="text-sm sm:text-base mt-2">
             Выберите контакт, которому хотите отправить сообщение
           </DialogDescription>
+          {messageText && (
+            <div className="mt-3">
+              <div
+                className={cn(
+                  "flex items-center gap-2 text-sm",
+                  isMessageTooLong ? "text-orange-600" : "text-gray-600"
+                )}
+              >
+                {isMessageTooLong && (
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                )}
+                <span>
+                  Длина сообщения: {messageLength} /{" "}
+                  {TELEGRAM_MESSAGE_MAX_LENGTH} символов
+                </span>
+              </div>
+              {isMessageTooLong && (
+                <p className="text-xs text-orange-600 mt-1">
+                  Сообщение превышает лимит Telegram. При отправке будет
+                  обрезано до {TELEGRAM_MESSAGE_MAX_LENGTH} символов.
+                </p>
+              )}
+            </div>
+          )}
         </DialogHeader>
 
         <div className="flex-shrink-0 px-4 sm:px-6 pb-3 sm:pb-4">
