@@ -20,6 +20,7 @@ def _summarize_payload(payload: Any) -> str:
     return text
 
 
+
 def thinking_planner_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Thinking planner node")
     registry = get_tool_registry()
