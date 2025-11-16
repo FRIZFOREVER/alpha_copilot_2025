@@ -19,6 +19,7 @@ def _compose_system_message(
     turn_highlights: Sequence[str],
     latest_reasoning: str,
     evidence_snippets: Sequence[str],
+    evidence_summary: str,
 ) -> str:
     persona = get_system_prompt(profile)
     sections: list[str] = [persona]
@@ -30,7 +31,9 @@ def _compose_system_message(
     if latest_reasoning:
         sections.append("Последняя сводка рассуждений:\n" + latest_reasoning)
 
-    if evidence_snippets:
+    if evidence_summary:
+        sections.append("Краткий отчёт по источникам:\n" + evidence_summary)
+    elif evidence_snippets:
         sections.append("Доступные источники:\n" + _format_evidence(evidence_snippets))
 
     sections.append(
@@ -55,6 +58,7 @@ def get_research_answer_prompt(
     turn_highlights: Sequence[str],
     latest_reasoning: str,
     evidence_snippets: Sequence[str],
+    evidence_summary: str,
 ) -> ChatHistory:
     """Recreate the conversation with an updated system message for the final answer."""
 
@@ -64,6 +68,7 @@ def get_research_answer_prompt(
         turn_highlights=turn_highlights,
         latest_reasoning=latest_reasoning,
         evidence_snippets=evidence_snippets,
+        evidence_summary=evidence_summary,
     )
     prompt.add_or_change_system(system_message)
     return prompt

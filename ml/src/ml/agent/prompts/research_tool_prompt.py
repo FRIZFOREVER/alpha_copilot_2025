@@ -1,9 +1,10 @@
 """Prompt builder for selecting and preparing a tool call."""
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
-from ml.agent.graph.state import ResearchToolRequest, ResearchTurn
+from ml.agent.graph.state import ResearchTurn
 from ml.agent.prompts.context_blocks import build_persona_block
+from ml.agent.tools.base import BaseTool
 from ml.configs.message import ChatHistory, Role, UserProfile
 
 
@@ -44,43 +45,36 @@ def _format_turn_highlights(turn_history: Sequence[ResearchTurn], *, limit: int 
     return "\n".join(lines)
 
 
-def _format_metadata(metadata: Mapping[str, object]) -> str:
-    lines: list[str] = []
-    for key, value in metadata.items():
-        lines.append(f"{key}: {value}")
+def _format_tool_catalog(tools: Sequence[BaseTool]) -> str:
+    if not tools:
+        return "Доступные инструменты: отсутствуют"
+    lines: list[str] = ["Доступные инструменты:"]
+    for tool in tools:
+        lines.append(f"- {tool.name}: {tool.description}")
     return "\n".join(lines)
 
 
-def _build_pending_request_block(pending_request: ResearchToolRequest) -> str:
-    lines: list[str] = [
-        "Pending tool request:",
-        f"Tool name: {pending_request.tool_name}",
-        f"Proposed input: {pending_request.input_text}",
-    ]
-    if pending_request.arguments:
-        lines.append("Arguments:")
-        for key, value in pending_request.arguments.items():
-            lines.append(f"  - {key}: {value}")
-    metadata_block = _format_metadata(pending_request.metadata)
-    if metadata_block:
-        lines.append("Metadata:")
-        lines.append(metadata_block)
-    return "\n".join(lines)
+def _build_reasoning_block(reasoning: str | None) -> str:
+    if not reasoning:
+        return ""
+    return "Последняя заметка исследователя:\n" + reasoning
 
 
 def get_research_tool_prompt(
     conversation: ChatHistory,
     turn_history: Sequence[ResearchTurn],
-    pending_request: ResearchToolRequest,
-    comparison_note: str | None = None,
+    available_tools: Sequence[BaseTool],
+    *,
+    latest_reasoning: str | None = None,
     profile: UserProfile | None = None,
 ) -> ChatHistory:
-    """Build a prompt for validating and finalizing the next tool request."""
+    """Build a prompt for selecting and finalizing the next tool request."""
 
     persona_block = build_persona_block(profile) if profile else None
     conversation_block = _build_dialogue_snapshot(conversation)
     history_block = _format_turn_highlights(turn_history) if turn_history else ""
-    request_block = _build_pending_request_block(pending_request)
+    reasoning_block = _build_reasoning_block(latest_reasoning)
+    tools_block = _format_tool_catalog(available_tools)
 
     evidence_sections: list[str] = []
     if persona_block:
@@ -92,15 +86,15 @@ def get_research_tool_prompt(
         evidence_sections.append(
             "Recent research turns:\nNone. This is the first tool call under consideration."
         )
-    evidence_sections.append(request_block)
-    if comparison_note:
-        evidence_sections.append("Comparison notes:\n" + comparison_note)
+    if reasoning_block:
+        evidence_sections.append(reasoning_block)
+    evidence_sections.append(tools_block)
 
     system_sections: list[str] = [
         (
             "You are responsible for crafting the exact tool call for the research agent.\n"
-            "Use the persona, dialogue snapshot, and evidence list to justify or adjust the request.\n"
-            "Confirm the best tool, refine the input, and ensure the call advances the investigation."
+            "Use the persona, dialogue snapshot, and evidence list to choose the best next step.\n"
+            "Confirm the best tool, craft the required arguments, and ensure the call advances the investigation."
         ),
         "\n\n".join(evidence_sections),
     ]
@@ -109,14 +103,13 @@ def get_research_tool_prompt(
     prompt.add_or_change_system("\n\n".join(system_sections))
 
     prompt.add_user(
-        "Validate the pending tool call using the evidence above. "
-        "Respond ONLY with a JSON object that follows this schema: "
+        "Реши, нужно ли вызвать инструмент или можно перейти к финальному ответу. "
+        "Ответь ТОЛЬКО JSON объектом со структурой "
         '{"action": "call_tool" | "finalize_answer", '
         '"tool_name": string | null, "arguments": object, "justification": string}. '
-        "When action is 'call_tool', provide a registered tool name, populate arguments with the "
-        "exact strings that should be issued to the tool (include a 'query' field for web_search), "
-        "and explain the justification using the cited evidence. When action is 'finalize_answer', "
-        "omit the tool name, leave arguments empty, and justify why the current evidence is enough." 
-        "Do not add commentary outside the JSON response."
+        "Если выбираешь 'call_tool', используй одно из доступных названий, заполни аргументы "
+        "строками, перечисли обязательные поля (например, query для web_search) и объясни "
+        "обоснование. Если выбираешь 'finalize_answer', tool_name = null и arguments = {}. "
+        "Не добавляй комментариев вне JSON."
     )
     return prompt

@@ -6,13 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ml.agent.graph.constants import (
-    FORCE_FINALIZE_METADATA_KEY,
-    STOP_REASON_KEY,
-    STOP_TOOL_NAME,
-)
 from ml.agent.graph.nodes.tooling import select_primary_input
-from ml.agent.graph.state import GraphState, NextAction, ResearchToolRequest
+from ml.agent.graph.state import GraphState, NextAction, ResearchToolRequest, ResearchTurn
 from ml.agent.prompts import get_research_tool_prompt
 from ml.agent.tools.registry import get_tool_registry
 from ml.api.ollama_calls import ReasoningModelClient
@@ -73,30 +68,14 @@ def _finalize_from_justification(state: GraphState, justification: str) -> Graph
 
 def tool_command_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Research tool command node")
-    pending_request = state.active_tool_request
-    if pending_request is None:
-        error_message = "Active tool request is missing for tool command node"
-        logger.error(error_message)
-        raise ValueError(error_message)
 
-    metadata = pending_request.metadata or {}
-    force_finalize = metadata.get(FORCE_FINALIZE_METADATA_KEY)
-    if force_finalize or pending_request.tool_name == STOP_TOOL_NAME:
-        stop_reason = metadata.get(STOP_REASON_KEY)
-        justification = stop_reason or (
-            "Достигнут лимит исследовательских итераций. Закрываем расследование."
-        )
-        logger.info(
-            "Tool command received forced finalize directive from %s", pending_request.tool_name
-        )
-        return _finalize_from_justification(state, justification)
-
-    comparison_note = pending_request.metadata.get("comparison_text") if pending_request.metadata else None
+    registry = get_tool_registry()
+    available_tools = list(registry.values())
     prompt = get_research_tool_prompt(
         conversation=state.payload.messages,
         turn_history=state.turn_history,
-        pending_request=pending_request,
-        comparison_note=comparison_note,
+        available_tools=available_tools,
+        latest_reasoning=state.latest_reasoning_text,
         profile=state.payload.profile,
     )
 
@@ -117,7 +96,6 @@ def tool_command_node(state: GraphState, client: ReasoningModelClient) -> GraphS
         raise ValueError("Tool command response is malformed") from exc
 
     normalized_arguments = _normalize_arguments(command.arguments)
-    registry = get_tool_registry()
 
     if command.action == "finalize_answer":
         logger.info("Tool command requested to finalize the research answer")
@@ -134,8 +112,7 @@ def tool_command_node(state: GraphState, client: ReasoningModelClient) -> GraphS
         logger.error(error_message)
         raise ValueError(error_message)
 
-    metadata = dict(pending_request.metadata)
-    metadata["arguments"] = dict(normalized_arguments)
+    metadata = {"arguments": dict(normalized_arguments)}
 
     finalized_request = ResearchToolRequest(
         tool_name=tool_name,
@@ -145,10 +122,14 @@ def tool_command_node(state: GraphState, client: ReasoningModelClient) -> GraphS
     )
 
     state.active_tool_request = finalized_request
-    state.latest_reasoning_text = command.justification
     if state.turn_history:
-        state.turn_history[-1].request = finalized_request
-        state.turn_history[-1].reasoning_summary = command.justification
+        last_turn = state.turn_history[-1]
+    else:
+        last_turn = ResearchTurn()
+        state.turn_history.append(last_turn)
+    if not last_turn.reasoning_summary:
+        last_turn.reasoning_summary = command.justification
+    last_turn.request = finalized_request
     logger.info("Tool command finalized request for tool %s", tool_name)
     state.next_action = NextAction.REQUEST_TOOL
 

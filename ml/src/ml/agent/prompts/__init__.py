@@ -1,6 +1,7 @@
 from .fast_answer_prompt import compose_fast_final_prompt
 from .mode_decision_prompt import ModeDecisionResponse, get_mode_decision_prompt
 from .research_answer_prompt import get_research_answer_prompt
+from .research_evidence_summary_prompt import get_research_evidence_summary_prompt
 from .research_observation_prompt import (
     get_research_observation_prompt,
     summarize_conversation_for_observer,
@@ -30,6 +31,7 @@ __all__: list[str] = [
     "summarize_conversation_for_observer",
     "summarize_turn_history_for_observer",
     "get_research_answer_prompt",  # Research answer assembly
+    "get_research_evidence_summary_prompt",  # Evidence summarization helper
     "get_tag_define_prompt",
     "get_thinking_planner_prompt",  # Thinking planner stage
     "ThinkingPlannerStructuredOutput",

@@ -136,26 +136,6 @@ class GraphState(BaseModel):
         default=None,
         description="Latest reasoning summary emitted by the agent",
     )
-    suggested_tool_name: str | None = Field(
-        default=None,
-        description="Identifier of the tool proposed by the reasoning model",
-    )
-    suggested_tool_args: dict[str, str] = Field(
-        default_factory=dict,
-        description="Arguments proposed for the next tool call",
-    )
-    suggested_objective: str | None = Field(
-        default=None,
-        description="High-level objective associated with the suggested tool",
-    )
-    loop_counter: int = Field(
-        default=0,
-        description=(
-            "Monotonic counter incremented by each graph iteration. "
-            "Nodes should compare this value against their configured maximum "
-            "iterations to prevent unbounded loops."
-        ),
-    )
     next_action: NextAction = Field(
         default=NextAction.THINK,
         description="Routing hint that indicates how downstream nodes should proceed",
