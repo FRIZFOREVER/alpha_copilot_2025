@@ -1,8 +1,9 @@
+
 import asyncio
 import logging
 import os
 from collections.abc import Iterator
-from typing import Any, cast
+from typing import Any, Optional, cast
 
 import ollama
 from fastapi.encoders import jsonable_encoder
@@ -18,6 +19,40 @@ _MODEL_ENV_VARS: list[str] = [
     "OLLAMA_REASONING_MODEL",
     "OLLAMA_EMBEDDING_MODEL",
 ]
+
+_PROGRESS_BAR_LENGTH = 24
+
+
+def _format_bytes(bytes_value: Optional[int]) -> str:
+    if bytes_value is None:
+        return "unknown"
+    size = float(bytes_value)
+    units = ("B", "KB", "MB", "GB", "TB", "PB")
+    for unit in units:
+        if size < 1024 or unit == units[-1]:
+            return f"{size:5.1f}{unit}"
+        size /= 1024
+
+
+def _build_progress_bar(ratio: float, length: int = _PROGRESS_BAR_LENGTH) -> str:
+    ratio = max(0.0, min(1.0, ratio))
+    filled = int(round(ratio * length))
+    empty = length - filled
+    return f"[{'█' * filled}{'-' * empty}]"
+
+
+def _format_progress_status(progress: ollama.ProgressResponse) -> str:
+    status = progress.status or "pulling"
+    completed = progress.completed
+    total = progress.total
+    if completed is not None and total:
+        ratio = completed / total if total else 0.0
+        bar = _build_progress_bar(ratio)
+        percent = f"{ratio * 100:5.1f}%"
+        return f"{status} {bar} {percent} {_format_bytes(completed)}/{_format_bytes(total)}"
+    if completed is not None:
+        return f"{status} {_format_bytes(completed)}"
+    return status
 
 
 async def get_models_from_env() -> list[str]:
@@ -45,7 +80,7 @@ async def download_missing_models(available_models: list[str], requested_models:
                 logger.info(
                     "Downloading %s: %s",
                     model,
-                    progress.model_dump(exclude_none=True),
+                    _format_progress_status(progress),
                 )
     logger.info("All required models are downloaded")
 
