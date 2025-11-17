@@ -238,3 +238,6 @@ __marimo__/
 
 .vscode/*
 test.ipynb
+
+# Large video files
+frontend/public/media/*.mp4
