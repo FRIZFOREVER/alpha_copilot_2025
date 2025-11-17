@@ -8,15 +8,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from ml.agent.router import (
-    STREAM_COMPLETE,
-    AsyncStreamHandle,
-    StreamError,
-    async_stream_workflow,
-    workflow_collected_async,
-)
+from ml.agent.router import workflow_async, workflow_collected_async
 from ml.api.graph_history import GraphLogClient, get_backend_url
 from ml.api.graph_logging import (
+    GraphLogContext,
     GraphLogDispatcher,
     reset_graph_log_context,
     set_graph_log_context,
@@ -34,13 +29,6 @@ from ml.configs.types import ModelClients
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-
-def _drain_async_queue(queue: asyncio.Queue[Any]) -> None:
-    while True:
-        try:
-            queue.get_nowait()
-        except asyncio.QueueEmpty:
-            break
 
 
 @asynccontextmanager
@@ -106,8 +94,14 @@ def create_app() -> FastAPI:
         exit_stack = AsyncExitStack()
         dispatcher: GraphLogDispatcher | None = None
         dispatcher_task: asyncio.Task[None] | None = None
-        stream_handle: AsyncStreamHandle
-        context_token = None
+        previous_graph_log_context: GraphLogContext | None = None
+        graph_log_context_active = False
+
+        def _reset_graph_log_context() -> None:
+            nonlocal graph_log_context_active
+            if graph_log_context_active:
+                reset_graph_log_context(previous_graph_log_context)
+                graph_log_context_active = False
 
         try:
             client = await exit_stack.enter_async_context(
@@ -116,14 +110,14 @@ def create_app() -> FastAPI:
             loop = asyncio.get_running_loop()
             dispatcher = GraphLogDispatcher(loop=loop, client=client)
             dispatcher_task = asyncio.create_task(dispatcher.run())
-            context_token = set_graph_log_context(
+            previous_graph_log_context = set_graph_log_context(
                 dispatcher=dispatcher, answer_id=payload.messages.get_answer_id()
             )
+            graph_log_context_active = True
 
-            stream_handle = await async_stream_workflow(payload)
+            stream, tag = await workflow_async(payload)
         except HTTPException:
-            if context_token is not None:
-                reset_graph_log_context(context_token)
+            _reset_graph_log_context()
             if dispatcher:
                 dispatcher.stop()
             if dispatcher_task:
@@ -133,9 +127,7 @@ def create_app() -> FastAPI:
                 await exit_stack.aclose()
             raise
         except Exception as exc:
-            if context_token is not None:
-                reset_graph_log_context(context_token)
-                context_token = None
+            _reset_graph_log_context()
             if dispatcher:
                 dispatcher.stop()
             if dispatcher_task:
@@ -149,34 +141,35 @@ def create_app() -> FastAPI:
             ) from exc
 
         async def event_generator() -> AsyncIterator[str]:
+            loop = asyncio.get_running_loop()
+            close_stream = getattr(stream, "close", None)
             try:
                 while True:
-                    item = await stream_handle.queue.get()
-                    if item is STREAM_COMPLETE:
+                    try:
+                        chunk = await loop.run_in_executor(None, next, stream)
+                    except StopIteration:
                         break
-                    if isinstance(item, StreamError):
+                    except Exception as exc:
                         raise HTTPException(
                             status_code=500, detail="Streaming workflow failed"
-                        ) from item.error
-                    yield f"data: {item.model_dump_json()}\n\n"
+                        ) from exc
+                    yield f"data: {chunk.model_dump_json()}\n\n"
             except asyncio.CancelledError:
                 raise
             finally:
-                stream_handle.stop()
-                _drain_async_queue(stream_handle.queue)
-                with suppress(Exception):
-                    await stream_handle.worker_task
+                if close_stream:
+                    with suppress(Exception):
+                        close_stream()
                 if dispatcher:
                     dispatcher.stop()
                 if dispatcher_task:
                     with suppress(Exception):
                         await dispatcher_task
-                if context_token is not None:
-                    reset_graph_log_context(context_token)
+                _reset_graph_log_context()
                 with suppress(Exception):
                     await exit_stack.aclose()
 
-        headers: dict[str, Any] = {"tag": stream_handle.tag.value}
+        headers: dict[str, Any] = {"tag": tag.value}
         return StreamingResponse(
             event_generator(),
             media_type="text/event-stream",
