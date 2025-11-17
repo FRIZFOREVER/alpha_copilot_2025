@@ -5,6 +5,7 @@ import {
   useState,
   createContext,
   useContext,
+  useEffect,
 } from "react";
 import { ChatHeader } from "../chatHeader";
 import { MessageList } from "../messageList";
@@ -51,6 +52,8 @@ export const Chat = memo(
     const scrollButtonContainerRef = useRef<HTMLDivElement>(null);
     const [isGraphLogsOpen, setIsGraphLogsOpen] = useState(false);
     const [currentAnswerId, setCurrentAnswerId] = useState<number | null>(null);
+    const prevIsLoadingRef = useRef<boolean>(false);
+    const lastProcessedAnswerIdRef = useRef<number | null>(null);
 
     const handleScrollContainerReady = useCallback(
       (ref: React.RefObject<HTMLElement>) => {
@@ -70,6 +73,35 @@ export const Chat = memo(
       setIsGraphLogsOpen(false);
       setCurrentAnswerId(null);
     }, []);
+
+    useEffect(() => {
+      const lastBotMessage = [...messages]
+        .reverse()
+        .find((msg) => !msg.isUser && msg.answerId);
+
+      if (
+        !lastBotMessage ||
+        lastBotMessage.isUser ||
+        !lastBotMessage.answerId
+      ) {
+        prevIsLoadingRef.current = isLoading;
+        return;
+      }
+
+      const newAnswerId = lastBotMessage.answerId;
+      const isGenerationStarted = !prevIsLoadingRef.current && isLoading;
+      const isNewAnswerId = newAnswerId !== lastProcessedAnswerIdRef.current;
+
+      if (isLoading && (isGenerationStarted || isNewAnswerId)) {
+        setCurrentAnswerId(newAnswerId);
+        if (!isGraphLogsOpen || isGenerationStarted) {
+          setIsGraphLogsOpen(true);
+        }
+        lastProcessedAnswerIdRef.current = newAnswerId;
+      }
+
+      prevIsLoadingRef.current = isLoading;
+    }, [isLoading, messages, isGraphLogsOpen]);
 
     return (
       <GraphLogsContext.Provider
