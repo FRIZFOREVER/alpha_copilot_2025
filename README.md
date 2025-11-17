@@ -6,6 +6,7 @@
 
 </div> 
 
+Ссылка на этот репозиторий: https://github.com/FRIZFOREVER/alpha_copilot_2025
 
 ## Оглавление
 - ### [Кейс](#1)
@@ -16,7 +17,7 @@
 - ### [Команда](#6)
 - ### [Скринкаст](#7)
 
-Ссылка на этот репозиторий: https://github.com/FRIZFOREVER/alpha_copilot_2025
+
 
 ## <a name="1"> Кейс </a>
 
