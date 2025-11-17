@@ -111,4 +111,4 @@ Docker compose up --build
 
 ## <a name="7">Скринкаст </a>
 
-- [Cсылка на скринкаст](https://drive.google.com/drive/folders/1BwoBICXg2sa_pRCZ6IFFrk211rVWjvbB?usp=sharing)&nbsp;
+- [Cсылка на скринкаст]([ппп](https://drive.google.com/file/d/1wOEB2Yz3gxwjyZjRD0Muik2xgyIR2jxC/view?usp=drivesdk))&nbsp;
