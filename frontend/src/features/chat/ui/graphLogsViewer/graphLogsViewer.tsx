@@ -72,10 +72,10 @@ export const GraphLogsViewer = ({
       <div
         className={cn(
           "bg-white border-l border-[#0000000f] flex-shrink-0 transition-all duration-300 ease-in-out md:flex hidden flex-col h-full overflow-hidden",
-          isOpen ? "w-96 opacity-100" : "w-0 opacity-0"
+          isOpen && !isLgView ? "w-96 opacity-100" : "w-0 opacity-0"
         )}
       >
-        {isOpen && (
+        {isOpen && !isLgView && (
           <div className="flex flex-col h-full w-full">
             <div className="flex items-center justify-between p-[14.2px] border-b border-[#0000000f]">
               <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ export const GraphLogsViewer = ({
       {isOpen && isLgView && (
         <div className="md:hidden">
           <Drawer open={isOpen} onOpenChange={onClose}>
-            <DrawerContent className="max-h-[80vh]">
+            <DrawerContent className="max-h-[80vh] rounded-t-3xl">
               <DrawerHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
