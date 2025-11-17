@@ -65,7 +65,7 @@ git clone https://github.com/FRIZFOREVER/alfa_copilot_2025.git
 Docker compose up --build
 ```
 
-4. Для доступа к сайту необходимо перейти по ссылке [http://localhost:](http://localhost:5173/)
+4. Для доступа к сайту необходимо перейти по ссылке [http://localhost:5173/](http://localhost:5173/)
 
 
 ## <a name="4">Уникальность нашего решения </a>
