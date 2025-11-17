@@ -93,7 +93,7 @@ class RequestPayload(BaseModel):
     messages: ChatHistory
     chat_id: str
     tag: Tag | None = None
-    mode: ModelMode = Field(default=ModelMode.Auto)
+    mode: ModelMode | str | None = Field(default=ModelMode.Auto)
     file_url: str
     is_voice: bool
     profile: UserProfile
@@ -124,3 +124,21 @@ class RequestPayload(BaseModel):
         except ValueError as exc:
             logger.exception("Found invalid tag inside payload: %s", v)
             raise RuntimeError("Expected a valid Tag value") from exc
+
+    @field_validator("mode", mode="before")
+    @classmethod
+    def validate_mode(cls, v: ModelMode | str | None) -> ModelMode:
+        if v is None:
+            return ModelMode.Auto
+
+        if isinstance(v, ModelMode):
+            return v
+
+        if isinstance(v, str):
+            try:
+                return ModelMode(v)
+            except ValueError:
+                return ModelMode.Auto
+
+        logger.exception("Found invalid mode inside payload: %s", v)
+        raise RuntimeError("Expected a valid ModelMode value")
