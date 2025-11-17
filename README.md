@@ -24,7 +24,15 @@
 
 ### Архетиктура решения
 
-Решение представляет собой ...
+Решение представляет собой микро-сервисную архитектуру, включающую в себя:
+- Backend - Golang + Fiber
+- Frontend - TypeScript + React
+- Ml - LangGraph + FastAPI
+- Ollama
+- Minio - S3
+- Postgres
+- AssemblyAI - Whisper
+- Migrations
 
 ### Архетиктура модели
 
