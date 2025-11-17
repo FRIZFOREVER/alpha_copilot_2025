@@ -196,21 +196,16 @@ def create_app() -> FastAPI:
             cleanup_scheduled = True
             asyncio.run_coroutine_threadsafe(_async_cleanup(), loop).result()
 
-        def event_generator() -> Iterator[ChatResponse]:
+        def event_generator(stram) -> Iterator[ChatResponse]:
             try:
                 for chunk in stream:
-                    yield chunk
+                    yield f"data: {chunk.model_dump_json()}\n\n"
             except Exception as exc:
                 _schedule_cleanup()
                 raise HTTPException(status_code=500, detail="Streaming workflow failed") from exc
-            finally:
-                if close_stream:
-                    with suppress(Exception):
-                        close_stream()
-                _schedule_cleanup()
 
         headers: dict[str, Any] = {"tag": tag.value}
-        return ChatResponseEventStream(event_generator(), headers=headers)
+        return ChatResponseEventStream(event_generator(stream), headers=headers)
 
     @app.get("/ping")
     async def ping() -> dict[str, str]:  # type: ignore[reportUnusedFunction]
