@@ -196,7 +196,7 @@ def create_app() -> FastAPI:
             cleanup_scheduled = True
             asyncio.run_coroutine_threadsafe(_async_cleanup(), loop).result()
 
-        def event_generator(stram) -> Iterator[ChatResponse]:
+        def event_generator(stream) -> Iterator[ChatResponse]:
             try:
                 for chunk in stream:
                     yield f"data: {chunk.model_dump_json()}\n\n"
