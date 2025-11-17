@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from contextvars import ContextVar, Token
+from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Final, TYPE_CHECKING
 
@@ -63,6 +63,7 @@ class GraphLogDispatcher:
 
 
 GraphLogContext = tuple[GraphLogDispatcher | None, int | None]
+
 graph_log_context: ContextVar[GraphLogContext | None] = ContextVar(
     "graph_log_context", default=None
 )
@@ -70,16 +71,18 @@ graph_log_context: ContextVar[GraphLogContext | None] = ContextVar(
 
 def set_graph_log_context(
     dispatcher: GraphLogDispatcher | None, answer_id: int | None
-) -> Token[GraphLogContext | None]:
+) -> GraphLogContext | None:
     """Persist dispatcher context for the lifetime of the request."""
 
-    return graph_log_context.set((dispatcher, answer_id))
+    previous_context = graph_log_context.get()
+    graph_log_context.set((dispatcher, answer_id))
+    return previous_context
 
 
-def reset_graph_log_context(token: Token[GraphLogContext | None]) -> None:
+def reset_graph_log_context(previous_context: GraphLogContext | None) -> None:
     """Restore the previous graph log context."""
 
-    graph_log_context.reset(token)
+    graph_log_context.set(previous_context)
 
 
 def _log_dispatcher_skip(reason: str, message: str) -> None:

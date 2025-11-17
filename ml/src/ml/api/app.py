@@ -17,6 +17,7 @@ from ml.agent.router import (
 )
 from ml.api.graph_history import GraphLogClient, get_backend_url
 from ml.api.graph_logging import (
+    GraphLogContext,
     GraphLogDispatcher,
     reset_graph_log_context,
     set_graph_log_context,
@@ -107,7 +108,14 @@ def create_app() -> FastAPI:
         dispatcher: GraphLogDispatcher | None = None
         dispatcher_task: asyncio.Task[None] | None = None
         stream_handle: AsyncStreamHandle
-        context_token = None
+        previous_graph_log_context: GraphLogContext | None = None
+        graph_log_context_active = False
+
+        def _reset_graph_log_context() -> None:
+            nonlocal graph_log_context_active
+            if graph_log_context_active:
+                reset_graph_log_context(previous_graph_log_context)
+                graph_log_context_active = False
 
         try:
             client = await exit_stack.enter_async_context(
@@ -116,14 +124,14 @@ def create_app() -> FastAPI:
             loop = asyncio.get_running_loop()
             dispatcher = GraphLogDispatcher(loop=loop, client=client)
             dispatcher_task = asyncio.create_task(dispatcher.run())
-            context_token = set_graph_log_context(
+            previous_graph_log_context = set_graph_log_context(
                 dispatcher=dispatcher, answer_id=payload.messages.get_answer_id()
             )
+            graph_log_context_active = True
 
             stream_handle = await async_stream_workflow(payload)
         except HTTPException:
-            if context_token is not None:
-                reset_graph_log_context(context_token)
+            _reset_graph_log_context()
             if dispatcher:
                 dispatcher.stop()
             if dispatcher_task:
@@ -133,9 +141,7 @@ def create_app() -> FastAPI:
                 await exit_stack.aclose()
             raise
         except Exception as exc:
-            if context_token is not None:
-                reset_graph_log_context(context_token)
-                context_token = None
+            _reset_graph_log_context()
             if dispatcher:
                 dispatcher.stop()
             if dispatcher_task:
@@ -171,8 +177,7 @@ def create_app() -> FastAPI:
                 if dispatcher_task:
                     with suppress(Exception):
                         await dispatcher_task
-                if context_token is not None:
-                    reset_graph_log_context(context_token)
+                _reset_graph_log_context()
                 with suppress(Exception):
                     await exit_stack.aclose()
 
