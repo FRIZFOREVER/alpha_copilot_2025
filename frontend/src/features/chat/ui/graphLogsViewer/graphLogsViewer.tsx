@@ -63,6 +63,10 @@ export const GraphLogsViewer = ({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    setRealtimeLogs([]);
+  }, [answerId]);
+
   return (
     <>
       <div
