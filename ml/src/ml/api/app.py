@@ -197,7 +197,6 @@ def create_app() -> FastAPI:
             asyncio.run_coroutine_threadsafe(_async_cleanup(), loop).result()
 
         def event_generator() -> Iterator[ChatResponse]:
-            close_stream = getattr(stream, "close", None)
             try:
                 for chunk in stream:
                     yield chunk
