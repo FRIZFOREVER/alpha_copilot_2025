@@ -159,9 +159,10 @@ const OnboardingCard = ({
                   autoPlay
                   muted
                   loop
+                  playsInline
                 >
                   <source
-                    src="/media/2025-11-17 06-07-07.mp4"
+                    src="https://getfile.dokpub.com/yandex/get/https://disk.yandex.ru/i/YPOS7y_jAnQbqQ"
                     type="video/mp4"
                   />
                   Ваш браузер не поддерживает видео.
