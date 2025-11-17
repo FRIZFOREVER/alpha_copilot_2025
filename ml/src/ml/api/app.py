@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
+from ollama import ChatResponse
 
 from ml.agent.router import workflow_async, workflow_collected_async
 from ml.api.graph_history import GraphLogClient, get_backend_url
@@ -28,7 +29,6 @@ from ml.configs.message import RequestPayload, Tag
 from ml.configs.types import ModelClients
 
 logger: logging.Logger = logging.getLogger(__name__)
-
 
 
 @asynccontextmanager
@@ -140,20 +140,11 @@ def create_app() -> FastAPI:
                 status_code=500, detail="Failed to start streaming workflow"
             ) from exc
 
-        async def event_generator() -> AsyncIterator[str]:
-            loop = asyncio.get_running_loop()
+        async def event_generator() -> AsyncIterator[ChatResponse]:
             close_stream = getattr(stream, "close", None)
             try:
-                while True:
-                    try:
-                        chunk = await loop.run_in_executor(None, next, stream)
-                    except StopIteration:
-                        break
-                    except Exception as exc:
-                        raise HTTPException(
-                            status_code=500, detail="Streaming workflow failed"
-                        ) from exc
-                    yield f"data: {chunk.model_dump_json()}\n\n"
+                for chunk in stream:
+                    yield chunk
             except asyncio.CancelledError:
                 raise
             finally:
@@ -169,9 +160,13 @@ def create_app() -> FastAPI:
                 with suppress(Exception):
                     await exit_stack.aclose()
 
+        async def stream_chunks() -> AsyncIterator[str]:
+            async for chunk in event_generator():
+                yield f"data: {chunk.model_dump_json()}\n\n"
+
         headers: dict[str, Any] = {"tag": tag.value}
         return StreamingResponse(
-            event_generator(),
+            stream_chunks(),
             media_type="text/event-stream",
             headers=headers,
         )
