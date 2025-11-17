@@ -20,7 +20,7 @@ services:
     environment:
       # Передаем переменную окружения для AssemblyAI API
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY:-}
-      # - MODEL=${MODEL:-}
+      # - MODEL=${MODEL:-} # Для дебага
     depends_on:
       - postgres
       - minio
@@ -119,14 +119,14 @@ services:
       start_period: 20s
     gpus: all
 
-  # recognizer-service:
-  #   build:
-  #     context: ./recognizer
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3333:3333"
-  #   environment:
-  #     - PYTHONUNBUFFERED=1
+  recognizer-service:
+    build:
+      context: ./recognizer
+      dockerfile: Dockerfile
+    ports:
+      - "3333:3333"
+    environment:
+      - PYTHONUNBUFFERED=1
 
 volumes:
   ollama:
