@@ -16,6 +16,7 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { useResize } from "@/shared/hooks/useResize";
+import { GraphLogCard } from "./graphLogCard";
 
 interface GraphLogsViewerProps {
   answerId: number;
@@ -62,29 +63,17 @@ export const GraphLogsViewer = ({
     }
   }, [isOpen]);
 
-  const formatTime = (timeString: string) => {
-    try {
-      const date = new Date(timeString);
-      const hours = date.getHours().toString().padStart(2, "0");
-      const minutes = date.getMinutes().toString().padStart(2, "0");
-      const seconds = date.getSeconds().toString().padStart(2, "0");
-      return `${hours}:${minutes}:${seconds}`;
-    } catch {
-      return timeString;
-    }
-  };
-
   return (
     <>
       <div
         className={cn(
-          "bg-white border-l border-gray-200 flex-shrink-0 transition-all duration-300 ease-in-out md:flex hidden flex-col h-full overflow-hidden",
+          "bg-white border-l border-[#0000000f] flex-shrink-0 transition-all duration-300 ease-in-out md:flex hidden flex-col h-full overflow-hidden",
           isOpen ? "w-96 opacity-100" : "w-0 opacity-0"
         )}
       >
         {isOpen && (
           <div className="flex flex-col h-full w-full">
-            <div className="flex items-center justify-between p-[14.2px] border-b border-gray-200">
+            <div className="flex items-center justify-between p-[14.2px] border-b border-[#0000000f]">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-gray-900">
                   Активность
@@ -111,20 +100,11 @@ export const GraphLogsViewer = ({
               ) : (
                 <div className="space-y-3">
                   {allLogs.map((log, index) => (
-                    <div
+                    <GraphLogCard
                       key={`${log.id}-${index}`}
-                      className="p-3 rounded-lg border border-gray-200 bg-gray-50"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <span className="text-xs font-medium text-gray-600 bg-gray-200 px-2 py-1 rounded">
-                          {log.tag}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {formatTime(log.log_time)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-900">{log.message}</p>
-                    </div>
+                      log={log}
+                      index={index}
+                    />
                   ))}
                 </div>
               )}
@@ -160,20 +140,11 @@ export const GraphLogsViewer = ({
                 ) : (
                   <div className="space-y-3">
                     {allLogs.map((log, index) => (
-                      <div
+                      <GraphLogCard
                         key={`${log.id}-${index}`}
-                        className="p-3 rounded-lg border border-gray-200 bg-gray-50"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <span className="text-xs font-medium text-gray-600 bg-gray-200 px-2 py-1 rounded">
-                            {log.tag}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            {formatTime(log.log_time)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-900">{log.message}</p>
-                      </div>
+                        log={log}
+                        index={index}
+                      />
                     ))}
                   </div>
                 )}
