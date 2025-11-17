@@ -1,9 +1,12 @@
 """Prompt builder for the thinking answer stage."""
 
+import logging
 from collections.abc import Sequence
 
 from ml.agent.prompts.system_prompt import get_system_prompt
 from ml.configs.message import ChatHistory, UserProfile
+
+logger = logging.getLogger(__name__)
 
 
 def _format_evidence_section(evidence: Sequence[str]) -> str:
@@ -36,4 +39,5 @@ def get_thinking_answer_prompt(
     system_sections.append(evidence_block)
 
     prompt.add_or_change_system("\n\n".join(system_sections))
+    logger.info("Final thinking prompt: \n%s", prompt.model_dump_json(indent=2))
     return prompt

@@ -182,7 +182,7 @@ func (c *StreamMessageClient) processSSEStream(resp *http.Response, messageChan 
 				// В случае ошибки парсинга пропускаем сообщение
 				continue
 			}
-
+			fmt.Printf("Thinking:%s\nContent:%s:\n", message.Message.Thinking, message.Message.Content)
 			// Отправляем сообщение в канал
 			messageChan <- &message
 		}

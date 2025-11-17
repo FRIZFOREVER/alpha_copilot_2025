@@ -12,7 +12,13 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 3. Копируем остальной код (только этот слой будет пересобираться чаще)
+# 3. Предзагружаем модель Whisper medium, чтобы сохранить веса в образе и ускорить последующие сборки/запуски
+RUN python - <<'PY'
+import whisper
+whisper.load_model("medium")
+PY
+
+# 4. Копируем остальной код (только этот слой будет пересобираться чаще)
 COPY recognizer.py .
 
 CMD ["python", "recognizer.py"]
