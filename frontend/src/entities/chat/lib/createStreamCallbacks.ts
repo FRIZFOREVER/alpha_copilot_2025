@@ -46,7 +46,7 @@ export const createStreamCallbacks = ({
             voice_url: sendMessageDto.voice_url || "",
             file_url: sendMessageDto.file_url,
             rating: null,
-            tag: sendMessageDto.tag ?? "general",
+            tag: sendMessageDto.tag || "general",
           };
 
           if (!old) {
