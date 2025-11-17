@@ -10,7 +10,7 @@ export interface GraphLogMessage {
 
 export const useGraphLogEvents = (
   onMessage?: (data: GraphLogWebSocketMessage) => void,
-  onConnectionEstablished?: (uuid: string) => void,
+  onConnectionEstablished?: (uuid: string) => void
 ) => {
   const { graphLogSocket } = useSocket();
 
@@ -26,7 +26,6 @@ export const useGraphLogEvents = (
           return;
         }
 
-        // Проверяем, является ли сообщение GraphLogWebSocketMessage
         if (
           parsedData.tag &&
           parsedData.answer_id !== undefined &&
@@ -37,7 +36,6 @@ export const useGraphLogEvents = (
           return;
         }
 
-        // Старый формат для обратной совместимости
         if (parsedData.message) {
           onMessage?.(parsedData as unknown as GraphLogWebSocketMessage);
         }

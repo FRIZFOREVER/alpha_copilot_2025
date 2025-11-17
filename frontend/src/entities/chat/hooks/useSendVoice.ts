@@ -25,11 +25,13 @@ export const useSendVoiceMutation = () => {
       voiceBlob,
       profile,
       mode,
+      tag,
     }: {
       chatId: number;
       voiceBlob: Blob;
       profile: SendMessageStreamDto["profile"];
       mode?: SendMessageStreamDto["mode"];
+      tag?: SendMessageStreamDto["tag"];
     }): Promise<SendVoiceResult> => {
       const voiceResponse: SendVoiceResponse = await sendVoice(voiceBlob);
 
@@ -77,7 +79,7 @@ export const useSendVoiceMutation = () => {
         question: voiceResponse.question,
         voice_url: voiceResponse.voice_url,
         mode: mode,
-        tag: "",
+        tag: tag ?? "general",
         profile,
       };
 
@@ -108,7 +110,7 @@ export const useSendVoiceMutation = () => {
         });
       });
     },
-    onMutate: async ({ chatId }) => {
+    onMutate: async ({ chatId, tag }) => {
       await queryClient.cancelQueries({
         queryKey: [GET_HISTORY_QUERY, chatId],
       });
@@ -130,7 +132,7 @@ export const useSendVoiceMutation = () => {
         answer_time: new Date().toISOString(),
         voice_url: "",
         rating: null,
-        tag: "general",
+        tag: tag ?? "general",
       };
 
       queryClient.setQueryData<GetHistoryResponse>(

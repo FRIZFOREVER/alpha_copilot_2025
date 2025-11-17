@@ -12,7 +12,11 @@ import { type TagId } from "../ui/tagSelector/tagSelector";
 import { useGetProfileQuery } from "@/entities/auth/hooks/useGetProfile";
 import { SendMessageStreamDto } from "@/entities/chat/types";
 import { useSelectedModel } from "@/shared/hooks/useSelectedModel";
-import { mapUIModelToMode } from "@/shared/types/modelMode";
+import {
+  mapUIModelToMode,
+  ModelMode,
+  SELECTED_MODEL_STORAGE_KEY,
+} from "@/shared/types/modelMode";
 
 const DEFAULT_SUGGESTIONS: Suggestion[] = [
   {
@@ -91,7 +95,6 @@ export const useChatMessages = () => {
   const handleSendMessage = useCallback(
     (data: { message: string; file_url?: string; tag?: TagId }) => {
       if (!data.message.trim() || !profile) return;
-
       const trimmedMessage = data.message.trim();
       const tag = data.tag || "";
 
@@ -99,7 +102,7 @@ export const useChatMessages = () => {
         question: trimmedMessage,
         file_url: data.file_url,
         tag: tag,
-        mode: modelMode,
+        mode: localStorage.getItem(SELECTED_MODEL_STORAGE_KEY) as ModelMode,
         profile: {
           id: profile.id,
           fio: profile.username,
@@ -145,11 +148,9 @@ export const useChatMessages = () => {
   );
 
   const handleSendVoice = useCallback(
-    (voiceBlob: Blob) => {
+    (voiceBlob: Blob, tag?: TagId) => {
       if (!profile) return;
       const currentChatId = chatIdRef.current;
-      const currentModelMode = mapUIModelToMode(selectedModel);
-
       if (!currentChatId) {
         createChat(
           { name: "Новый чат" },
@@ -170,7 +171,10 @@ export const useChatMessages = () => {
                   business_info: profile.business_info,
                   user_info: profile.user_info,
                 },
-                mode: currentModelMode,
+                tag: tag,
+                mode: localStorage.getItem(
+                  SELECTED_MODEL_STORAGE_KEY
+                ) as ModelMode,
               });
             },
             onError: (error) => {
@@ -190,11 +194,12 @@ export const useChatMessages = () => {
             business_info: profile.business_info,
             user_info: profile.user_info,
           },
-          mode: currentModelMode,
+          tag: tag,
+          mode: localStorage.getItem(SELECTED_MODEL_STORAGE_KEY) as ModelMode,
         });
       }
     },
-    [createChat, navigate, sendVoice, selectedModel, profile]
+    [createChat, navigate, sendVoice, modelMode, profile]
   );
 
   useEffect(() => {

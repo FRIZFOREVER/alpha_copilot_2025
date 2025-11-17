@@ -12,7 +12,7 @@ import { TagSelector, type TagId } from "../tagSelector/tagSelector";
 import { TagBadge } from "../tagBadge/tagBadge";
 export interface ChatInputProps {
   onSend?: (data: { message: string; file_url?: string; tag?: TagId }) => void;
-  onSendVoice?: (voiceBlob: Blob) => void;
+  onSendVoice?: (voiceBlob: Blob, tag?: TagId) => void;
   placeholder?: string;
   disabled?: boolean;
   suggestions?: Suggestion[];
@@ -59,9 +59,10 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
         sendCallback: (blob: Blob) => {
           recordedBlobRef.current = blob;
           if (shouldSendBlobRef.current && onSendVoice) {
-            onSendVoice(blob);
+            onSendVoice(blob, selectedTag);
             recordedBlobRef.current = null;
             shouldSendBlobRef.current = false;
+            setSelectedTag(undefined);
           }
         },
       });
@@ -217,8 +218,9 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
         shouldSendBlobRef.current = true;
         stopRecording();
       } else if (recordedBlobRef.current && onSendVoice) {
-        onSendVoice(recordedBlobRef.current);
+        onSendVoice(recordedBlobRef.current, selectedTag);
         recordedBlobRef.current = null;
+        setSelectedTag(undefined);
       }
     };
 

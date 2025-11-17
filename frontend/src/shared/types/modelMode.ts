@@ -39,5 +39,5 @@ export const SELECTED_MODEL_STORAGE_KEY = "selected_model";
 /**
  * Значение по умолчанию
  */
-export const DEFAULT_MODEL: UIModelValue = "auto";
+export const DEFAULT_MODEL: UIModelValue = "fast";
 
