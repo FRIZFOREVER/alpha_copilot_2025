@@ -152,9 +152,22 @@ const OnboardingCard = ({
           )}
 
           {currentStep === 4 && (
-            <div className="mb-4">
-              <div className="aspect-video bg-purple-100 rounded-lg flex items-center justify-center">
-                <div className="text-6xl">▶️</div>
+          <div className="mb-4">
+              <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                <video
+                  className="w-full h-full object-contain"
+                  controls
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                >
+                  <source
+                    src="https://getfile.dokpub.com/yandex/get/https://disk.yandex.ru/i/YPOS7y_jAnQbqQ"
+                    type="video/mp4"
+                  />
+                  Ваш браузер не поддерживает видео.
+                </video>
               </div>
               <p className="text-xs text-gray-500 mt-2 text-center">
                 Краткое руководство по использованию
