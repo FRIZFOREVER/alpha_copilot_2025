@@ -19,10 +19,12 @@ export const useSelectedModel = () => {
   });
 
   useEffect(() => {
-    // Сохраняем значение по умолчанию в localStorage, если его там нет
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem(SELECTED_MODEL_STORAGE_KEY);
-      if (!stored || !["fast", "thinking", "research", "auto"].includes(stored)) {
+      if (
+        !stored ||
+        !["fast", "thinking", "research", "auto"].includes(stored)
+      ) {
         localStorage.setItem(SELECTED_MODEL_STORAGE_KEY, DEFAULT_MODEL);
       }
     }
