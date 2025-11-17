@@ -111,4 +111,4 @@ Docker compose up --build
 
 ## <a name="7">Скринкаст </a>
 
-- [Cсылка на скринкаст]([)](https://youtu.be/UypCoDZtJKo?si=_nhtPIP5xlJcuEwv)&nbsp;
+- [Cсылка на скринкаст](https://youtu.be/UypCoDZtJKo?si=_nhtPIP5xlJcuEwv)&nbsp;
