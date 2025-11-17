@@ -93,7 +93,7 @@ class RequestPayload(BaseModel):
     messages: ChatHistory
     chat_id: str
     tag: Tag | None = None
-    mode: ModelMode
+    mode: ModelMode = Field(default=ModelMode.Auto)
     file_url: str
     is_voice: bool
     profile: UserProfile
