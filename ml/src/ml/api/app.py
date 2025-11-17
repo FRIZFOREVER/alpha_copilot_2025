@@ -1,12 +1,14 @@
 import asyncio
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import Iterator
 from contextlib import AsyncExitStack, asynccontextmanager, suppress
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
+from ollama import ChatResponse
+from starlette.types import Send
 
 from ml.agent.router import workflow_async, workflow_collected_async
 from ml.api.graph_history import GraphLogClient, get_backend_url
@@ -29,6 +31,41 @@ from ml.configs.types import ModelClients
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+
+class ChatResponseEventStream(StreamingResponse):
+    media_type = "text/event-stream"
+
+    def __init__(self, content: Iterator[ChatResponse], headers: dict[str, Any]) -> None:
+        super().__init__(content, media_type=self.media_type, headers=headers)
+
+    async def stream_response(self, send: Send) -> None:
+        await send(
+            {
+                "type": "http.response.start",
+                "status": self.status_code,
+                "headers": self.raw_headers,
+            }
+        )
+        async for chunk in self.body_iterator:
+            await send(
+                {
+                    "type": "http.response.body",
+                    "body": self._serialize_chunk(chunk),
+                    "more_body": True,
+                }
+            )
+        await send({"type": "http.response.body", "body": b"", "more_body": False})
+
+    def _serialize_chunk(self, chunk: Any) -> bytes:
+        if isinstance(chunk, (bytes, bytearray)):
+            return bytes(chunk)
+        if isinstance(chunk, memoryview):
+            return chunk.tobytes()
+        if isinstance(chunk, str):
+            return chunk.encode(self.charset or "utf-8")
+        if isinstance(chunk, ChatResponse):
+            return f"data: {chunk.model_dump_json()}\n\n".encode()
+        raise TypeError(f"Unsupported chunk type: {type(chunk)!r}")
 
 
 @asynccontextmanager
@@ -140,41 +177,35 @@ def create_app() -> FastAPI:
                 status_code=500, detail="Failed to start streaming workflow"
             ) from exc
 
-        async def event_generator() -> AsyncIterator[str]:
-            loop = asyncio.get_running_loop()
-            close_stream = getattr(stream, "close", None)
-            try:
-                while True:
-                    try:
-                        chunk = await loop.run_in_executor(None, next, stream)
-                    except StopIteration:
-                        break
-                    except Exception as exc:
-                        raise HTTPException(
-                            status_code=500, detail="Streaming workflow failed"
-                        ) from exc
-                    yield f"data: {chunk.model_dump_json()}\n\n"
-            except asyncio.CancelledError:
-                raise
-            finally:
-                if close_stream:
-                    with suppress(Exception):
-                        close_stream()
-                if dispatcher:
-                    dispatcher.stop()
-                if dispatcher_task:
-                    with suppress(Exception):
-                        await dispatcher_task
-                _reset_graph_log_context()
+        cleanup_scheduled = False
+
+        async def _async_cleanup() -> None:
+            if dispatcher:
+                dispatcher.stop()
+            if dispatcher_task:
                 with suppress(Exception):
-                    await exit_stack.aclose()
+                    await dispatcher_task
+            _reset_graph_log_context()
+            with suppress(Exception):
+                await exit_stack.aclose()
+
+        def _schedule_cleanup() -> None:
+            nonlocal cleanup_scheduled
+            if cleanup_scheduled:
+                return
+            cleanup_scheduled = True
+            asyncio.run_coroutine_threadsafe(_async_cleanup(), loop).result()
+
+        def event_generator(stream) -> Iterator[ChatResponse]:
+            try:
+                for chunk in stream:
+                    yield f"data: {chunk.model_dump_json()}\n\n"
+            except Exception as exc:
+                _schedule_cleanup()
+                raise HTTPException(status_code=500, detail="Streaming workflow failed") from exc
 
         headers: dict[str, Any] = {"tag": tag.value}
-        return StreamingResponse(
-            event_generator(),
-            media_type="text/event-stream",
-            headers=headers,
-        )
+        return ChatResponseEventStream(event_generator(stream), headers=headers)
 
     @app.get("/ping")
     async def ping() -> dict[str, str]:  # type: ignore[reportUnusedFunction]
