@@ -5,7 +5,6 @@ import {
   useState,
   createContext,
   useContext,
-  useEffect,
 } from "react";
 import { ChatHeader } from "../chatHeader";
 import { MessageList } from "../messageList";
@@ -14,6 +13,8 @@ import { type Suggestion } from "../suggestions";
 import type { MessageData } from "@/shared/types/message";
 import { MessageLadder } from "../message/messageLadder";
 import { GraphLogsViewer } from "../graphLogsViewer";
+import { useGraphLogEvents } from "@/shared/hooks/useGraphLogEvents";
+import type { GraphLogWebSocketMessage } from "@/entities/chat/types/types";
 
 interface GraphLogsContextType {
   openGraphLogs: (answerId: number) => void;
@@ -52,9 +53,8 @@ export const Chat = memo(
     const scrollButtonContainerRef = useRef<HTMLDivElement>(null);
     const [isGraphLogsOpen, setIsGraphLogsOpen] = useState(false);
     const [currentAnswerId, setCurrentAnswerId] = useState<number | null>(null);
-
-    const prevIsLoadingRef = useRef<boolean>(false);
-    const lastProcessedAnswerIdRef = useRef<number | null>(null);
+    const processedAnswerIdsRef = useRef<Set<number>>(new Set());
+    const lastReceivedAnswerIdRef = useRef<number | null>(null);
 
     const handleScrollContainerReady = useCallback(
       (ref: React.RefObject<HTMLElement>) => {
@@ -75,34 +75,30 @@ export const Chat = memo(
       setCurrentAnswerId(null);
     }, []);
 
-    useEffect(() => {
-      const lastBotMessage = [...messages]
-        .reverse()
-        .find((msg) => !msg.isUser && msg.answerId);
+    const handleGraphLogMessage = useCallback(
+      (graphLogMessage: GraphLogWebSocketMessage) => {
+        const answerId = graphLogMessage.answer_id;
+        if (!answerId || isCompact) return;
 
-      if (
-        !lastBotMessage ||
-        lastBotMessage.isUser ||
-        !lastBotMessage.answerId
-      ) {
-        prevIsLoadingRef.current = isLoading;
-        return;
-      }
+        const isNewAnswerId = lastReceivedAnswerIdRef.current !== answerId;
+        const isFirstLogForAnswer =
+          !processedAnswerIdsRef.current.has(answerId);
 
-      const newAnswerId = lastBotMessage.answerId;
-      const isGenerationStarted = !prevIsLoadingRef.current && isLoading;
-      const isNewAnswerId = newAnswerId !== lastProcessedAnswerIdRef.current;
+        if (isNewAnswerId) {
+          lastReceivedAnswerIdRef.current = answerId;
 
-      if (isLoading && (isGenerationStarted || isNewAnswerId)) {
-        setCurrentAnswerId(newAnswerId);
-        if (!isGraphLogsOpen || isGenerationStarted) {
+          if (isFirstLogForAnswer) {
+            processedAnswerIdsRef.current.add(answerId);
+          }
+
+          setCurrentAnswerId(answerId);
           setIsGraphLogsOpen(true);
         }
-        lastProcessedAnswerIdRef.current = newAnswerId;
-      }
+      },
+      []
+    );
 
-      prevIsLoadingRef.current = isLoading;
-    }, [isLoading, messages, isGraphLogsOpen]);
+    useGraphLogEvents(handleGraphLogMessage);
 
     return (
       <GraphLogsContext.Provider

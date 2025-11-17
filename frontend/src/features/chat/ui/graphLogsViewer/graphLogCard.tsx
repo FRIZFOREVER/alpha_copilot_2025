@@ -76,8 +76,7 @@ export const GraphLogCard = ({ log }: GraphLogCardProps) => {
   return (
     <div
       className={cn(
-        "p-4 rounded-xl border transition-all duration-200",
-        tagConfig.bgColor,
+        "p-4 rounded-2xl border transition-all duration-200",
         tagConfig.hoverBgColor,
         tagConfig.borderColor
       )}
