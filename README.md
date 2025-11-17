@@ -24,11 +24,32 @@
 
 ### Архетиктура решения
 
-Решение представляет собой ...
+Решение представляет собой микро-сервисную архитектуру, включающую в себя:
+- Backend - Golang + Fiber
+- Frontend - TypeScript + React
+- Ml - LangGraph + FastAPI
+- Ollama
+- Minio - S3
+- Postgres
+- AssemblyAI - Whisper
+- Migrations
 
 ### Архетиктура модели
 
-...
+LangGraph-пайплайн `pipeline.py` ML-сервиса состоит из режимов `fast`, `thinking` и `research`. Узел `Mode Decider`
+определяет режим и направляет состояние GraphState:
+- **Fast**: цепочка `Flash Memories → Fast answer → Final answer` быстро генерирует ответ, если
+  контекст достаточен.
+- **Thinking**: `Thinking planner` строит пошаговый план, исполняет вспомогательные инструменты и
+  агрегирует доказательства, после чего `Thinking answer` формирует итог.
+- **Research**: цикл `Research reason → Research tool call ↔ Research observer → Research answer`
+  позволяет агенту запрашивать зарегистрированные инструменты, валидировать аргументы и сохранять
+  наблюдения, пока `NextAction` не укажет на готовность финализировать ответ.
+
+GraphState хранит историю шагов, доказательства, промежуточные подсказки и активные наблюдения, что
+делает пайплайн детерминированным и пригодным для отладки. Перед запуском графа сервис проверяет
+валидность голосового ввода, определяет тег диалога (юридические вопросы, маркетинг и т.д.) и только
+после этого запускает потоковое поколение ответа.
 
 ## <a name="3">Запуск кода </a>
 
@@ -37,20 +58,28 @@
 ```Bash
 git clone https://github.com/FRIZFOREVER/alfa_copilot_2025.git
 ```
-2. 
+2. Прочитайте .env.example и по инструкциям в нём создайте и заполните .env в той же папке 
 
-3. 
+3. Убедитесь, что у вас установлен и сконфигурирован nvidia-container-toolkit и запустите все контейнеры:
+```shell
+Docker compose up --build
+```
 
-4. Для доступа к сайту необходимо перейти по ссылке http://localhost:
+3.1 После успешного поднятия, внутренний сервис с ml логикой: ml-api начнёт скачивать модели через клиент ollama. При этом остальные части приложения уже будут работать. Если отправить запрос, пока модели всё ещё инициализируются, то сервис вернёт ошибку 500(503) - модели всё ещё инициализируются и вам прийдёт пустой ответ
 
+4. Для доступа к сайту необходимо перейти по ссылке [http://localhost:5173/](http://localhost:5173/)
+
+Также у нас есть видео-скринкаст (см конец этого README), где демонстрируется запуск и функционал приложения 
 
 ## <a name="4">Уникальность нашего решения </a>
 
 ### Киллерфичи:
-1. 
-2. 
-
-3. 
+1. Несколько режимов работы логики нашего решения со стороны ml, который адаптируется к не до конца заполненным данным и запросам пользователя
+2. Backend на Golang полностью покрыт unit-тестами, все сервисы коммуницируют друг с другом только через него
+3. Реализованы интеграции с интернет-поиском через агента и отправкой сообщений в телеграм через Frontend
+4. Решение разворачивается полностью локально, использует только Open-source источники и не требует внешнего платного API для функционирования
+5. Агент отправляет статус своих размышлений по технологии Websocket и это отрисовывается на Frontend'е
+6. Ответ на Frontend поступает по протоколу SEE, что позволяет генерировать ответ на глазах, не дожидаясь окончания его генерации 
 
 ## <a name="5">Стек </a>
 <div align="center">
@@ -78,12 +107,11 @@ git clone https://github.com/FRIZFOREVER/alfa_copilot_2025.git
 *Состав команды "Жабки МИСИС"*   
 
 - <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @facT0RR, Маслов Денис - Backend-developer</h3>
-- <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @FRIZFOREVER, Хромов Кирилл - ML-engineer</h3>
+- <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @FRIZFOREVER, Хромов Кирилл - ML-engineer / ML-Ops</h3>
 - <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @egoryaaa, Яровицын Егор - Frontend-developer</h3>
 - <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @Llaceyne, Гулария Лана - UI/UX Designer </h3>
-- <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @Magoxdd, Магомедов Мариф - ML-engineer</h3>
 
 
 ## <a name="7">Скринкаст </a>
 
-- [Cсылка на скринкаст](https://drive.google.com/drive/folders/1BwoBICXg2sa_pRCZ6IFFrk211rVWjvbB?usp=sharing)&nbsp;
+- [Cсылка на скринкаст](https://youtu.be/UypCoDZtJKo?si=_nhtPIP5xlJcuEwv)&nbsp;

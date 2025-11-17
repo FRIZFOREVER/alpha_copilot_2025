@@ -24,7 +24,7 @@ services:
     depends_on:
       - postgres
       - minio
-      # - recognizer-service
+      - recognizer-service
     restart: always
   ml-api:
     build:

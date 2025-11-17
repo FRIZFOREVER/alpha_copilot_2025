@@ -63,7 +63,7 @@ def _collect_documents(observation_metadata: dict[str, Any]) -> list[str]:
 
 def research_observer_node(state: GraphState, client: ReasoningModelClient) -> GraphState:
     logger.info("Entered Research observer node")
-    log_think(state, "Думаю")
+    log_think(state, "Собираю результаты")
     observation = state.active_observation
     if observation is None:
         return state
