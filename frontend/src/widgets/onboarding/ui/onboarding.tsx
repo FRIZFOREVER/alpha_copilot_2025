@@ -83,7 +83,6 @@ const OnboardingCard = ({
         }}
       />
 
-      {/* Карточка онбординга */}
       <div
         ref={cardRef}
         className={cn(
@@ -153,8 +152,20 @@ const OnboardingCard = ({
 
           {currentStep === 4 && (
             <div className="mb-4">
-              <div className="aspect-video bg-purple-100 rounded-lg flex items-center justify-center">
-                <div className="text-6xl">▶️</div>
+              <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                <video
+                  className="w-full h-full object-contain"
+                  controls
+                  autoPlay
+                  muted
+                  loop
+                >
+                  <source
+                    src="/media/2025-11-17 06-07-07.mp4"
+                    type="video/mp4"
+                  />
+                  Ваш браузер не поддерживает видео.
+                </video>
               </div>
               <p className="text-xs text-gray-500 mt-2 text-center">
                 Краткое руководство по использованию
