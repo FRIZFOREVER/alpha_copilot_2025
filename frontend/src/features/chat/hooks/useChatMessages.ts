@@ -97,7 +97,6 @@ export const useChatMessages = () => {
       if (!data.message.trim() || !profile) return;
       const trimmedMessage = data.message.trim();
       const tag = data.tag || "";
-
       const sendMessageDto: SendMessageStreamDto = {
         question: trimmedMessage,
         file_url: data.file_url,
