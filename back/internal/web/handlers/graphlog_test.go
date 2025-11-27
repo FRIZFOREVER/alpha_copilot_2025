@@ -1,4 +1,3 @@
-//nolint:thelper
 package handlers
 
 import (

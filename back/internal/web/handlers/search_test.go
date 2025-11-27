@@ -1,15 +1,15 @@
+//nolint:errcheck
 package handlers
 
 import (
 	"errors"
 	"io"
+	"jabki/internal/database"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
-
-	"jabki/internal/database"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockSearchManager мок для SearchManager интерфейса
+// MockSearchManager мок для SearchManager интерфейса.
 type MockSearchManager struct {
 	mock.Mock
 }
@@ -30,11 +30,11 @@ func (m *MockSearchManager) GetSearchedMessages(uuid string, searchQuery string)
 
 func TestSearch_Handler(t *testing.T) {
 	logger := logrus.New()
-	
+
 	// Создаем тестовые данные
 	testUUID := uuid.New()
 	testTime := time.Now()
-	
+
 	tests := []struct {
 		name           string
 		pattern        string
@@ -75,7 +75,7 @@ func TestSearch_Handler(t *testing.T) {
 				msm.On("GetSearchedMessages", testUUID.String(), "test query").Return(messages, nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody: `[{"question_id":1,"answer_id":1,"question":"Test question?","tag":"general","answer":"Test answer","question_time":"` + testTime.Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Format(time.RFC3339Nano) + `","voice_url":"voice.mp3","file_url":"file.pdf","rating":5},{"question_id":2,"answer_id":2,"question":"Another test?","tag":null,"answer":"Another answer","question_time":"` + testTime.Add(-time.Hour).Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Add(-30*time.Minute).Format(time.RFC3339Nano) + `","voice_url":"","file_url":"","rating":null}]`,
+			expectedBody:   `[{"question_id":1,"answer_id":1,"question":"Test question?","tag":"general","answer":"Test answer","question_time":"` + testTime.Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Format(time.RFC3339Nano) + `","voice_url":"voice.mp3","file_url":"file.pdf","rating":5},{"question_id":2,"answer_id":2,"question":"Another test?","tag":null,"answer":"Another answer","question_time":"` + testTime.Add(-time.Hour).Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Add(-30*time.Minute).Format(time.RFC3339Nano) + `","voice_url":"","file_url":"","rating":null}]`,
 		},
 		{
 			name:    "Пустой результат поиска",
@@ -116,7 +116,7 @@ func TestSearch_Handler(t *testing.T) {
 				msm.On("GetSearchedMessages", testUUID.String(), "").Return(messages, nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody: `[{"question_id":3,"answer_id":3,"question":"Empty pattern search?","tag":"test","answer":"Should work with empty pattern","question_time":"` + testTime.Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Format(time.RFC3339Nano) + `","voice_url":"","file_url":"","rating":3}]`,
+			expectedBody:   `[{"question_id":3,"answer_id":3,"question":"Empty pattern search?","tag":"test","answer":"Should work with empty pattern","question_time":"` + testTime.Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Format(time.RFC3339Nano) + `","voice_url":"","file_url":"","rating":3}]`,
 		},
 		{
 			name:    "Специальные символы в поисковом запросе",
@@ -133,7 +133,7 @@ func TestSearch_Handler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Создаем мок
 			mockSearchManager := new(MockSearchManager)
-			
+
 			// Настраиваем мок
 			tt.setupMocks(mockSearchManager)
 
@@ -153,15 +153,15 @@ func TestSearch_Handler(t *testing.T) {
 			if tt.pattern != "" {
 				params.Add("pattern", tt.pattern)
 			}
-			
+
 			urlPath := "/search"
 			if len(params) > 0 {
 				urlPath += "?" + params.Encode()
 			}
 
 			// Создаем запрос
-			req := httptest.NewRequest("GET", urlPath, nil)
-			
+			req := httptest.NewRequest(http.MethodGet, urlPath, nil)
+
 			// Выполняем запрос
 			resp, err := app.Test(req, -1)
 			assert.NoError(t, err)
@@ -181,7 +181,7 @@ func TestSearch_Handler(t *testing.T) {
 	}
 }
 
-// Вспомогательные функции для создания указателей
+// Вспомогательные функции для создания указателей.
 func stringPtr(s string) *string {
 	return &s
 }
