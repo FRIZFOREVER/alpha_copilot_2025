@@ -1,4 +1,3 @@
-//nolint:errcheck,thelper
 package handlers
 
 import (
