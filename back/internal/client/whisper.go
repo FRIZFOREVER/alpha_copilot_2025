@@ -85,7 +85,7 @@ func (wc *WhisperClient) SendVoice(voiceURL []byte) (*WhisperOut, error) {
 func (wc *WhisperClient) Ping() (out bool) {
 	resp, err := http.Get(wc.host + "/ping")
 	if err != nil {
-		//fmt.Println("Ошибка запроса:", err)
+		// fmt.Println("Ошибка запроса:", err)
 		out = false
 	} else {
 		if resp.StatusCode == http.StatusOK {

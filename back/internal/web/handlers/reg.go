@@ -38,6 +38,18 @@ func (rh *Reg) Handler(c *fiber.Ctx) error {
 			"details": err.Error(),
 		})
 	}
+
+	if regIn.Login == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "No login in body",
+		})
+	}
+
+	if regIn.Password == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "No password in body",
+		})
+	}
 	var regOut regOut
 
 	userUUID, err := rh.repo.RegistrateUser(regIn.Login, regIn.Password, regIn.FIO)
