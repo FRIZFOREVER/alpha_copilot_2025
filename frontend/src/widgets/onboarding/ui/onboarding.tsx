@@ -173,7 +173,6 @@ const OnboardingCard = ({
               </p>
             </div>
           )}
-
           {currentStep === 3 && (
             <div className="mb-4 flex gap-1 justify-center">
               {Array.from({ length: totalSteps }).map((_, idx) => (
