@@ -51,9 +51,9 @@ func (m *MinIOAudioFileManager) Upload(bucketName, uuid string, mp3Data []byte) 
 	return fmt.Sprintf("/%s/%s", bucketName, fileName), nil
 }
 
-// Get получает MP3 файл из объектного хранилища
-// Возвращает объект файла или ошибку, если файл не найден или не является MP3.
-func (m *MinIOAudioFileManager) Get(bucket, fileName string) (*minio.Object, error) {
+// Get получает WEBM файл из объектного хранилища
+// Возвращает объект файла или ошибку, если файл не найден или не является WEBM.
+func (m *MinIOAudioFileManager) Get(bucket, fileName string) (File, error) {
 	if fileName == "" {
 		return nil, ErrFilenameIsRequired
 	}

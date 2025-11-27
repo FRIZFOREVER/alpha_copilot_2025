@@ -20,9 +20,9 @@ type Message struct {
 
 // Profile представляет структуру профиля пользователя.
 type Profile struct {
-	ID                     int     `json:"id"`
-	Login                  string  `json:"login"`
-	FIO                    string  `json:"username"`
+	ID                     int    `json:"id"`
+	Login                  string `json:"login"`
+	FIO                    string `json:"username"`
 	UserInfo               string `json:"user_info"`
 	BusinessInfo           string `json:"business_info"`
 	AdditionalInstructions string `json:"additional_instructions"`
@@ -31,7 +31,7 @@ type Profile struct {
 // PayloadStream структура для входных данных.
 type PayloadStream struct {
 	Messages []Message `json:"messages"`
-	ChatID   string    `json:"chat_id"`
+	ChatID   int       `json:"chat_id"`
 	Tag      string    `json:"tag"`
 	Mode     string    `json:"mode"`
 	FileURL  string    `json:"file_url"`
@@ -116,11 +116,11 @@ func (c *StreamMessageClient) StreamRequestToModel(payload PayloadStream) (<-cha
 	}
 	tag = resp.Header.Get("Tag")
 	// Проверяем статус ответа
-	if resp.StatusCode != http.StatusOK {	
+	if resp.StatusCode != http.StatusOK {
 
-		if resp.StatusCode == 422 {
-			b, _ := io.ReadAll(resp.Body);
-			fmt.Println("---!!!АХТУНГ!!!--\n\n", string(b),"\n\n---!!!АХТУНГ!!!--")
+		if resp.StatusCode == http.StatusUnprocessableEntity {
+			b, _ := io.ReadAll(resp.Body)
+			fmt.Println("---!!!АХТУНГ!!!--\n\n", string(b), "\n\n---!!!АХТУНГ!!!--")
 		}
 
 		if err := resp.Body.Close(); err != nil {
@@ -148,7 +148,7 @@ func (c *StreamMessageClient) processSSEStream(resp *http.Response, messageChan 
 	defer close(messageChan)
 
 	reader := bufio.NewReader(resp.Body)
-
+	thinkFlag := false
 	for {
 		// Читаем строку из потока
 		line, err := reader.ReadString('\n')
@@ -182,7 +182,18 @@ func (c *StreamMessageClient) processSSEStream(resp *http.Response, messageChan 
 				// В случае ошибки парсинга пропускаем сообщение
 				continue
 			}
-			fmt.Printf("Thinking:%s\nContent:%s:\n", message.Message.Thinking, message.Message.Content)
+
+			if message.Message.Content == "<think>" {
+				thinkFlag = true
+				continue
+			} else if message.Message.Content == "</think>" {
+				thinkFlag = false
+				continue
+			}
+			if thinkFlag {
+				message.Message.Thinking = message.Message.Content
+				message.Message.Content = ""
+			}
 			// Отправляем сообщение в канал
 			messageChan <- &message
 		}
