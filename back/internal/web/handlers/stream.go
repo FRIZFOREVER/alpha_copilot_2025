@@ -127,7 +127,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 
 	messageToModel.FileURL = streamIn.FileURL
 
-	messageToModel.ChatID = chatIDStr
+	messageToModel.ChatID = chatID
 
 	messageToModel.Mode = streamIn.Mode
 

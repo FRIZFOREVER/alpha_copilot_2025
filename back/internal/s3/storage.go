@@ -1,6 +1,8 @@
 package s3
 
-import "github.com/minio/minio-go"
+import (
+	"github.com/minio/minio-go"
+)
 
 // FileManager интерфейс для управления файлами в объектном хранилище.
 type FileManager interface {
@@ -10,7 +12,7 @@ type FileManager interface {
 
 	// GetFile получает файл из объектного хранилища
 	// Возвращает объект файла или ошибку в случае неудачи
-	GetFile(bucket, fileName string) (*minio.Object, error)
+	GetFile(bucket, fileName string) (File, error)
 
 	// ValidateFileSize проверяет размер файла перед загрузкой
 	// Возвращает ошибку если размер превышает допустимый или файл пустой
@@ -28,5 +30,12 @@ type AudioFileManager interface {
 
 	// GetMP3File получает MP3 файл из объектного хранилища
 	// Возвращает объект файла или ошибку, если файл не найден или не является MP3
-	Get(bucket, fileName string) (*minio.Object, error)
+	Get(bucket, fileName string) (File, error)
+}
+
+// File интерфейс, который реализует *minio.Object.
+type File interface {
+	Read(p []byte) (n int, err error)
+	Close() error
+	Stat() (minio.ObjectInfo, error)
 }

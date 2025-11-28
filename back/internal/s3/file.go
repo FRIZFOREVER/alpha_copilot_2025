@@ -60,7 +60,7 @@ func (s *S3Client) UploadFile(bucketName, uuid, fileExtension string, fileData [
 }
 
 // GetFile получает любой файл из MinIO.
-func (s *S3Client) GetFile(bucket, fileName string) (*minio.Object, error) {
+func (s *S3Client) GetFile(bucket, fileName string) (File, error) {
 	if fileName == "" {
 		return nil, ErrFilenameIsRequired
 	}
