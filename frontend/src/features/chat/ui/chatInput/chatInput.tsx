@@ -341,6 +341,13 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
           )}
         >
           <div className="relative overflow-visible" ref={tagSelectorRef}>
+            {showTagSelector && (
+              <TagSelector
+                onSelect={handleTagSelect}
+                onClose={handleTagSelectorClose}
+                position={tagSelectorPosition}
+              />
+            )}
             {isRecording ? (
               <div className="w-full min-h-[50px] rounded-[24px] shadow-sm mb-[13px] px-12 py-3 pr-20 bg-white border border-gray-200 flex items-center relative">
                 <button

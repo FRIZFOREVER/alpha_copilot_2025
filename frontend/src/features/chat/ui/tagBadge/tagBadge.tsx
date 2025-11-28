@@ -34,7 +34,7 @@ export const TagBadge = ({
         "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1",
         "text-xs font-medium transition-all duration-200",
         "border cursor-default",
-        className,
+        className
       )}
       style={{
         backgroundColor: `${tagConfig.color}15`,
@@ -51,12 +51,12 @@ export const TagBadge = ({
           onClick={handleRemove}
           disabled={disabled}
           className={cn(
-            "flex-shrink-0 w-4 h-4 rounded-full",
+            "flex-shrink-0 w-4 h-4 rounded-full cursor-pointer",
             "flex items-center justify-center",
             "hover:bg-black/10 active:bg-black/20",
             "transition-all duration-150",
             "disabled:opacity-50 disabled:cursor-not-allowed",
-            "ml-0.5",
+            "ml-0.5"
           )}
           aria-label="Удалить тег"
         >
