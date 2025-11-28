@@ -1,5 +1,3 @@
-"""Package entrypoint helpers."""
+from ml.main import main
 
-from .main import app
-
-__all__: list[str] = ["app"]
+__all__ = ["main"]

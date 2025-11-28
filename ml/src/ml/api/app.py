@@ -89,7 +89,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-def create_app() -> FastAPI:
+def app() -> FastAPI:
     """Configure and return the FastAPI application."""
     app = FastAPI(title="Agent Base API", lifespan=lifespan)
 

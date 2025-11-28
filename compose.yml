@@ -26,7 +26,7 @@ services:
       - minio
       # - recognizer-service
     restart: always
-  ml-api:
+  ml:
     build:
       context: ./ml
       dockerfile: Dockerfile
