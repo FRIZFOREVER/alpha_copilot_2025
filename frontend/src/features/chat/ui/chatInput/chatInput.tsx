@@ -479,7 +479,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
                     disabled={!message.trim() || disabled}
                     className={cn(
                       "absolute right-2 h-8 w-8 rounded-full cursor-pointer",
-                      "bg-black hover:bg-gray-800",
+                      "bg-[#1D1D1B] hover:bg-gray-800",
                       "text-white transition-all shadow-sm duration-200",
                       "disabled:opacity-50 disabled:cursor-not-allowed",
                       "active:scale-95 p-0",

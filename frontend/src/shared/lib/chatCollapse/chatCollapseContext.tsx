@@ -33,7 +33,7 @@ const getInitialCollapsed = (): boolean => {
 const getInitialMinimized = (): boolean => {
   if (typeof window === "undefined") return false;
   const stored = localStorage.getItem(MINIMIZED_CHAT_VISIBLE_KEY);
-  return stored !== null ? stored === "true" : false;
+  return stored !== null ? stored === "true" : true;
 };
 
 export const ChatCollapseProvider = ({ children }: { children: ReactNode }) => {
@@ -96,14 +96,11 @@ export const ChatCollapseProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window === "undefined") return;
 
     const storedCollapsed = localStorage.getItem(STORAGE_KEY);
-    const storedMinimized = localStorage.getItem(MINIMIZED_CHAT_VISIBLE_KEY);
 
     if (storedCollapsed === null) {
       setIsCollapsed(true);
     }
-    if (storedMinimized === null) {
-      setIsMinimizedChatVisible(false);
-    }
+    // Убрана логика для minimized, так как getInitialMinimized уже устанавливает правильное значение
   }, []);
 
   return (

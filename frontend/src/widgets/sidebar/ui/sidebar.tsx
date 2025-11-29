@@ -164,7 +164,7 @@ export const Sidebar = () => {
           >
             <div className="group cursor-pointer rounded-lg transition-all duration-300 hover:bg-red-50/50">
               <Icon
-                type={IconTypes.LOGO_OUTLINED_V2}
+                type={IconTypes.ALPHA_OUTLINED}
                 className="text-3xl text-red-400 fill-red-100/80 stroke-red-200 transition-all duration-300 group-hover:scale-110 group-hover:text-red-600 group-hover:fill-red-200 group-hover:stroke-red-300 group-hover:drop-shadow-lg"
               />
             </div>
@@ -369,7 +369,7 @@ export const Sidebar = () => {
               >
                 <Avatar className="h-10 w-10 border-2 border-gray-200 bg-gradient-to-br from-red-500 to-pink-500 rounded-full shrink-0">
                   <AvatarImage
-                    src="/images/user.webp"
+                    src="/images/alpha-user.png"
                     alt={displayName}
                     className="object-cover rounded-full"
                   />
@@ -383,7 +383,7 @@ export const Sidebar = () => {
             >
               <Avatar className="h-10 w-10 border-2 border-gray-200 bg-gradient-to-br from-red-500 to-pink-500 rounded-full shrink-0">
                 <AvatarImage
-                  src="/images/user.webp"
+                  src="/images/alpha-user.png"
                   alt={displayName}
                   className="object-cover rounded-full"
                 />

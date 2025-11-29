@@ -93,7 +93,7 @@ const AnalyticsPage = () => {
   );
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80">
+    <div className="flex flex-col h-full bg-[#1D1D1B]">
       <Header />
       <div className="overflow-hidden md:px-6 md:pb-6">
         <div className="flex-1 overflow-y-auto scrollbar-hide bg-zinc-100 rounded-t-3xl md:rounded-4xl h-full">

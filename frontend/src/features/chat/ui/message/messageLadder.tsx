@@ -125,7 +125,7 @@ export const MessageLadder = ({
                 <div className="absolute right-full mr-3 w-64 max-h-24 bg-white rounded-3xl shadow-lg border border-gray-200 p-3 flex flex-col z-50 top-1/2 -translate-y-1/2">
                   {!msg.isUser && (
                     <div className="text-xs font-medium text-gray-500 mb-1.5 flex-shrink-0">
-                      FinAI
+                      Alpha AI
                     </div>
                   )}
                   <div className="text-sm text-gray-800 overflow-hidden break-words">

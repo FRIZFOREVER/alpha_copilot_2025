@@ -3,6 +3,7 @@ import LogoIcon from "../assets/logo-icon.svg";
 import MenuIcon from "../assets/menu.svg";
 import TodoistIcon from "../assets/todoist.svg";
 import TelegramIcon from "../assets/telegram.svg";
+import AlphaIcon from "../assets/alpha-logo.svg";
 
 export const enum IconTypes {
   LOGO_OUTLINED,
@@ -10,6 +11,7 @@ export const enum IconTypes {
   LOGO_OUTLINED_V2,
   TODOIST_OUTLINED,
   TELEGRAM_OUTLINED,
+  ALPHA_OUTLINED,
 }
 
 export type IconDictionaryType = {
@@ -35,6 +37,9 @@ export const IconDictionary: IconDictionaryType = {
     TelegramIcon as unknown as React.FunctionComponent<
       React.SVGAttributes<SVGElement>
     >,
+  [IconTypes.ALPHA_OUTLINED]: AlphaIcon as unknown as React.FunctionComponent<
+    React.SVGAttributes<SVGElement>
+  >,
 };
 export const enum IconSizes {
   SMALL,

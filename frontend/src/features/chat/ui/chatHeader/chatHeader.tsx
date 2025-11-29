@@ -21,25 +21,25 @@ import { useSelectedModel } from "@/shared/hooks/useSelectedModel";
 const modelOptions = [
   {
     value: "fast",
-    label: "Fin Ai Fast",
+    label: "Alpha Fast",
     description: "Отвечает быстро",
     icon: Zap,
   },
   {
     value: "thinking",
-    label: "Fin Ai Thinking",
+    label: "Alpha Thinking",
     description: "Думает дольше для лучших ответов",
     icon: Brain,
   },
   {
     value: "research",
-    label: "Fin Ai Deep Research",
+    label: "Alpha Deep Research",
     description: "Может думать достаточно долго",
     icon: Sparkles,
   },
   {
     value: "auto",
-    label: "Fin Ai Auto",
+    label: "Alpha Auto",
     description: "Решает как долго думать",
     icon: Settings,
   },

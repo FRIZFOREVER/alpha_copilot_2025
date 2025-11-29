@@ -1,4 +1,4 @@
-import { Mail, Calendar, Settings, LogOut, ArrowLeft } from "lucide-react";
+import { Mail, Calendar, ArrowLeft } from "lucide-react";
 import { Avatar, AvatarImage } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge/badge";
@@ -65,7 +65,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-[#ef3124]/80 to-pink-600/80">
+    <div className="flex flex-col h-full bg-[#1D1D1B]">
       <Header />
       <div className="overflow-hidden md:px-6 md:pb-6">
         <div className="flex-1 overflow-y-auto scrollbar-hide bg-zinc-100 rounded-t-3xl md:rounded-4xl h-full">
@@ -92,7 +92,7 @@ const ProfilePage = () => {
                   <div className="relative">
                     <Avatar className="relative h-32 w-32 md:h-40 md:w-40 ring-4 ring-white shadow-xl">
                       <AvatarImage
-                        src="/images/user.webp"
+                        src="/images/alpha-user.png"
                         alt={displayName}
                         className="object-cover rounded-2xl"
                       />
@@ -104,7 +104,7 @@ const ProfilePage = () => {
                       <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
                         {displayName}
                       </h2>
-                      <Badge className="self-start sm:self-center bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 px-4 py-1.5 rounded-full text-xs font-semibold shadow-md">
+                      <Badge className="self-start sm:self-center bg-[#EF3124] text-white border-0 px-4 py-1.5 rounded-full text-xs font-semibold shadow-md">
                         {mockData.plan}
                       </Badge>
                     </div>
@@ -135,13 +135,12 @@ const ProfilePage = () => {
                       </div>
                       <Progress
                         value={progress}
-                        className="h-3 bg-gray-200 rounded-full overflow-hidden [&>div]:!bg-gradient-to-r [&>div]:!from-red-500 [&>div]:!to-pink-500 [&>div]:!rounded-full [&>div]:!transition-all"
+                        className="h-3 bg-gray-200 rounded-full overflow-hidden [&>div]:!bg-[#EF3124] [&>div]:!from-[#EF3124] [&>div]:!to-pink-500 [&>div]:!rounded-full [&>div]:!transition-all"
                       />
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                      <Button className="flex-1 cursor-pointer h-11 rounded-3xl bg-gradient-to-r from-red-500 to-pink-600 text-white text-sm font-medium shadow-md hover:shadow-lg hover:from-red-600 hover:to-pink-700 transition-all">
-                        <Settings className="h-4 w-4 mr-2" />
+                      <Button className="flex-1 cursor-pointer h-11 rounded-3xl bg-[#EF3124] hover:bg-[#EF3124]/90 text-white text-sm font-medium shadow-md hover:shadow-lg transition-all">
                         Настройки
                       </Button>
                       <Button
@@ -149,7 +148,6 @@ const ProfilePage = () => {
                         className="flex-1 cursor-pointer h-11 rounded-3xl bg-white hover:bg-gray-50 hover:border-gray-300 text-gray-700 text-sm font-medium transition-all"
                         onClick={handleLogout}
                       >
-                        <LogOut className="h-4 w-4 mr-2" />
                         Выйти
                       </Button>
                     </div>
@@ -235,7 +233,7 @@ const ProfilePage = () => {
                             <div className="flex-shrink-0">
                               <Button
                                 size="sm"
-                                className="h-10 md:h-11 cursor-pointer px-5 md:px-6 text-sm font-medium bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-3xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
+                                className="h-10 md:h-11 cursor-pointer px-5 md:px-6 text-sm font-medium bg-[#EF3124] text-white rounded-3xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
                               >
                                 {rec.action}
                               </Button>

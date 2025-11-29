@@ -31,8 +31,8 @@ export const CapabilityCard = ({
         />
       </div>
       <div className="p-5 flex-1 bg-white rounded-4xl">
-        <h3 className="font-bold text-lg text-purple-600 mb-3">{title}</h3>
-        <p className="text-sm text-gray-900 leading-relaxed">{description}</p>
+        <h3 className="font-bold text-lg text-[#EF3124] mb-3">{title}</h3>
+        <p className="text-sm text-zinc-600 leading-relaxed">{description}</p>
       </div>
     </div>
   );

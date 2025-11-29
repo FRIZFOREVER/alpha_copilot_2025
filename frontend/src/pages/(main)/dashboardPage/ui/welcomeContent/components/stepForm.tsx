@@ -64,7 +64,7 @@ export const StepForm = ({
       <div>
         <label
           htmlFor={`step-${stepConfig.step}-textarea`}
-          className="block text-sm md:text-base text-gray-900 mb-3 font-medium"
+          className="block text-sm md:text-base text-zinc-600 mb-3 font-medium"
         >
           {stepConfig.title}
         </label>
@@ -103,8 +103,8 @@ export const StepForm = ({
                 className={cn(
                   "h-10 w-10 md:h-11 md:w-11",
                   "rounded-full cursor-pointer",
-                  "bg-gradient-to-r from-red-500 to-pink-600",
-                  "hover:from-red-600 hover:to-pink-700",
+                  "bg-[#1D1D1B]",
+                  "hover:bg-[#1D1D1B]/90",
                   "text-white font-medium",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                   "transition-all duration-200",
@@ -120,8 +120,8 @@ export const StepForm = ({
               className={cn(
                 "h-10 w-10 md:h-11 md:w-11",
                 "rounded-full cursor-pointer",
-                "bg-gradient-to-r from-red-500 to-pink-600",
-                "hover:from-red-600 hover:to-pink-700",
+                "bg-[#1D1D1B]",
+                "hover:bg-[#1D1D1B]/90",
                 "text-white font-medium",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
                 "transition-all duration-200",
