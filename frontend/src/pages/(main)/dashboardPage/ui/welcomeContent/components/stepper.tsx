@@ -40,7 +40,7 @@ export const Stepper = ({
             key={stepNumber}
             className={cn(
               "flex items-center",
-              index < totalSteps - 1 && "flex-1",
+              index < totalSteps - 1 && "flex-1"
             )}
           >
             <div className="flex items-center flex-1">
@@ -49,11 +49,11 @@ export const Stepper = ({
                 className={cn(
                   "flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-red-500 text-white"
+                    ? "bg-[#EF3124] text-white"
                     : isCompleted
-                      ? "bg-red-500 text-white"
-                      : "bg-transparent border-2 border-red-200 text-red-400",
-                  isClickable && "cursor-pointer hover:opacity-80",
+                    ? "bg-[#EF3124] text-white"
+                    : "bg-transparent border-2 border-[#EF3124] text-[#EF3124]",
+                  isClickable && "cursor-pointer hover:opacity-80"
                 )}
               >
                 {stepNumber}
@@ -62,7 +62,7 @@ export const Stepper = ({
                 <div
                   className={cn(
                     "flex-1 h-1 rounded-full mx-2 transition-colors",
-                    isActive || isCompleted ? "bg-red-500" : "bg-red-200",
+                    isActive || isCompleted ? "bg-red-500" : "bg-red-200"
                   )}
                 />
               )}

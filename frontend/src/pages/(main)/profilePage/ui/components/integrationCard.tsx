@@ -86,7 +86,7 @@ export const IntegrationCard = ({
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : connected
                 ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                : "bg-red-600 text-white hover:bg-red-700"
+                : "bg-[#EF3124] text-white hover:bg-[#EF3124]/90"
             )}
             onClick={(e) => {
               e.stopPropagation();

@@ -56,7 +56,7 @@ export const LoginForm = () => {
                     label="Почта"
                     className={cn(
                       "py-1.5 text-black bg-[#f0f3f7] rounded-3xl shadow-sm border-[#f0f3f7]",
-                      errors.login && "border-red-700",
+                      errors.login && "border-red-700"
                     )}
                   />
                   {errors.login && (
@@ -91,7 +91,7 @@ export const LoginForm = () => {
                     type={showPassword ? "text" : "password"}
                     className={cn(
                       "py-1.5 text-black bg-[#f0f3f7] rounded-3xl shadow-sm border-[#f0f3f7] pr-12",
-                      errors.password && "border-red-700",
+                      errors.password && "border-red-700"
                     )}
                   />
                   {errors.password && (
@@ -138,7 +138,7 @@ export const LoginForm = () => {
             <Button
               type="submit"
               variant={"outline"}
-              className="px-6 py-5 w-full rounded-3xl bg-gradient-to-br from-red-500 to-pink-600 text-white hover:bg-[#D00E46] hover:text-white"
+              className="px-6 py-5 w-full rounded-3xl bg-[#EF3124] text-white hover:bg-[#EF3124]/90 cursor-pointer hover:text-white"
             >
               Войти
             </Button>

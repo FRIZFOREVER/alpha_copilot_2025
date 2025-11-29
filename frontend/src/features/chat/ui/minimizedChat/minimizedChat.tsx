@@ -91,11 +91,11 @@ export const MinimizedChat = memo(
             <button className="flex items-center gap-2 h-auto p-0 border-0 bg-transparent hover:bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg md:text-xl font-medium text-gray-900 hover:text-gray-700 transition-colors cursor-pointer data-[state=open]:text-gray-700 [&>svg]:opacity-60 [&>svg]:hover:opacity-100 [&_[data-slot=select-value]]:hidden">
               <div className="group cursor-pointer rounded-lg transition-all duration-300 hover:bg-red-50/50">
                 <Icon
-                  type={IconTypes.LOGO_OUTLINED_V2}
+                  type={IconTypes.ALPHA_OUTLINED}
                   className="text-2xl text-red-400 fill-red-100/80 stroke-red-200 transition-all duration-300 group-hover:scale-110 group-hover:text-red-600 group-hover:fill-red-200 group-hover:stroke-red-300 group-hover:drop-shadow-lg"
                 />
               </div>
-              <span>FinAi</span>
+              <span>Alpha AI</span>
             </button>
           </div>
           <div className="flex items-center gap-1">

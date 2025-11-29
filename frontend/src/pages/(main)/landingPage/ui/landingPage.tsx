@@ -70,7 +70,7 @@ const LandingPage = () => {
   return (
     <div className="flex min-h-screen w-full flex-col bg-black overflow-hidden">
       <section className="relative min-h-screen flex flex-col">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-black to-black" />
+        <div className="absolute inset-0 bg-[#1C1C1E]" />
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-28 pt-12 sm:pt-16 lg:pt-20 pb-6 sm:pb-8 relative z-10">
           <motion.div
@@ -81,23 +81,13 @@ const LandingPage = () => {
           >
             <motion.div
               variants={itemVariants}
-              className="flex items-center gap-3 sm:gap-4 mb-4 mr-10"
+              className="flex items-center gap-3 sm:gap-4 mb-4 "
             >
-              <motion.div
-                className="group cursor-pointer rounded-lg transition-all duration-300 p-2"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Icon
-                  type={IconTypes.LOGO_OUTLINED_V2}
-                  className="text-4xl sm:text-5xl lg:text-6xl text-red-400 transition-all duration-300 group-hover:scale-110 group-hover:text-red-600 group-hover:drop-shadow-lg"
-                />
-              </motion.div>
               <motion.h1
                 variants={itemVariants}
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white"
               >
-                FinAi
+                Альфа Core
               </motion.h1>
             </motion.div>
             <motion.p
@@ -118,7 +108,7 @@ const LandingPage = () => {
               <motion.div
                 key={index}
                 variants={itemVariants}
-                className="rounded-3xl sm:rounded-4xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 p-4 sm:p-6 lg:p-8 hover:bg-gray-800/70 transition-all"
+                className="rounded-3xl sm:rounded-4xl bg-[#DEDEF01F] backdrop-blur-sm border border-[#DEDEF01F]/50 p-4 sm:p-6 lg:p-8 hover:bg-[#DEDEF0170] transition-all"
               >
                 {card.image && (
                   <div className="mb-4">
@@ -348,7 +338,7 @@ const LandingPage = () => {
       </section>
 
       <div className="bg-white">
-        <footer className="relative bg-gradient-to-b rounded-t-[3rem] sm:rounded-t-[4rem] md:rounded-t-[5rem] from-gray-900 via-black to-black pt-12 sm:pt-16 pb-8 sm:pb-12">
+        <footer className="relative bg-black/90 rounded-t-[3rem] sm:rounded-t-[4rem] md:rounded-t-[5rem]  pt-12 sm:pt-16 pb-8 sm:pb-12">
           <div className="container mx-auto px-4 sm:px-6 lg:px-28">
             <motion.div
               variants={containerVariants}
