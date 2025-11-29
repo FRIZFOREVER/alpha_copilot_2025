@@ -101,4 +101,15 @@ func InitPrivateRoutes(
 	graphLogRepo := database.NewGraphLogRepository(db, logger)
 	graphLog := handlers.NewGraphLog(graphLogRepo, logger)
 	server.Get("/log/graph", graphLog.Handler)
+
+	analyticRepo := database.NewAnalyticRepository(db, logger)
+	analytic := handlers.NewAnalytic(analyticRepo, logger)
+	analyticGroup := server.Group("/analytics")
+	analyticGroup.Get("/average-likes", analytic.GetAverageLikesHandler)
+	analyticGroup.Get("/chat-counts", analytic.GetChatCountsHandler)
+	analyticGroup.Get("/day-count", analytic.GetDayCountHandler)
+	analyticGroup.Get("/file-counts", analytic.GetFileCountsHandler)
+	analyticGroup.Get("/message-counts", analytic.GetMessageCountsHandler)
+	analyticGroup.Get("/tag-counts", analytic.GetTagCountsHandler)
+	analyticGroup.Post("/timeseries-messages", analytic.GetTimeseriesMessagesHandler)
 }
