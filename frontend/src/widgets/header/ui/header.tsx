@@ -39,22 +39,30 @@ export const Header = ({ className }: HeaderProps) => {
 
   return (
     <header className={cn("sticky top-0 z-50 w-full", className)}>
-      <div className="mx-auto px-4 md:px-8 md:pr-6">
+      <div className="mx-auto px-2 md:px-5 md:pr-6">
         <div className="flex items-center justify-between h-14 md:h-16">
-          <div
-            className="flex items-center gap-1.5 cursor-pointer"
+          <button
             onClick={handleLogoClick}
+            className={cn(
+              "flex items-center gap-2 px-3 py-2 md:py-2.5 rounded-3xl cursor-pointer transition-all duration-200",
+              "bg-white/10 backdrop-blur-sm shadow-sm hover:shadow",
+              "border border-white/20",
+              "hover:bg-white/20"
+            )}
+            title="Alfa Core"
           >
-            <div className="group rounded-lg transition-all duration-300 md:-ml-2">
+            <div className="group rounded-lg transition-all duration-300">
               <Icon
                 type={IconTypes.ALPHA_OUTLINED}
-                className="text-2xl md:text-3xl text-white fill-white/90 stroke-white/80 transition-all duration-300 group-hover:scale-110 group-hover:fill-white group-hover:stroke-white group-hover:drop-shadow-lg"
+                className="text-2xl md:text-2xl text-white fill-white/90 stroke-white/80 transition-all duration-300 group-hover:fill-white group-hover:stroke-white group-hover:drop-shadow-lg shrink-0"
               />
             </div>
-            <span className="text-lg md:text-xl font-medium text-white drop-shadow-sm">
-              Alpha Core
-            </span>
-          </div>
+            <div className="flex flex-col items-start min-w-0">
+              <span className="text-xs font-medium text-white/90 truncate max-w-[100px] leading-tight">
+                Alfa Core
+              </span>
+            </div>
+          </button>
 
           <nav className="flex items-center space-x-1.5">
             <button

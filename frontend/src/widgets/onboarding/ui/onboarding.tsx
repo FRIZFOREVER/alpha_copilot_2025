@@ -86,15 +86,14 @@ const OnboardingCard = ({
       <div
         ref={cardRef}
         className={cn(
-          "fixed z-[101] bg-white rounded-3xl shadow-2xl pointer-events-auto",
+          "fixed z-[101] bg-white rounded-4xl shadow-2xl pointer-events-auto",
           "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
           isMobile
             ? "w-[calc(100vw-32px)] max-w-[calc(100vw-32px)]"
-            : "max-w-sm w-full",
-          currentStep === 3 && !isMobile && "max-w-xs"
+            : "max-w-md w-full"
         )}
       >
-        <div className="p-6">
+        <div className="p-7">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <div className="text-4xl mb-3">{step.emoji}</div>
@@ -107,7 +106,7 @@ const OnboardingCard = ({
             </div>
             <button
               onClick={onSkip}
-              className="ml-4 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+              className="ml-4 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 cursor-pointer"
               aria-label="Пропустить онбординг"
             >
               <X className="h-5 w-5" />
@@ -194,7 +193,7 @@ const OnboardingCard = ({
               <Button
                 variant="outline"
                 onClick={onPrevious}
-                className="flex-1 rounded-2xl cursor-pointer"
+                className="flex-1 py-[22px] rounded-4xl cursor-pointer"
               >
                 Назад
               </Button>
@@ -202,7 +201,7 @@ const OnboardingCard = ({
             <Button
               onClick={isLastStep ? onSkip : onNext}
               className={cn(
-                "flex-1 rounded-2xl cursor-pointer",
+                "flex-1 cursor-pointer bg-[#EF3124] py-[22px] rounded-4xl",
                 isFirstStep && "w-full"
               )}
             >
