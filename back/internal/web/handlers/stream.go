@@ -167,8 +167,8 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		}
 
 		var builder strings.Builder
+		var file_url string
 		builder.Grow(1024)
-
 		// Обрабатываем поток сообщений
 		for message := range messageChan {
 			if message != nil {
@@ -202,7 +202,9 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 						Time:    time.Now().UTC(),
 						Done:    true,
 					}
-
+					if message.FileURL != nil {
+						file_url = *message.FileURL
+					}
 					finalJSON, err := json.Marshal(finalChunk)
 					if err != nil {
 						sh.logger.Errorf("Error encoding final chunk: %v", err)
@@ -223,7 +225,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		if tag == streamIn.Tag {
 			// Сохраняем полный ответ в базу данных
 			fullAnswer := builder.String()
-			_, err = sh.repo.UpdateAnswer(answerID, fullAnswer)
+			_, err = sh.repo.UpdateAnswer(answerID, fullAnswer, file_url)
 			if err != nil {
 				sh.logger.Errorf("Error updating answer in database: %v", err)
 			}
@@ -233,7 +235,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 			}
 			// Сохраняем полный ответ в базу данных
 			fullAnswer := builder.String()
-			_, err = sh.repo.UpdateAnswerAndQuestionTag(answerID, questionID, fullAnswer, tag)
+			_, err = sh.repo.UpdateAnswerAndQuestionTag(answerID, questionID, fullAnswer, tag, file_url)
 			if err != nil {
 				sh.logger.Errorf("Error updating answer and question tag in database: %v", err)
 			}
@@ -254,4 +256,5 @@ type streamChunckOut struct {
 	Content string    `json:"content"`
 	Time    time.Time `json:"time"`
 	Done    bool      `json:"done"`
+	FileURL *string   `json:"file_url,omitempty"`
 }
