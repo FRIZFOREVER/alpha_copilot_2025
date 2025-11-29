@@ -51,6 +51,7 @@ type StreamMessage struct {
 	PromptEvalDuration *int64         `json:"prompt_eval_duration"`
 	EvalCount          *int           `json:"eval_count"`
 	EvalDuration       *int64         `json:"eval_duration"`
+	FileURL            *string        `json:"file_url,omitempty"`
 	Message            MessageContent `json:"message"`
 }
 
