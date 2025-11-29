@@ -250,11 +250,11 @@ type streamMetaOut struct {
 	AnswerID     int       `json:"answer_id"`
 	QuestionTime time.Time `json:"question_time"`
 	Tag          string    `json:"tag"`
-	FileURL      *string   `json:"file_url,omitempty"`
 }
 
 type streamChunckOut struct {
 	Content string    `json:"content"`
 	Time    time.Time `json:"time"`
 	Done    bool      `json:"done"`
+	FileURL *string   `json:"file_url,omitempty"`
 }
