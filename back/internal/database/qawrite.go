@@ -99,8 +99,9 @@ func (s *MessageService) WriteMessage(
 func (s *MessageService) UpdateAnswer(
 	answerID int,
 	answer string,
+	file_url string,
 ) (int64, error) {
-	result, err := s.db.Exec(updateAnswerQuery, answer, time.Now().UTC(), answerID)
+	result, err := s.db.Exec(updateAnswerQuery, answer, time.Now().UTC(), file_url, answerID)
 	if err != nil {
 		s.logger.WithError(err).WithFields(logrus.Fields{
 			"answer_id": answerID,
@@ -127,6 +128,7 @@ func (s *MessageService) UpdateAnswerAndQuestionTag(
 	answerID, questionID int,
 	answer string,
 	tag string,
+	file_url string,
 ) (int64, error) {
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -153,7 +155,7 @@ func (s *MessageService) UpdateAnswerAndQuestionTag(
 	}()
 
 	// Обновляем ответ
-	result, err := tx.Exec(updateAnswerQuery, answer, time.Now().UTC(), answerID)
+	result, err := tx.Exec(updateAnswerQuery, answer, time.Now().UTC(), file_url, answerID)
 	if err != nil {
 		s.logger.WithError(err).WithFields(logrus.Fields{
 			"answer_id": answerID,
@@ -264,8 +266,8 @@ type MessageManager interface {
 		voiceURL string,
 		fileURL string,
 	) (questionID int, answerID int, err error)
-	UpdateAnswer(answerID int, answer string) (int64, error)
-	UpdateAnswerAndQuestionTag(answerID, questionID int, answer string, tag string) (int64, error)
+	UpdateAnswer(answerID int, answer string, file_url string) (int64, error)
+	UpdateAnswerAndQuestionTag(answerID, questionID int, answer string, tag string, file_url string) (int64, error)
 	WriteEmptyMessage(chatID int, questionTime, answerTime time.Time, voiceURL string) (questionID int, answerID int, err error)
 	CheckChat(userUUID string, chatID int) (bool, error)
 	GetHistory(chatID int, uuid string, historyLen int, tag string) ([]Message, error)
