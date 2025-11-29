@@ -54,13 +54,13 @@ func (m *MockMessageManager) WriteMessage(chatID int, question, answer string, q
 }
 
 // UpdateAnswer implements MessageManager.
-func (m *MockMessageManager) UpdateAnswer(answerID int, answer string) (int64, error) {
+func (m *MockMessageManager) UpdateAnswer(answerID int, answer string, file_url string) (int64, error) {
 	args := m.Called(answerID, answer)
 	return args.Get(0).(int64), args.Error(1)
 }
 
 // UpdateAnswerAndQuestionTag implements MessageManager.
-func (m *MockMessageManager) UpdateAnswerAndQuestionTag(answerID, questionID int, answer string, tag string) (int64, error) {
+func (m *MockMessageManager) UpdateAnswerAndQuestionTag(answerID, questionID int, answer string, tag string, file_url string) (int64, error) {
 	args := m.Called(answerID, questionID, answer, tag)
 	return args.Get(0).(int64), args.Error(1)
 }
