@@ -16,8 +16,8 @@ from ml.api.routes.health import router as health_router
 from ml.api.routes.workflow import router as workflow_router
 from ml.configs import get_log_level
 
-logging.basicConfig(level=get_log_level())
 logger = logging.getLogger(__name__)
+logger.setLevel(get_log_level())
 
 
 @asynccontextmanager
