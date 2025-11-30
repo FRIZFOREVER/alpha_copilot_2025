@@ -82,6 +82,7 @@ class ReasoningClientSettings(ClientSettings):
         key: str = MODEL_ENV_VARS["chat"]
         logger.debug("Automatically defining model_name")
         value = os.getenv(key)
+        logger.debug("Value: %s", value)
 
         if value is None:
             msg = f"Environment variable {key} is required for automatic detection"
@@ -110,12 +111,12 @@ class EmbeddingClientSettings(ClientSettings):
         key: str = MODEL_ENV_VARS["embedding"]
         logger.debug("Automatically defining embedding model name")
         value = os.getenv(key)
+        logger.debug("Value: %s", value)
 
         if not value:
             msg = f"Environment variable {key} is required for automatic detection"
             logger.error(msg)
             raise RuntimeError(msg)
 
-        logger.debug("Embedding model name: %s", value)
         print("Embedding model name:", value)
         return value

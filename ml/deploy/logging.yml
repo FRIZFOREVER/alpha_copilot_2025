@@ -3,12 +3,12 @@ disable_existing_loggers: false
 formatters:
   default:
     "()": uvicorn.logging.DefaultFormatter
-    fmt: "%(levelprefix)s %(asctime)s [%(name)s] %(message)s"
+    fmt: "%(levelprefix)s %(message)s"
     use_colors: false
   access:
     "()": uvicorn.logging.AccessFormatter
     fmt: >-
-      %(levelprefix)s %(asctime)s [%(name)s] %(client_addr)s - "%(request_line)s"
+      %(levelprefix)s - "%(request_line)s"
       %(status_code)s
     use_colors: false
 handlers:
@@ -38,5 +38,5 @@ loggers:
     level: INFO
     propagate: false
 root:
-  level: INFO
+  level: DEBUG
   handlers: [default]

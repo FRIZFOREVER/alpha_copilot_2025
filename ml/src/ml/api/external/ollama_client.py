@@ -22,6 +22,9 @@ class ReasoningModelClient:
             settings = ReasoningClientSettings()
         self.settings: ReasoningClientSettings = settings
 
+        logger.debug(
+            "initiated Reasoning client with: \n%s", self.settings.model_dump_json(indent=2)
+        )
         # Async Ollama client (OpenAI-compatible base_url assumed in settings)
         self.client: Any = AsyncClient(
             host=self.settings.base_url,
@@ -110,6 +113,9 @@ class EmbeddingModelClient:
             logging.debug("Automatically defining settings for Embedding client")
             settings = EmbeddingClientSettings()
         self.settings: EmbeddingClientSettings = settings
+        logger.debug(
+            "initiated Embedding client with: \n%s", self.settings.model_dump_json(indent=2)
+        )
 
         # Async Ollama client (same pattern as ReasoningModelClient)
         self.client: Any = AsyncClient(
