@@ -5,7 +5,7 @@ from typing import Any
 
 from fastapi import FastAPI
 
-from ml.api.external.ollama_init import (
+from ml.api.external import (
     clients_warmup,
     download_missing_models,
     fetch_available_models,
@@ -14,9 +14,8 @@ from ml.api.external.ollama_init import (
 )
 from ml.api.routes.health import router as health_router
 from ml.api.routes.workflow import router as workflow_router
-from ml.configs import configure_logging
+from ml.api.schemas.client_types import ModelClients
 
-configure_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -33,7 +32,7 @@ async def lifespan(app: FastAPI):
 
             await download_missing_models(available_models, requested_models)
 
-            model_clients: dict[str, Any] = await init_warmup_clients()
+            model_clients: ModelClients = await init_warmup_clients()
             await clients_warmup(model_clients)
 
             logger.info("All models successfully initialized, ready to accept connections")

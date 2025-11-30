@@ -116,4 +116,6 @@ class EmbeddingClientSettings(ClientSettings):
             logger.error(msg)
             raise RuntimeError(msg)
 
+        logger.debug("Embedding model name: %s", value)
+        print("Embedding model name:", value)
         return value

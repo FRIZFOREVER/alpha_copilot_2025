@@ -18,6 +18,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 class ReasoningModelClient:
     def __init__(self, settings: ReasoningClientSettings | None = None) -> None:
         if settings is None:
+            logging.debug("Automatically defining settings for Reasoner client")
             settings = ReasoningClientSettings()
         self.settings: ReasoningClientSettings = settings
 
@@ -106,6 +107,7 @@ class ReasoningModelClient:
 class EmbeddingModelClient:
     def __init__(self, settings: EmbeddingClientSettings | None = None) -> None:
         if settings is None:
+            logging.debug("Automatically defining settings for Embedding client")
             settings = EmbeddingClientSettings()
         self.settings: EmbeddingClientSettings = settings
 
