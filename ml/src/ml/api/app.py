@@ -14,8 +14,9 @@ from ml.api.external.ollama_init import (
 )
 from ml.api.routes.health import router as health_router
 from ml.api.routes.workflow import router as workflow_router
+from ml.configs import get_log_level
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
+logging.basicConfig(level=get_log_level())
 logger = logging.getLogger(__name__)
 
 
@@ -35,9 +36,7 @@ async def lifespan(app: FastAPI):
             model_clients: dict[str, Any] = await init_warmup_clients()
             await clients_warmup(model_clients)
 
-            logger.info(
-                "All models successfully initialized, ready to accept connections"
-            )
+            logger.info("All models successfully initialized, ready to accept connections")
         except Exception:
             logger.exception("Failed to initialize Ollama models")
             raise

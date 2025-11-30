@@ -107,7 +107,7 @@ class EmbeddingClientSettings(ClientSettings):
             return value
 
         key: str = MODEL_ENV_VARS["embedding"]
-        logger.debug("Automatically defining model_name")
+        logger.debug("Automatically defining embedding model name")
         value = os.getenv(key)
 
         if value is None:
