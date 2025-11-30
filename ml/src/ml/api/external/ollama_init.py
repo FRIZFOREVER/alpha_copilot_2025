@@ -52,6 +52,7 @@ async def get_models_from_env() -> list[str]:
     else:
         requested_model_names.append(embedding_model_name)
 
+    logger.info("Reqeuested models: %s", requested_model_names)
     return requested_model_names
 
 
