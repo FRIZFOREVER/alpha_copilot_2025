@@ -2,12 +2,12 @@ import asyncio
 import logging
 import os
 from collections.abc import Iterator
-from typing import Any
 
 import ollama
 from ollama import ListResponse
 
 from ml.api.external.ollama_client import EmbeddingModelClient, ReasoningModelClient
+from ml.api.schemas.client_types import ModelClients
 from ml.configs import MODEL_ENV_VARS
 from ml.domain.models import ChatHistory
 from ml.utils import format_progress
@@ -38,7 +38,7 @@ async def get_models_from_env() -> list[str]:
 
     requested_model_names: list[str] = []
     chat_model_name: str | None = os.getenv(MODEL_ENV_VARS["chat"])
-    if chat_model_name is None:
+    if not chat_model_name:
         # If reasoning model is not provided, app can't work
         logger.exception(f"{MODEL_ENV_VARS['chat']} environment varaible is not setted up")
         raise RuntimeError("Cannot run this app without reasoning model setup")
@@ -46,11 +46,12 @@ async def get_models_from_env() -> list[str]:
         requested_model_names.append(chat_model_name)
 
     embedding_model_name: str | None = os.getenv(MODEL_ENV_VARS["embedding"])
-    if embedding_model_name is None:
-        # Without embedding model we just skip work of memories
-        logger.warning(f"{MODEL_ENV_VARS['embedding']} is not setted up\ncontinuing work without it")
-    else:
-        requested_model_names.append(embedding_model_name)
+    if not embedding_model_name:
+        msg = f"{MODEL_ENV_VARS['embedding']} environment varaible is not setted up"
+        logger.exception(msg)
+        raise RuntimeError("Cannot run this app without embedding model setup")
+
+    requested_model_names.append(embedding_model_name)
 
     logger.info("Reqeuested models: %s", requested_model_names)
     return requested_model_names
@@ -115,8 +116,11 @@ async def download_missing_models(available_models: list[str], requested_models:
     logger.info("All required models are downloaded")
 
 
-async def init_warmup_clients() -> dict[str, Any]:
-    return {"chat": ReasoningModelClient(), "embeddings": EmbeddingModelClient()}
+async def init_warmup_clients() -> ModelClients:
+    chat_client = ReasoningModelClient()
+    embedding_client = EmbeddingModelClient()
+
+    return {"chat": chat_client, "embeddings": embedding_client}
 
 
 async def _embedding_warmup(client: EmbeddingModelClient) -> None:
@@ -133,9 +137,10 @@ async def _reasoning_warmup(client: ReasoningModelClient) -> None:
     await client.call(messages=prompt)
 
 
-async def clients_warmup(models: dict[str, Any]) -> None:
+async def clients_warmup(models: ModelClients) -> None:
     logger.info("Started embedding client warmup")
     await _embedding_warmup(models["embeddings"])
+
     logger.info("Started reasoner client warmup")
     await _reasoning_warmup(models["chat"])
     return
