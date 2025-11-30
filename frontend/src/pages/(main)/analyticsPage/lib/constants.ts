@@ -19,9 +19,11 @@ export const analyticsData = {
   },
   usage: {
     chats: 24,
-    messages: 1247,
+    messages: 3298,
     daysActive: 12,
     avgSessionTime: "12 мин",
+    completedTasks: 27,
+    totalTasks: 80,
   },
   trends: [
     {
@@ -99,4 +101,19 @@ export const analyticsData = {
     { category: "Юридические", percentage: 12, color: "bg-green-500" },
     { category: "Другое", percentage: 8, color: "bg-gray-500" },
   ],
+  yearlyActivity: [
+    { month: "ЯНВ", value: 120 },
+    { month: "ФЕВ", value: 180 },
+    { month: "МАР", value: 150 },
+    { month: "АПР", value: 320 },
+    { month: "МАЙ", value: 380 },
+    { month: "ИЮН", value: 250 },
+    { month: "ИЮЛ", value: 280 },
+    { month: "АВГ", value: 200 },
+    { month: "СЕН", value: 220 },
+    { month: "ОКТ", value: 350 },
+    { month: "НОЯ", value: 390 },
+    { month: "ДЕК", value: 300 },
+  ],
+  efficiency: 86,
 };

@@ -15,6 +15,12 @@ interface OnboardingStep {
   content?: React.ReactNode;
 }
 
+interface OnboardingTask {
+  id: number;
+  label: string;
+  completed: boolean;
+}
+
 const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 1,
@@ -44,6 +50,12 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
       "Посмотрите краткое руководство, чтобы узнать больше о возможностях вашего ИИ-помощника.",
     emoji: "▶️",
   },
+];
+
+const ONBOARDING_TASKS: OnboardingTask[] = [
+  { id: 1, label: "Создать первый чат", completed: true },
+  { id: 2, label: "Настроить профиль", completed: false },
+  { id: 3, label: "Изучить возможности", completed: false },
 ];
 
 interface OnboardingCardProps {
@@ -117,11 +129,7 @@ const OnboardingCard = ({
             <div className="mb-4 space-y-3">
               <Progress value={progress} className="h-2" />
               <div className="space-y-2">
-                {[
-                  { id: 1, label: "Создать первый чат", completed: true },
-                  { id: 2, label: "Настроить профиль", completed: false },
-                  { id: 3, label: "Изучить возможности", completed: false },
-                ].map((task) => (
+                {ONBOARDING_TASKS.map((task) => (
                   <div
                     key={task.id}
                     className="flex items-center gap-2 text-sm text-gray-600"
