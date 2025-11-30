@@ -88,14 +88,32 @@ export const MinimizedChat = memo(
       >
         <div className="flex items-center justify-between px-4 py-4 bg-white rounded-4xl">
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 h-auto p-0 border-0 bg-transparent hover:bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg md:text-xl font-medium text-gray-900 hover:text-gray-700 transition-colors cursor-pointer data-[state=open]:text-gray-700 [&>svg]:opacity-60 [&>svg]:hover:opacity-100 [&_[data-slot=select-value]]:hidden">
+            {/* <button className="flex items-center gap-2 h-auto p-0 border-0 bg-transparent hover:bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-lg md:text-xl font-medium text-gray-900 hover:text-gray-700 transition-colors cursor-pointer data-[state=open]:text-gray-700 [&>svg]:opacity-60 [&>svg]:hover:opacity-100 [&_[data-slot=select-value]]:hidden">
               <div className="group cursor-pointer rounded-lg transition-all duration-300 hover:bg-red-50/50">
                 <Icon
                   type={IconTypes.ALPHA_OUTLINED}
                   className="text-2xl text-red-400 fill-red-100/80 stroke-red-200 transition-all duration-300 group-hover:scale-110 group-hover:text-red-600 group-hover:fill-red-200 group-hover:stroke-red-300 group-hover:drop-shadow-lg"
                 />
               </div>
-              <span>Alpha AI</span>
+              <span>Alfa AI</span>
+            </button> */}
+            <button
+              className={cn(
+                "flex items-center gap-2 rounded-3xl cursor-pointer transition-all duration-200"
+              )}
+              title="Alfa Core"
+            >
+              <div className="group rounded-lg transition-all duration-300">
+                <Icon
+                  type={IconTypes.ALPHA_OUTLINED}
+                  className="text-2xl md:text-2xl text-black fill-white/90 stroke-white/80 transition-all duration-300 group-hover:fill-white group-hover:stroke-white group-hover:drop-shadow-lg shrink-0"
+                />
+              </div>
+              <div className="flex flex-col items-start min-w-0">
+                <span className="text-xs font-medium text-black truncate max-w-[100px] leading-tight">
+                  Alfa AI
+                </span>
+              </div>
             </button>
           </div>
           <div className="flex items-center gap-1">

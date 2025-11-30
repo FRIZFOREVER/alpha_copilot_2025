@@ -177,7 +177,7 @@ export const RegisterForm = () => {
             <Button
               type="submit"
               variant={"outline"}
-              className="px-6 py-5 w-full rounded-3xl bg-[#EF3124] text-white hover:bg-[#EF3124]/90 cursor-pointer hover:text-white"
+              className="px-6 py-[22px] w-full rounded-3xl bg-[#EF3124] text-white hover:bg-[#EF3124]/90 cursor-pointer hover:text-white"
             >
               Зарегестрироваться
             </Button>
