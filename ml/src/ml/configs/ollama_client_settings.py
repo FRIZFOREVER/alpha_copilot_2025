@@ -110,8 +110,9 @@ class EmbeddingClientSettings(ClientSettings):
         logger.debug("Automatically defining embedding model name")
         value = os.getenv(key)
 
-        if value is None:
+        if not value:
             msg = f"Environment variable {key} is required for automatic detection"
-            logger.warning(msg)
+            logger.error(msg)
+            raise RuntimeError(msg)
 
-        return value or ""
+        return value
