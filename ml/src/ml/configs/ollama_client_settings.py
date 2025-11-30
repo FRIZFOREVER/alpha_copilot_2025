@@ -2,7 +2,7 @@ import logging
 import os
 
 import httpx
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,8 @@ class ClientSettings(BaseModel):
     This is a parent model, hich is never created in a pipeline
     It's purpose is to only provide general client settings for chieldren
     """
+
+    model_config = ConfigDict(validate_default=True)
 
     model: str = Field(default="", description="Model name (filled by subclasses)")
 
@@ -117,6 +119,4 @@ class EmbeddingClientSettings(ClientSettings):
             msg = f"Environment variable {key} is required for automatic detection"
             logger.error(msg)
             raise RuntimeError(msg)
-
-        print("Embedding model name:", value)
         return value
