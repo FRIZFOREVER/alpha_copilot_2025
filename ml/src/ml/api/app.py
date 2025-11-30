@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    await app.state.model_task
+    await app.state.models_task
 
 
 def app() -> FastAPI:

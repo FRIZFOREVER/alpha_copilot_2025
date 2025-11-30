@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from collections.abc import Iterator
@@ -18,7 +19,7 @@ async def fetch_available_models() -> list[str]:
     """
     getting list of all available model names
     """
-    response: ListResponse = ollama.list()
+    response: ListResponse = await asyncio.to_thread(ollama.list)
 
     model_names: list[str] = [model.model for model in response.models if model.model is not None]
 
@@ -67,11 +68,11 @@ async def download_missing_models(available_models: list[str], requested_models:
 
     logger.info("Downloading missing models: %s", ", ".join(to_download))
 
-    for model in to_download:
-        logger.info("Starting download for %s", model)
+    def _pull_model(model_name: str) -> None:
+        logger.info("Starting download for %s", model_name)
 
         download_stream: Iterator[ollama.ProgressResponse] = ollama.pull(
-            model=model,
+            model=model_name,
             stream=True,
         )
 
@@ -96,17 +97,19 @@ async def download_missing_models(available_models: list[str], requested_models:
                     continue
 
                 last_step_percent = step_percent
-                logger.info("Downloading %s: %s", model, format_progress(progress))
+                logger.info("Downloading %s: %s", model_name, format_progress(progress))
 
             else:
                 # total is unknown -> log only once per model to avoid spam
                 if last_step_percent is not None:
                     continue
                 last_step_percent = 0
-                logger.info("Downloading %s: %s", model, format_progress(progress))
+                logger.info("Downloading %s: %s", model_name, format_progress(progress))
 
-        # Ensure we log completion even if we somehow skipped the final step.
-        logger.info("Finished download for %s", model)
+        logger.info("Finished download for %s", model_name)
+
+    for model in to_download:
+        await asyncio.to_thread(_pull_model, model)
 
     logger.info("All required models are downloaded")
 
@@ -131,7 +134,7 @@ async def _reasoning_warmup(client: ReasoningModelClient) -> None:
 
 async def clients_warmup(models: dict[str, Any]) -> None:
     logger.info("Started embedding client warmup")
-    await _embedding_warmup(models["embedding"])
+    await _embedding_warmup(models["embeddings"])
     logger.info("Started reasoner client warmup")
     await _reasoning_warmup(models["chat"])
     return
