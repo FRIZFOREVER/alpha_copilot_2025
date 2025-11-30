@@ -6,10 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_BASE_URLS = [
-    "http://ollama:11434/v1",
-    "http://localhost:11434/v1",
-]
+_DEFAULT_BASE_URLS = ["http://ollama:11434", "http://localhost:11434"]
 
 MODEL_ENV_VARS = {"chat": "OLLAMA_REASONING_MODEL", "embedding": "OLLAMA_EMBEDDING_MODEL"}
 
@@ -41,7 +38,7 @@ class ClientSettings(BaseModel):
         for url in _DEFAULT_BASE_URLS:
             try:
                 with httpx.Client(timeout=0.3) as client:
-                    resp = client.get(url)
+                    resp = client.get(f"{url}/api/tags")
                 if resp.status_code == 200:
                     # Mostly shugar. We don't really care about status code that much
                     # This doesn't gurantee that it's actually a working ollama service
