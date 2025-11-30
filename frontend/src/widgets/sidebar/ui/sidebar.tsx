@@ -156,19 +156,19 @@ export const Sidebar = () => {
         )}
       >
         <div className="flex items-center justify-between px-3.5 py-3 pb-2.5">
-          <div
+          <button
             className={cn(
-              "flex items-center justify-start w-full",
-              isCollapsed ? "justify-center" : "justify-start"
+              "flex items-center gap-2 rounded-3xl cursor-pointer transition-all duration-200"
             )}
+            title="Alfa Core"
           >
-            <div className="group cursor-pointer rounded-lg transition-all duration-300 hover:bg-red-50/50">
+            <div className="group rounded-lg transition-all duration-300">
               <Icon
                 type={IconTypes.ALPHA_OUTLINED}
-                className="text-3xl text-red-400 fill-red-100/80 stroke-red-200 transition-all duration-300 group-hover:scale-110 group-hover:text-red-600 group-hover:fill-red-200 group-hover:stroke-red-300 group-hover:drop-shadow-lg"
+                className="text-2xl md:text-2xl text-black fill-white/90 stroke-white/80 transition-all duration-300 group-hover:fill-white group-hover:stroke-white group-hover:drop-shadow-lg shrink-0"
               />
             </div>
-          </div>
+          </button>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
