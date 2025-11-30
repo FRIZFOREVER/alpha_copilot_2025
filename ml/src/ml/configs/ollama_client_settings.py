@@ -104,6 +104,7 @@ class EmbeddingClientSettings(ClientSettings):
     @classmethod
     def define_embedding_model_name(cls, value: str | None) -> str:
         if value:
+            logger.info("Embedding model name is forced: %s", value)
             return value
 
         key: str = MODEL_ENV_VARS["embedding"]
@@ -112,6 +113,7 @@ class EmbeddingClientSettings(ClientSettings):
 
         if value is None:
             msg = f"Environment variable {key} is required for automatic detection"
-            logger.warning(msg)
+            logger.error(msg)
+            raise RuntimeError(msg)
 
         return value or ""
