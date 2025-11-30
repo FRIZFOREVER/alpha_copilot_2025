@@ -11,7 +11,7 @@ services:
     volumes:
       - ollama:/root/.ollama
     environment:
-      - OLLAMA_AUTH=disabled
+      - OLLAMA_ORIGINS=*
       - CUDA_VISIBLE_DEVICES=""
     restart: unless-stopped
     deploy:
@@ -31,6 +31,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_DEFAULT_MODEL=${OLLAMA_DEFAULT_MODEL:-llama3.2:3b}
       - TELEGRAM_API_ID=${TELEGRAM_API_ID:-0}
       - TELEGRAM_API_HASH=${TELEGRAM_API_HASH:-}
       - TELEGRAM_DATA_DIR=/app/data

@@ -16,10 +16,38 @@ import {
   ActivityChart,
   EfficiencyMiniChart,
 } from "@/features/analytics/ui";
+import { useAnalytics } from "@/entities/analytics/hooks/useAnalytics";
 
 const AnalyticsPage = () => {
   const navigate = useNavigate();
   const [selectedMonth, setSelectedMonth] = useState("year");
+
+  // Вычисляем даты на основе выбранного периода
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    const endDate = new Date(now);
+    endDate.setHours(23, 59, 59, 999);
+
+    const startDate = new Date(now);
+    if (selectedMonth === "year") {
+      startDate.setFullYear(now.getFullYear() - 1);
+    } else {
+      startDate.setMonth(now.getMonth() - 1);
+    }
+    startDate.setHours(0, 0, 0, 0);
+
+    return {
+      start_date: startDate.toISOString().split("T")[0],
+      end_date: endDate.toISOString().split("T")[0],
+    };
+  }, [selectedMonth]);
+
+  // Подключаем хук аналитики с обязательными параметрами
+  const analytics = useAnalytics({
+    timeseriesRequest: dateRange,
+    enableTimeseries: true,
+  });
+
   const categoryChartData = useMemo(
     () =>
       analyticsData.categoryDistribution.map((cat) => ({
@@ -29,6 +57,23 @@ const AnalyticsPage = () => {
       })),
     []
   );
+
+  // Преобразуем данные timeseriesMessages для ActivityChart
+  const activityChartData = useMemo(() => {
+    if (
+      analytics.timeseriesMessages.data &&
+      analytics.timeseriesMessages.data.length > 0
+    ) {
+      return analytics.timeseriesMessages.data.map((item) => ({
+        month: new Date(item.day).toLocaleDateString("ru-RU", {
+          day: "numeric",
+          month: "short",
+        }),
+        value: item.count_messages,
+      }));
+    }
+    return analyticsData.yearlyActivity;
+  }, [analytics.timeseriesMessages.data]);
 
   return (
     <div className="flex flex-col h-full bg-[#1D1D1B]">
@@ -57,13 +102,15 @@ const AnalyticsPage = () => {
                 <div className="bg-white border border-gray-200 rounded-3xl p-5">
                   <div className="text-sm text-gray-600 mb-2">Сообщений</div>
                   <div className="text-4xl font-semibold text-gray-900">
-                    {analyticsData.usage.messages.toLocaleString()}
+                    {analytics.fileCounts.data?.count_messages.toLocaleString() ??
+                      analyticsData.usage.messages.toLocaleString()}
                   </div>
                 </div>
                 <div className="bg-white border border-gray-200 rounded-3xl p-5">
                   <div className="text-sm text-gray-600 mb-2">Диалогов</div>
                   <div className="text-4xl font-semibold text-gray-900">
-                    {analyticsData.usage.chats}
+                    {analytics.chatCounts.data?.count_chats ??
+                      analyticsData.usage.chats}
                   </div>
                 </div>
 
@@ -99,7 +146,7 @@ const AnalyticsPage = () => {
                   </Select>
                 </div>
                 <Suspense fallback={<div className="h-[250px]" />}>
-                  <ActivityChart data={analyticsData.yearlyActivity} />
+                  <ActivityChart data={activityChartData} />
                 </Suspense>
               </div>
             </div>

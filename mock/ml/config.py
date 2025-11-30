@@ -14,4 +14,4 @@ elif OLLAMA_HOST.endswith("/"):
 TELEGRAM_API_ID = int(os.getenv("TELEGRAM_API_ID", "0"))
 TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH", "")
 
-DEFAULT_MODEL = "gpt-oss:120b-cloud"
+DEFAULT_MODEL = os.getenv("OLLAMA_DEFAULT_MODEL", "llama3.2:3b")
