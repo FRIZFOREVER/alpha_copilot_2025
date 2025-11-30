@@ -11,7 +11,7 @@ _DEFAULT_BASE_URLS = [
     "http://localhost:11434/v1",
 ]
 
-_MODEL_ENV_VARS = {"chat": "OLLAMA_REASONING_MODEL", "embedding": "OLLAMA_EMBEDDING_MODEL"}
+MODEL_ENV_VARS = {"chat": "OLLAMA_REASONING_MODEL", "embedding": "OLLAMA_EMBEDDING_MODEL"}
 
 
 class ClientSettings(BaseModel):
@@ -79,7 +79,7 @@ class ReasoningClientSettings(ClientSettings):
         if value:
             return value
 
-        key: str = _MODEL_ENV_VARS["chat"]
+        key: str = MODEL_ENV_VARS["chat"]
         logger.debug("Automatically defining model_name")
         value = os.getenv(key)
 
@@ -89,3 +89,29 @@ class ReasoningClientSettings(ClientSettings):
             raise RuntimeError(msg)
 
         return value
+
+
+class EmbeddingModelOptions(BaseModel):
+    num_ctx: int = Field(default=32768, description="Default max context window size")
+
+
+class EmbeddingClientSettings(ClientSettings):
+    options: EmbeddingModelOptions = Field(
+        default=EmbeddingModelOptions(), description="Contains fallback params for options"
+    )
+
+    @field_validator("model", mode="before")
+    @classmethod
+    def define_embedding_model_name(cls, value: str | None) -> str:
+        if value:
+            return value
+
+        key: str = MODEL_ENV_VARS["embedding"]
+        logger.debug("Automatically defining model_name")
+        value = os.getenv(key)
+
+        if value is None:
+            msg = f"Environment variable {key} is required for automatic detection"
+            logger.warning(msg)
+
+        return value or ""

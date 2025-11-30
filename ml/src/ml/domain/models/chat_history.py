@@ -4,7 +4,7 @@ import logging
 from enum import Enum
 from typing import Dict, List, overload
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class ChatHistory(BaseModel):
     - no id for system message
     """
 
-    messages: list[Message]
+    messages: list[Message] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_turn_order(self) -> ChatHistory:
@@ -81,58 +81,58 @@ class ChatHistory(BaseModel):
         return self
 
     @overload
-    def add_or_change_system(self, arg: str) -> None: ...
+    def add_or_change_system(self, content: str) -> None: ...
     @overload
-    def add_or_change_system(self, arg: Message) -> None: ...
+    def add_or_change_system(self, content: Message) -> None: ...
 
-    def add_or_change_system(self, arg: str | Message) -> None:
+    def add_or_change_system(self, content: str | Message) -> None:
         """
         Deletes current user_message and inserts new one in start of chat history
         """
         self.messages = [msg for msg in self.messages if msg.role != Role.system]
-        if isinstance(arg, Message):
-            self.messages.insert(0, arg)
+        if isinstance(content, Message):
+            self.messages.insert(0, content)
             return
         else:
-            system_message: Message = Message(role=Role.system, content=arg)
+            system_message: Message = Message(role=Role.system, content=content)
             self.messages.insert(0, system_message)
             return
 
     @overload
-    def add_user(self, arg: str) -> None: ...
+    def add_user(self, content: str) -> None: ...
     @overload
-    def add_user(self, arg: Message) -> None: ...
+    def add_user(self, content: Message) -> None: ...
 
-    def add_user(self, arg: str | Message) -> None:
+    def add_user(self, content: str | Message) -> None:
         if self.messages:
             if self.last_message(ensure_user=False).role == Role.user:
                 raise RuntimeError("Tried to assign 2 consecutive user messages in a row")
 
-        if isinstance(arg, Message):
-            self.messages.append(arg)
+        if isinstance(content, Message):
+            self.messages.append(content)
             return
 
         else:
-            user_message: Message = Message(role=Role.user, content=arg)
+            user_message: Message = Message(role=Role.user, content=content)
             self.messages.append(user_message)
             return
 
     @overload
-    def add_assistant(self, arg: str) -> None: ...
+    def add_assistant(self, content: str) -> None: ...
     @overload
-    def add_assistant(self, arg: Message) -> None: ...
+    def add_assistant(self, content: Message) -> None: ...
 
-    def add_assistant(self, arg: str | Message) -> None:
+    def add_assistant(self, content: str | Message) -> None:
         if self.messages:
             if self.last_message(ensure_user=False).role == Role.assistant:
                 raise RuntimeError("Tried to assign 2 consecutive assistant messages in a row")
 
-        if isinstance(arg, Message):
-            self.messages.append(arg)
+        if isinstance(content, Message):
+            self.messages.append(content)
             return
 
         else:
-            user_message: Message = Message(role=Role.assistant, content=arg)
+            user_message: Message = Message(role=Role.assistant, content=content)
             self.messages.append(user_message)
             return
 

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import logging
 from collections.abc import AsyncIterator
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from ollama import AsyncClient  # type: ignore[reportUnknownVariableType]
 from pydantic import BaseModel
 
-from ml.configs import ReasoningClientSettings
+from ml.configs import EmbeddingClientSettings, ReasoningClientSettings
 from ml.domain.models import ChatHistory
 
 T = TypeVar("T", bound=BaseModel)
@@ -101,3 +101,47 @@ class ReasoningModelClient:
         except Exception as exc:
             logger.exception("FAILED TO PARSE STRUCTURED OUTPUT")
             raise ValueError("Structured response did not match the expected schema") from exc
+
+
+class EmbeddingModelClient:
+    def __init__(self, settings: EmbeddingClientSettings | None = None) -> None:
+        if settings is None:
+            settings = EmbeddingClientSettings()
+        self.settings: EmbeddingClientSettings = settings
+
+        # Async Ollama client (same pattern as ReasoningModelClient)
+        self.client: Any = AsyncClient(
+            host=self.settings.base_url,
+        )
+
+        # TODO: Plan for empty embeddings env workaround
+
+    async def call(self, content: str, **kwargs: Any) -> list[float]:
+        """
+        Async call for generating a single embedding vector.
+
+        Returns a single embedding vector (list[float]) for the given content.
+        """
+        logger.debug(
+            "Calling Embedder with content length=%d",
+            len(content),
+        )
+
+        try:
+            response: dict[str, Any] = await self.client.embed(
+                model=self.settings.model,
+                input=content,
+                options=self.settings.options.model_dump() | kwargs,
+                keep_alive=self.settings.keep_alive,
+            )
+        except Exception:
+            logger.exception("Error while calling Ollama embed (async)")
+            raise
+
+        # Ollama embed is guaranteed to return: {"embeddings": list[list[float]]}
+        embeddings = cast(list[list[float]], response["embeddings"])
+
+        if not embeddings:
+            raise RuntimeError("Got empty embeddings from embedding model")
+
+        return embeddings[0]

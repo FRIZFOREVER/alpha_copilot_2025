@@ -26,4 +26,4 @@ ENTRYPOINT ["uvicorn"]
 
 USER nonroot
 
-CMD ["ml.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["ml.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--factory"]
