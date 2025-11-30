@@ -50,11 +50,10 @@ class AnalyticsService {
   ): Promise<TimeseriesMessagesResponse> {
     const { data } = await axiosAuth.post<TimeseriesMessagesResponse>(
       "/analytics/timeseries-messages",
-      request
+      { ...request }
     );
     return data;
   }
 }
 
 export const analyticsService = new AnalyticsService();
-
