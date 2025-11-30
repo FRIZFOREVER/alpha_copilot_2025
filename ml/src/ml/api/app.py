@@ -14,10 +14,10 @@ from ml.api.external.ollama_init import (
 )
 from ml.api.routes.health import router as health_router
 from ml.api.routes.workflow import router as workflow_router
-from ml.configs import get_log_level
+from ml.configs import configure_logging
 
+configure_logging()
 logger = logging.getLogger(__name__)
-logger.setLevel(get_log_level())
 
 
 @asynccontextmanager
