@@ -1,0 +1,2 @@
+export { PieChartComponent } from "./pieChart";
+

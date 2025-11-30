@@ -1,0 +1,2 @@
+export { EfficiencyMiniChart } from "./efficiencyMiniChart";
+
