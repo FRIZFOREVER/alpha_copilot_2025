@@ -50,6 +50,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
     const [shouldShowTagSelector, setShouldShowTagSelector] = useState(false);
     const tagSelectorRef = useRef<HTMLDivElement>(null);
     const inputContainerRef = useRef<HTMLDivElement>(null);
+    const atSymbolPositionRef = useRef<number>(-1);
 
     const { file, addFile, removeFile, clearFile, selectFile, hasFile } =
       useFileAttachments();
@@ -111,6 +112,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
         });
         setMessage("");
         setSelectedTag(undefined);
+        atSymbolPositionRef.current = -1;
         clearFile();
         if (textareaRef.current) {
           textareaRef.current.style.height = "auto";
@@ -127,6 +129,8 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
         handleSend();
       } else if (e.key === "Escape") {
         setShowTagSelector(false);
+        setShouldShowTagSelector(false);
+        atSymbolPositionRef.current = -1;
       }
     };
 
@@ -141,29 +145,25 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
       if (lastAtIndex !== -1) {
         const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
         if (textAfterAt.length === 0 || /^[a-zA-Z]*$/.test(textAfterAt)) {
+          atSymbolPositionRef.current = lastAtIndex;
           setShouldShowTagSelector(true);
         } else {
+          atSymbolPositionRef.current = -1;
           setShouldShowTagSelector(false);
           setShowTagSelector(false);
         }
       } else {
+        atSymbolPositionRef.current = -1;
         setShouldShowTagSelector(false);
         setShowTagSelector(false);
       }
     };
 
-    // const handleSuggestionSelect = (suggestion: Suggestion) => {
-    //   const fullText = `${suggestion.title} ${suggestion.subtitle}`;
-    //   setMessage(fullText);
-    //   textareaRef.current?.focus();
-    // };
-
     const handleTagSelect = (tag: TagId) => {
-      const cursorPosition = textareaRef.current?.selectionStart || 0;
-      const textBeforeCursor = message.substring(0, cursorPosition);
-      const lastAtIndex = textBeforeCursor.lastIndexOf("@");
+      const lastAtIndex = atSymbolPositionRef.current;
 
-      if (lastAtIndex !== -1) {
+      if (lastAtIndex !== -1 && textareaRef.current) {
+        const cursorPosition = textareaRef.current.selectionStart || 0;
         const textAfterCursor = message.substring(cursorPosition);
         const newMessage = message.substring(0, lastAtIndex) + textAfterCursor;
 
@@ -171,6 +171,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
         setSelectedTag(tag);
         setShowTagSelector(false);
         setShouldShowTagSelector(false);
+        atSymbolPositionRef.current = -1;
 
         setTimeout(() => {
           if (textareaRef.current) {
@@ -191,6 +192,8 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
 
     const handleTagSelectorClose = () => {
       setShowTagSelector(false);
+      setShouldShowTagSelector(false);
+      atSymbolPositionRef.current = -1;
     };
 
     const handleMicClick = async () => {
@@ -286,6 +289,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
         ) {
           setShowTagSelector(false);
           setShouldShowTagSelector(false);
+          atSymbolPositionRef.current = -1;
         }
       };
 
@@ -330,7 +334,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
         resizeObserver.disconnect();
       };
     }, [scrollButtonContainerRef, message, file, selectedTag]);
-
+    console.log(selectedTag);
     return (
       <div className={cn("md:px-4 lg:px-10", isCompact && "md:px-0 lg:px-0")}>
         <div

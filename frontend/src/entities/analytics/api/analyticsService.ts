@@ -4,6 +4,7 @@ import {
   ChatCountsResponse,
   DayCountResponse,
   FileCountsResponse,
+  MessageCountsResponse,
   TagCountsResponse,
   TimeseriesMessagesRequest,
   TimeseriesMessagesResponse,
@@ -34,6 +35,13 @@ class AnalyticsService {
   public async getFileCounts(): Promise<FileCountsResponse> {
     const { data } = await axiosAuth.get<FileCountsResponse>(
       "/analytics/file-counts"
+    );
+    return data;
+  }
+
+  public async getMessageCounts(): Promise<MessageCountsResponse> {
+    const { data } = await axiosAuth.get<MessageCountsResponse>(
+      "/analytics/message-counts"
     );
     return data;
   }

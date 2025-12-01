@@ -48,15 +48,46 @@ const AnalyticsPage = () => {
     enableTimeseries: true,
   });
 
-  const categoryChartData = useMemo(
-    () =>
-      analyticsData.categoryDistribution.map((cat) => ({
-        name: cat.category,
-        value: cat.percentage,
-        color: cat.color.replace("bg-", ""),
-      })),
-    []
-  );
+  // Преобразуем данные tagCounts для PieChart
+  const categoryChartData = useMemo(() => {
+    if (analytics.tagCounts.data && analytics.tagCounts.data.length > 0) {
+      const totalCount = analytics.tagCounts.data.reduce(
+        (sum, item) => sum + item.tag_count,
+        0
+      );
+
+      // Маппинг тегов на цвета (формат для PieChartComponent)
+      const tagColorMap: Record<string, string> = {
+        general: "purple-500",
+        finance: "green-500",
+        law: "orange-500",
+        marketing: "pink-500",
+        managment: "purple-500",
+      };
+
+      return analytics.tagCounts.data
+        .map((item) => {
+          // Если тег пустой, заменяем на "general"
+          const tagName = item.tag || "general";
+          const percentage =
+            totalCount > 0 ? (item.tag_count / totalCount) * 100 : 0;
+
+          return {
+            name: tagName,
+            value: percentage,
+            color: tagColorMap[tagName] || "gray-500",
+          };
+        })
+        .sort((a, b) => b.value - a.value); // Сортируем по убыванию процента
+    }
+
+    // Fallback на статические данные
+    return analyticsData.categoryDistribution.map((cat) => ({
+      name: cat.category,
+      value: cat.percentage,
+      color: cat.color.replace("bg-", ""),
+    }));
+  }, [analytics.tagCounts.data]);
 
   // Преобразуем данные timeseriesMessages для ActivityChart
   const activityChartData = useMemo(() => {
@@ -102,7 +133,7 @@ const AnalyticsPage = () => {
                 <div className="bg-white border border-gray-200 rounded-3xl p-5">
                   <div className="text-sm text-gray-600 mb-2">Сообщений</div>
                   <div className="text-4xl font-semibold text-gray-900">
-                    {analytics.fileCounts.data?.count_messages.toLocaleString() ??
+                    {analytics.messageCounts.data?.count_messages.toLocaleString() ??
                       analyticsData.usage.messages.toLocaleString()}
                   </div>
                 </div>

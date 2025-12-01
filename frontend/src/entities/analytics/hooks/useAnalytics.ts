@@ -2,6 +2,7 @@ import { useGetAverageLikesQuery } from "./useGetAverageLikes";
 import { useGetChatCountsQuery } from "./useGetChatCounts";
 import { useGetDayCountQuery } from "./useGetDayCount";
 import { useGetFileCountsQuery } from "./useGetFileCounts";
+import { useGetMessageCountsQuery } from "./useGetMessageCounts";
 import { useGetTagCountsQuery } from "./useGetTagCounts";
 import { TimeseriesMessagesRequest } from "../types/types";
 import { useGetTimeseriesMessagesQuery } from "./useGetTimeseriesMessages";
@@ -16,6 +17,7 @@ export const useAnalytics = (options?: UseAnalyticsOptions) => {
   const chatCounts = useGetChatCountsQuery();
   const dayCount = useGetDayCountQuery();
   const fileCounts = useGetFileCountsQuery();
+  const messageCounts = useGetMessageCountsQuery();
   const tagCounts = useGetTagCountsQuery();
   const timeseriesMessages = useGetTimeseriesMessagesQuery(
     options?.timeseriesRequest || {
@@ -30,6 +32,7 @@ export const useAnalytics = (options?: UseAnalyticsOptions) => {
     chatCounts,
     dayCount,
     fileCounts,
+    messageCounts,
     tagCounts,
     timeseriesMessages,
     isLoading:
@@ -37,6 +40,7 @@ export const useAnalytics = (options?: UseAnalyticsOptions) => {
       chatCounts.isLoading ||
       dayCount.isLoading ||
       fileCounts.isLoading ||
+      messageCounts.isLoading ||
       tagCounts.isLoading ||
       (options?.enableTimeseries && timeseriesMessages.isLoading),
     isError:
@@ -44,6 +48,7 @@ export const useAnalytics = (options?: UseAnalyticsOptions) => {
       chatCounts.isError ||
       dayCount.isError ||
       fileCounts.isError ||
+      messageCounts.isError ||
       tagCounts.isError ||
       (options?.enableTimeseries && timeseriesMessages.isError),
   };

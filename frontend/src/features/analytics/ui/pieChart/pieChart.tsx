@@ -40,6 +40,8 @@ export const PieChartComponent = lazy(async () => {
                       ? "#ec4899"
                       : entry.color === "green-500"
                       ? "#10b981"
+                      : entry.color === "orange-500"
+                      ? "#f59e0b"
                       : "#6b7280"
                   }
                 />
@@ -59,4 +61,3 @@ export const PieChartComponent = lazy(async () => {
     },
   };
 });
-
