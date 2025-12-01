@@ -30,8 +30,8 @@ jobs:
       run: go test ./... -v -coverprofile=coverage.out
 
     - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v4  # Используем v4 action
       with:
         working-directory: ./back
-        version: latest
+        version: v2.0.2  # Явно указываем версию v2
         args: --timeout=5m
