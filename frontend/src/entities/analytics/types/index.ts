@@ -4,6 +4,7 @@ export type {
   ChatCountsResponse,
   DayCountResponse,
   FileCountsResponse,
+  MessageCountsResponse,
   TagCount,
   TagCountsResponse,
   TimeseriesMessagesRequest,

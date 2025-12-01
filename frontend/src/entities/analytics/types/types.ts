@@ -22,6 +22,11 @@ export interface FileCountsResponse {
   count_messages_yesterday: number;
 }
 
+export interface MessageCountsResponse {
+  count_messages: number;
+  count_messages_yesterday: number;
+}
+
 export interface TagCount {
   tag: string;
   tag_count: number;
