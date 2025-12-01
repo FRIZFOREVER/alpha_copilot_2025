@@ -3,9 +3,31 @@ import { lazy } from "react";
 export const ActivityChart = lazy(async () => {
   const recharts = await import("recharts");
   return {
-    default: ({ data }: { data: Array<{ month: string; value: number }> }) => {
+    default: ({
+      data,
+      showMonthOnly = false,
+    }: {
+      data: Array<{ month: string; value: number }>;
+      showMonthOnly?: boolean;
+    }) => {
       const { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } =
         recharts;
+
+      // Для месячного периода показываем только одну метку по центру
+      const getXAxisTickFormatter = (value: any, index: number) => {
+        if (showMonthOnly) {
+          // Находим средний индекс и название месяца
+          const middleIndex = Math.floor(data.length / 2);
+          const monthName = data.find((item) => item.month)?.month || "";
+          // Показываем название месяца только для средней метки
+          if (index === middleIndex) {
+            return monthName;
+          }
+          return "";
+        }
+        return value;
+      };
+
       return (
         <ResponsiveContainer width="100%" height={250}>
           <BarChart
@@ -17,6 +39,7 @@ export const ActivityChart = lazy(async () => {
               axisLine={false}
               tickLine={false}
               tick={{ fill: "#6b7280", fontSize: 12 }}
+              tickFormatter={getXAxisTickFormatter}
             />
             <YAxis
               axisLine={false}

@@ -21,9 +21,9 @@ export const PieChartComponent = lazy(async () => {
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, percent }) =>
-                `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`
-              }
+              label={({ name, percent }) => {
+                return `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`;
+              }}
               outerRadius={90}
               fill="#8884d8"
               dataKey="value"
