@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches-ignore: []  # Пустой список означает все ветки
+    branches-ignore: []
   pull_request:
-    branches-ignore: []  # Пустой список означает все ветки
+    branches-ignore: []
 
 jobs:
   test:
@@ -19,7 +19,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Go
+    - name: Set up Go 1.24
       uses: actions/setup-go@v4
       with:
         go-version: '1.24'
@@ -29,9 +29,27 @@ jobs:
     - name: Run tests
       run: go test ./... -v -coverprofile=coverage.out
 
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v4  # Используем v4 action
+    - name: Cache golangci-lint binary
+      uses: actions/cache@v3
+      id: cache-golangci
       with:
-        working-directory: ./back
-        version: v2.0.2  # Явно указываем версию v2
-        args: --timeout=5m
+        path: ~/.cache/golangci-lint
+        key: ${{ runner.os }}-golangci-${{ hashFiles('back/go.mod') }}
+        restore-keys: |
+          ${{ runner.os }}-golangci-
+
+    - name: Install and run golangci-lint v2
+      run: |
+        # Проверяем, установлен ли уже golangci-lint
+        if ! command -v golangci-lint &> /dev/null; then
+          echo "Installing golangci-lint v2..."
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.0.2
+        else
+          echo "golangci-lint already installed"
+        fi
+        
+        # Проверяем версию
+        golangci-lint version
+        
+        # Запускаем линтер
+        golangci-lint run --timeout=5m
