@@ -221,8 +221,9 @@ func (s *AnalyticService) GetMessageCounts(userUUID uuid.UUID) (*MessageCounts, 
 
 // TagCount - структура для хранения тега и его количества.
 type TagCount struct {
-	Tag      string `json:"tag"`
-	TagCount int    `json:"tag_count"`
+	Tag               string `json:"tag"`
+	TagCount          int    `json:"tag_count"`
+	TagCountYesterday int    `json:"tag_count_yesterday"`
 }
 
 // GetTagCounts - метод для получения статистики по тегам пользователя.
@@ -244,7 +245,7 @@ func (s *AnalyticService) GetTagCounts(userUUID uuid.UUID) ([]TagCount, error) {
 	var tagCounts []TagCount
 	for rows.Next() {
 		var tagCount TagCount
-		err := rows.Scan(&tagCount.Tag, &tagCount.TagCount)
+		err := rows.Scan(&tagCount.Tag, &tagCount.TagCount, &tagCount.TagCountYesterday)
 		if err != nil {
 			s.logger.WithFields(logrus.Fields{
 				"user_uuid": userUUID,
