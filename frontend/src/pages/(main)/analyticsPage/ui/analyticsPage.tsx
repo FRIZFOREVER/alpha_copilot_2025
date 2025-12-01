@@ -16,13 +16,17 @@ import {
   ActivityChart,
   EfficiencyMiniChart,
 } from "@/features/analytics/ui";
-import { useAnalytics } from "@/entities/analytics/hooks/useAnalytics";
+import {
+  useAnalytics,
+  useCategoryChartData,
+  useTopFeatures,
+  useActivityChartData,
+} from "@/entities/analytics/hooks";
 
 const AnalyticsPage = () => {
   const navigate = useNavigate();
   const [selectedMonth, setSelectedMonth] = useState("year");
 
-  // Вычисляем даты на основе выбранного периода
   const dateRange = useMemo(() => {
     const now = new Date();
     const endDate = new Date(now);
@@ -42,69 +46,25 @@ const AnalyticsPage = () => {
     };
   }, [selectedMonth]);
 
-  // Подключаем хук аналитики с обязательными параметрами
   const analytics = useAnalytics({
     timeseriesRequest: dateRange,
     enableTimeseries: true,
   });
 
-  // Преобразуем данные tagCounts для PieChart
-  const categoryChartData = useMemo(() => {
-    if (analytics.tagCounts.data && analytics.tagCounts.data.length > 0) {
-      const totalCount = analytics.tagCounts.data.reduce(
-        (sum, item) => sum + item.tag_count,
-        0
-      );
+  const categoryChartData = useCategoryChartData(analytics.tagCounts.data, {
+    categoryDistribution: analyticsData.categoryDistribution,
+  });
 
-      // Маппинг тегов на цвета (формат для PieChartComponent)
-      const tagColorMap: Record<string, string> = {
-        general: "purple-500",
-        finance: "green-500",
-        law: "orange-500",
-        marketing: "pink-500",
-        managment: "purple-500",
-      };
+  const topFeatures = useTopFeatures(
+    analytics.tagCounts.data,
+    analytics.fileCounts.data
+  );
 
-      return analytics.tagCounts.data
-        .map((item) => {
-          // Если тег пустой, заменяем на "general"
-          const tagName = item.tag || "general";
-          const percentage =
-            totalCount > 0 ? (item.tag_count / totalCount) * 100 : 0;
-
-          return {
-            name: tagName,
-            value: percentage,
-            color: tagColorMap[tagName] || "gray-500",
-          };
-        })
-        .sort((a, b) => b.value - a.value); // Сортируем по убыванию процента
-    }
-
-    // Fallback на статические данные
-    return analyticsData.categoryDistribution.map((cat) => ({
-      name: cat.category,
-      value: cat.percentage,
-      color: cat.color.replace("bg-", ""),
-    }));
-  }, [analytics.tagCounts.data]);
-
-  // Преобразуем данные timeseriesMessages для ActivityChart
-  const activityChartData = useMemo(() => {
-    if (
-      analytics.timeseriesMessages.data &&
-      analytics.timeseriesMessages.data.length > 0
-    ) {
-      return analytics.timeseriesMessages.data.map((item) => ({
-        month: new Date(item.day).toLocaleDateString("ru-RU", {
-          day: "numeric",
-          month: "short",
-        }),
-        value: item.count_messages,
-      }));
-    }
-    return analyticsData.yearlyActivity;
-  }, [analytics.timeseriesMessages.data]);
+  const activityChartData = useActivityChartData(
+    analytics.timeseriesMessages.data,
+    selectedMonth as "year" | "month",
+    { yearlyActivity: analyticsData.yearlyActivity }
+  );
 
   return (
     <div className="flex flex-col h-full bg-[#1D1D1B]">
@@ -167,17 +127,30 @@ const AnalyticsPage = () => {
                     value={selectedMonth}
                     onValueChange={setSelectedMonth}
                   >
-                    <SelectTrigger className="w-[120px] border-gray-300">
+                    <SelectTrigger className="w-[120px] border-gray-300 rounded-3xl cursor-pointer">
                       <SelectValue placeholder="Месяц" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="year">Год</SelectItem>
-                      <SelectItem value="month">Месяц</SelectItem>
+                    <SelectContent className="rounded-3xl">
+                      <SelectItem
+                        value="year"
+                        className="rounded-3xl cursor-pointer"
+                      >
+                        Год
+                      </SelectItem>
+                      <SelectItem
+                        value="month"
+                        className="rounded-3xl cursor-pointer"
+                      >
+                        Месяц
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <Suspense fallback={<div className="h-[250px]" />}>
-                  <ActivityChart data={activityChartData} />
+                  <ActivityChart
+                    data={activityChartData}
+                    showMonthOnly={selectedMonth === "month"}
+                  />
                 </Suspense>
               </div>
             </div>
@@ -196,32 +169,52 @@ const AnalyticsPage = () => {
             </div>
 
             <div className="space-y-3">
-              {analyticsData.topFeatures.map((feature, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-4 rounded-4xl border transition-all cursor-pointer shadow-sm hover:shadow-md"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-4xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-md">
-                      <feature.icon className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {feature.name}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <p className="text-xs text-gray-500">
-                          Использовано {feature.count} раз
+              {topFeatures.length > 0 ? (
+                topFeatures.map((feature, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between p-4 rounded-4xl border transition-all cursor-pointer shadow-sm hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-4xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                        <feature.icon className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {feature.name}
                         </p>
-                        <div className="flex items-center gap-0.5 text-xs font-medium text-green-600">
-                          <ArrowUp className="h-3 w-3" />+{feature.trend}
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className="text-xs text-gray-500">
+                            Использовано {feature.count} раз
+                          </p>
+                          {feature.trend !== 0 && (
+                            <div
+                              className={`flex items-center gap-0.5 text-xs font-medium ${
+                                feature.trend > 0
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              <ArrowUp
+                                className={`h-3 w-3 ${
+                                  feature.trend < 0 ? "rotate-180" : ""
+                                }`}
+                              />
+                              {feature.trend > 0 ? "+" : ""}
+                              {feature.trend}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
+                    <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
                   </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                ))
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  Нет данных о топ фичах
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>

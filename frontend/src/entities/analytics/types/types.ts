@@ -30,6 +30,7 @@ export interface MessageCountsResponse {
 export interface TagCount {
   tag: string;
   tag_count: number;
+  tag_count_yesterday: number;
 }
 
 export type TagCountsResponse = TagCount[];
