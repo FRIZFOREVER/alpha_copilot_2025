@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test and Lint
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./back
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24'
+        cache: true
+        cache-dependency-path: ./back/go.sum
+
+    - name: Run tests
+      run: go test ./... -v -coverprofile=coverage.out
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./back/coverage.out
+        flags: unittests
+        name: codecov-umbrella
+      continue-on-error: true
+
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        working-directory: ./back
+        version: latest
+        args: --timeout=5m
