@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches-ignore: []  # Пустой список означает все ветки
   pull_request:
-    branches: [ main, develop ]
+    branches-ignore: []  # Пустой список означает все ветки
 
 jobs:
   test:
@@ -28,14 +28,6 @@ jobs:
 
     - name: Run tests
       run: go test ./... -v -coverprofile=coverage.out
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./back/coverage.out
-        flags: unittests
-        name: codecov-umbrella
-      continue-on-error: true
 
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v3
