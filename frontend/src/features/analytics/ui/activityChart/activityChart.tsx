@@ -13,13 +13,10 @@ export const ActivityChart = lazy(async () => {
       const { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } =
         recharts;
 
-      // Для месячного периода показываем только одну метку по центру
       const getXAxisTickFormatter = (value: any, index: number) => {
         if (showMonthOnly) {
-          // Находим средний индекс и название месяца
           const middleIndex = Math.floor(data.length / 2);
           const monthName = data.find((item) => item.month)?.month || "";
-          // Показываем название месяца только для средней метки
           if (index === middleIndex) {
             return monthName;
           }
