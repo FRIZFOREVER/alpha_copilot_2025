@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import logging
 from collections.abc import AsyncIterator
-from typing import Any, TypeVar, cast
+from typing import Any, ClassVar, TypeVar, cast
 
-from ollama import AsyncClient  # type: ignore[reportUnknownVariableType]
+from ollama import AsyncClient
 from pydantic import BaseModel
 
 from ml.configs import EmbeddingClientSettings, ReasoningClientSettings
@@ -16,19 +16,35 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ReasoningModelClient:
+    _instance: ClassVar["ReasoningModelClient | None"] = None
+
     def __init__(self, settings: ReasoningClientSettings | None = None) -> None:
         if settings is None:
-            logging.debug("Automatically defining settings for Reasoner client")
+            logger.debug("Automatically defining settings for Reasoner client")
             settings = ReasoningClientSettings()
         self.settings: ReasoningClientSettings = settings
 
         logger.debug(
-            "initiated Reasoning client with: \n%s", self.settings.model_dump_json(indent=2)
+            "initiated Reasoning client with: \n%s",
+            self.settings.model_dump_json(indent=2),
         )
-        # Async Ollama client (OpenAI-compatible base_url assumed in settings)
+
         self.client: Any = AsyncClient(
             host=self.settings.base_url,
         )
+
+    @classmethod
+    def instance(
+        cls,
+        settings: ReasoningClientSettings | None = None,
+    ) -> ReasoningModelClient:
+        if cls._instance is None:
+            cls._instance = cls(settings)
+        return cls._instance
+
+    @classmethod
+    def reset_instance(cls) -> None:
+        cls._instance = None
 
     async def call(self, messages: ChatHistory, **kwargs: Any) -> str:
         """Async non-streaming call."""
@@ -108,6 +124,8 @@ class ReasoningModelClient:
 
 
 class EmbeddingModelClient:
+    _instance: ClassVar["ReasoningModelClient | None"] = None
+
     def __init__(self, settings: EmbeddingClientSettings | None = None) -> None:
         if settings is None:
             logging.debug("Automatically defining settings for Embedding client")
@@ -122,7 +140,18 @@ class EmbeddingModelClient:
             host=self.settings.base_url,
         )
 
-        # TODO: Plan for empty embeddings env workaround
+    @classmethod
+    def instance(
+        cls,
+        settings: EmbeddingClientSettings | None = None,
+    ) -> EmbeddingModelClient:
+        if cls._instance is None:
+            cls._instance = cls(settings)
+        return cls._instance
+
+    @classmethod
+    def reset_instance(cls) -> None:
+        cls._instance = None
 
     async def call(self, content: str, **kwargs: Any) -> list[float]:
         """

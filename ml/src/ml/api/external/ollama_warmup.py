@@ -1,37 +1,45 @@
 import logging
 
 from ml.api.external.ollama_client import EmbeddingModelClient, ReasoningModelClient
-from ml.api.schemas.client_types import ModelClients
 from ml.domain.models import ChatHistory
 
 logger = logging.getLogger(__name__)
 
 
-async def init_warmup_clients() -> ModelClients:
-    chat_client = ReasoningModelClient()
-    embedding_client = EmbeddingModelClient()
+async def init_warmup_clients():
+    logger.debug("Initiating ReasoningModelClient")
+    ReasoningModelClient.instance()
+    logger.debug("Initiating EmbeddingModelClient")
+    EmbeddingModelClient.instance()
 
-    return {"chat": chat_client, "embeddings": embedding_client}
 
-
-async def _embedding_warmup(client: EmbeddingModelClient) -> None:
+async def _embedding_warmup() -> None:
+    client = EmbeddingModelClient.instance()
     await client.call(content="a")
-    return
 
 
-async def _reasoning_warmup(client: ReasoningModelClient) -> None:
+async def _reasoning_warmup() -> None:
+    client = ReasoningModelClient.instance()
     prompt: ChatHistory = ChatHistory()
     prompt.add_or_change_system(
         content="This is just model warmup call, don't think and reply as fast as possible"
     )
     prompt.add_user(content="Hello, say 'hello' to me as well and nothing else")
-    await client.call(messages=prompt)
+    # calling with additional max output tokens = 1 for speed
+    await client.call(messages=prompt, num_predict=1)
 
 
-async def clients_warmup(models: ModelClients) -> None:
+async def clients_warmup() -> None:
     logger.info("Started embedding client warmup")
-    await _embedding_warmup(models["embeddings"])
+    await _embedding_warmup()
 
     logger.info("Started reasoner client warmup")
-    await _reasoning_warmup(models["chat"])
-    return
+    await _reasoning_warmup()
+
+
+async def close_clients() -> None:
+    logger.debug("Closing reasoner warmup client")
+    ReasoningModelClient.reset_instance()
+
+    logger.debug("Closing embedding warmup client")
+    EmbeddingModelClient.reset_instance()

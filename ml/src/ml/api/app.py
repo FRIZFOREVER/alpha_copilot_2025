@@ -14,7 +14,6 @@ from ml.api.external import (
 )
 from ml.api.routes.health import router as health_router
 from ml.api.routes.workflow import router as workflow_router
-from ml.api.schemas.client_types import ModelClients
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +31,8 @@ async def lifespan(app: FastAPI):
 
             await download_missing_models(available_models, requested_models)
 
-            model_clients: ModelClients = await init_warmup_clients()
-            await clients_warmup(model_clients)
+            await init_warmup_clients()
+            await clients_warmup()
 
             logger.info("All models successfully initialized, ready to accept connections")
         except Exception:

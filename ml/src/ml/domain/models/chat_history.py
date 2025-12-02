@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from enum import Enum
-from typing import Dict, List, overload
+from typing import Any, Dict, List, overload
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -60,6 +60,13 @@ class ChatHistory(BaseModel):
     """
 
     messages: list[Message] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _wrap_messages(cls, data: List[Message] | dict[str, str]) -> Any:
+        if isinstance(data, list):
+            return {"messages": data}
+        return data
 
     @model_validator(mode="after")
     def validate_turn_order(self) -> ChatHistory:
@@ -152,3 +159,8 @@ class ChatHistory(BaseModel):
         return [
             {"role": message.role.value, "content": message.content} for message in self.messages
         ]
+
+    def model_dump_chat_last(self) -> List[Dict[str, str]]:
+        last_message = self.last_message()
+
+        return [{"role": last_message.role, "content": last_message.content}]
