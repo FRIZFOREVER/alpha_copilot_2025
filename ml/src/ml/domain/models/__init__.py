@@ -1,6 +1,7 @@
 from ml.domain.models.chat_history import ChatHistory, Message, Role
 from ml.domain.models.graph_state import GraphState
 from ml.domain.models.payload_data import MetaData, ModelMode, Tag, UserProfile
+from ml.domain.models.research import PlannedToolCall, ToolObservation
 
 __all__ = [
     "ChatHistory",
@@ -11,4 +12,6 @@ __all__ = [
     "ModelMode",
     "UserProfile",
     "MetaData",
+    "PlannedToolCall",
+    "ToolObservation",
 ]
