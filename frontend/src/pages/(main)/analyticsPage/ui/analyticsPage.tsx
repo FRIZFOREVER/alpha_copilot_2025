@@ -65,8 +65,6 @@ const AnalyticsPage = () => {
     selectedMonth as "year" | "month",
     { yearlyActivity: analyticsData.yearlyActivity }
   );
-
-  console.log(activityChartData);
   return (
     <div className="flex flex-col h-full bg-[#1D1D1B]">
       <Header />
@@ -111,7 +109,12 @@ const AnalyticsPage = () => {
                     Эффективность
                   </div>
                   <div className="text-4xl font-semibold text-gray-900 mb-2">
-                    {analyticsData.efficiency}%
+                    {(
+                      ((analytics.averageLikes.data?.avg_rating.Float64 ?? 0) /
+                        5) *
+                      100
+                    ).toFixed(0)}
+                    %
                   </div>
                   <Suspense fallback={<div className="h-8" />}>
                     <EfficiencyMiniChart />
@@ -177,7 +180,7 @@ const AnalyticsPage = () => {
                     className="flex items-center justify-between p-4 rounded-4xl border transition-all cursor-pointer shadow-sm hover:shadow-md"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-4xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                      <div className="h-12 w-12 rounded-4xl bg-[#EF3124] flex items-center justify-center flex-shrink-0 shadow-md">
                         <feature.icon className="h-6 w-6 text-white" />
                       </div>
                       <div>
