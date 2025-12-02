@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - 'back-*'  # Только ветки, начинающиеся с back-
+  pull_request:
+    branches-ignore: []
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./back
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Go 1.24
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24'
+        cache: true
+        cache-dependency-path: ./back/go.sum
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('back/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Run tests
+      run: go test ./... -v -coverprofile=coverage.out
+
+  lint:
+    name: Run Linter
+    runs-on: ubuntu-latest
+    needs: test  # Запускать только после успешных тестов
+    
+    defaults:
+      run:
+        working-directory: ./back
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Go 1.24
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24'
+
+    - name: Cache golangci-lint binary
+      uses: actions/cache@v3
+      id: cache-golangci
+      with:
+        path: ~/.cache/golangci-lint
+        key: ${{ runner.os }}-golangci-v2-${{ hashFiles('back/go.mod') }}
+        restore-keys: |
+          ${{ runner.os }}-golangci-v2-
+
+    - name: Install and run golangci-lint v2
+      run: |
+        # Проверяем, установлен ли уже golangci-lint
+        if ! command -v golangci-lint &> /dev/null; then
+          echo "Installing golangci-lint v2..."
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.0.2
+        else
+          echo "golangci-lint already installed"
+        fi
+        
+        # Проверяем версию
+        golangci-lint version
+        
+        # Запускаем линтер
+        golangci-lint run --timeout=5m
