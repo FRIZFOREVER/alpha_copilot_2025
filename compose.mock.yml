@@ -60,7 +60,7 @@ services:
       # Дата окончания периода
       - END_DATE=2025-12-31
       # Логин тестового пользователя
-      - SEED_USER_LOGIN=test_user_2@mail.ru
+      - SEED_USER_LOGIN=test_user_3@mail.ru
       # Пароль тестового пользователя
       - SEED_USER_PASSWORD=test_password_123
     restart: "no"

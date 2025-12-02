@@ -16,6 +16,15 @@ DB_CONFIG = {
     "port": "5432"
 }
 
+# Новые теги из файла
+TAGS = [
+    "general",
+    "finance",
+    "law",
+    "marketing",
+    "management"
+]
+
 def generate_test_data(start_date: datetime, end_date: datetime, 
                        user_login: str, user_password: str) -> None:
     """Генерация тестовых данных"""
@@ -93,6 +102,8 @@ def generate_test_data(start_date: datetime, end_date: datetime,
         current_date = start_date
         total_questions = 0
         total_answers = 0
+        tag_distribution = {tag: 0 for tag in TAGS}
+        tag_distribution[None] = 0  # Вопросы без тега
         
         while current_date <= end_date:
             # Случайное количество вопросов и ответов от 0 до 50
@@ -130,6 +141,13 @@ def generate_test_data(start_date: datetime, end_date: datetime,
                 ))
                 answer_id = cursor.fetchone()[0]
                 
+                # Выбираем случайный тег (с вероятностью 40% что тег будет, 60% что None)
+                selected_tag = random.choice(TAGS) if random.random() < 0.4 else None
+                if selected_tag:
+                    tag_distribution[selected_tag] += 1
+                else:
+                    tag_distribution[None] += 1
+                
                 # Создаем вопрос, связанный с ответом
                 cursor.execute("""
                     INSERT INTO questions (time_utc, message, visible, chat_id, answer_id, 
@@ -143,7 +161,7 @@ def generate_test_data(start_date: datetime, end_date: datetime,
                     answer_id,
                     f"https://example.com/voice/{random.randint(1000, 9999)}.mp3" if random.random() < 0.5 else None,
                     f"https://example.com/file/{random.randint(1000, 9999)}.pdf" if random.random() < 0.4 else None,
-                    random.choice(["техподдержка", "опрос", "жалоба", "предложение", None])
+                    selected_tag
                 ))
                 
                 total_answers += 1
@@ -185,6 +203,14 @@ def generate_test_data(start_date: datetime, end_date: datetime,
         print(f"Создано вопросов: {total_questions}")
         print(f"Создано ответов: {total_answers}")
         print(f"Создано обращений в поддержку: 5")
+        
+        # Статистика по тегам
+        print("\nРаспределение вопросов по тегам:")
+        print("-" * 30)
+        for tag, count in tag_distribution.items():
+            tag_name = "без тега" if tag is None else tag
+            print(f"{tag_name}: {count} вопросов")
+        
         print("="*50)
         
         # Тестируем аутентификацию
@@ -203,6 +229,20 @@ def generate_test_data(start_date: datetime, end_date: datetime,
             print(f"  ФИО: {test_user[1]}")
         else:
             print("✗ Ошибка аутентификации!")
+        
+        # Показываем примеры вопросов с разными тегами
+        print("\nПримеры вопросов с тегами:")
+        cursor.execute("""
+            SELECT tag, message 
+            FROM questions 
+            WHERE tag IS NOT NULL 
+            ORDER BY RANDOM() 
+            LIMIT 5
+        """)
+        examples = cursor.fetchall()
+        
+        for tag, message in examples:
+            print(f"  [{tag}] {message[:50]}...")
         
     except psycopg2.OperationalError as e:
         print(f"Ошибка подключения к базе данных: {e}")
@@ -240,6 +280,7 @@ def main():
     """Основная функция"""
     print("\n" + "="*50)
     print("Генератор тестовых данных для базы данных")
+    print("Доступные теги: " + ", ".join(TAGS))
     print("="*50)
     
     # Получаем переменные окружения
