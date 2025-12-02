@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, AsyncIterator, Optional
 
 from pydantic import BaseModel
 
@@ -12,3 +12,5 @@ class GraphState(BaseModel):
     meta: MetaData
     model_mode: ModelMode
     voice_is_valid: Optional[bool]
+    final_prompt: Optional[ChatHistory]
+    output_stream: AsyncIterator[dict[str, Any]]

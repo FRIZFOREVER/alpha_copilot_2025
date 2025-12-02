@@ -16,7 +16,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ReasoningModelClient:
-    _instance: ClassVar["ReasoningModelClient | None"] = None
+    _instance: ClassVar[ReasoningModelClient | None] = None
 
     def __init__(self, settings: ReasoningClientSettings | None = None) -> None:
         if settings is None:
@@ -124,7 +124,7 @@ class ReasoningModelClient:
 
 
 class EmbeddingModelClient:
-    _instance: ClassVar["ReasoningModelClient | None"] = None
+    _instance: ClassVar[EmbeddingModelClient | None] = None
 
     def __init__(self, settings: EmbeddingClientSettings | None = None) -> None:
         if settings is None:
