@@ -18,34 +18,40 @@ export const useActivityChartData = (
   return useMemo(() => {
     if (timeseriesMessages && timeseriesMessages.length > 0) {
       if (selectedPeriod === "year") {
+        const currentYear = new Date().getFullYear();
+
         const monthlyData = new Map<string, number>();
 
         timeseriesMessages.forEach((item) => {
           const date = new Date(item.day);
-          const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+          const year = date.getFullYear();
+          const monthIndex = date.getMonth();
+
+          if (year !== currentYear) return;
+
+          const monthKey = `${year}-${monthIndex}`;
           const currentCount = monthlyData.get(monthKey) || 0;
           monthlyData.set(monthKey, currentCount + item.count_messages);
         });
 
-        return Array.from(monthlyData.entries())
-          .map(([monthKey, count]) => {
-            const [year, monthIndex] = monthKey.split("-").map(Number);
-            const date = new Date(year, monthIndex, 1);
-            let monthLabel = date.toLocaleDateString("ru-RU", {
-              month: "short",
-            });
-            monthLabel = monthLabel.replace(/\.$/, "");
-            monthLabel =
-              monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+        const result: ActivityChartDataItem[] = [];
 
-            return {
-              month: monthLabel,
-              value: count,
-              sortKey: monthKey,
-            };
-          })
-          .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
-          .map(({ month, value }) => ({ month, value }));
+        for (let month = 0; month < 12; month++) {
+          const key = `${currentYear}-${month}`;
+          const count = monthlyData.get(key) || 0;
+
+          const date = new Date(currentYear, month, 1);
+          let monthLabel = date.toLocaleDateString("ru-RU", { month: "short" });
+          monthLabel = monthLabel.replace(/\.$/, "");
+          monthLabel = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+
+          result.push({
+            month: monthLabel,
+            value: count,
+          });
+        }
+
+        return result;
       } else {
         const firstDate = new Date(timeseriesMessages[0].day);
         let monthLabel = firstDate.toLocaleDateString("ru-RU", {
@@ -64,4 +70,3 @@ export const useActivityChartData = (
     return fallbackData?.yearlyActivity || [];
   }, [timeseriesMessages, selectedPeriod, fallbackData]);
 };
-

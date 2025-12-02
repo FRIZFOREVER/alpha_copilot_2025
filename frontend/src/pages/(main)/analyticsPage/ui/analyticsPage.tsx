@@ -66,6 +66,7 @@ const AnalyticsPage = () => {
     { yearlyActivity: analyticsData.yearlyActivity }
   );
 
+  console.log(activityChartData);
   return (
     <div className="flex flex-col h-full bg-[#1D1D1B]">
       <Header />
@@ -127,7 +128,7 @@ const AnalyticsPage = () => {
                     value={selectedMonth}
                     onValueChange={setSelectedMonth}
                   >
-                    <SelectTrigger className="w-[120px] border-gray-300 rounded-3xl cursor-pointer">
+                    <SelectTrigger className="w-[120px] border-gray-300 rounded-3xl cursor-pointer outline-0 ring-0 focus-visible:ring-0 focus:ring-0">
                       <SelectValue placeholder="Месяц" />
                     </SelectTrigger>
                     <SelectContent className="rounded-3xl">
