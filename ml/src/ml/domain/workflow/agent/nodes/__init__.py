@@ -1,5 +1,5 @@
 from .fast_answer.node import fast_answer
-from .final_node.node import get_final_stream
+from .final_node.node import final_stream
 from .flash_memories.node import flash_memories
 from .mode_definition.node import define_mode
 from .tag_validation.node import validate_tag
@@ -11,5 +11,5 @@ __all__ = [
     "define_mode",
     "flash_memories",
     "fast_answer",
-    "get_final_stream",
+    "final_stream",
 ]
