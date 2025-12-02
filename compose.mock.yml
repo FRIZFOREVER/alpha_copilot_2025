@@ -48,6 +48,23 @@ services:
       retries: 3
       start_period: 10s
 
+  seed-data:
+    build: ./mock/database
+    container_name: seed-data
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Всегда используем автоматический режим
+      - AUTO_START=true
+      # Дата начала периода
+      - START_DATE=2025-01-01
+      # Дата окончания периода
+      - END_DATE=2025-12-31
+      # Логин тестового пользователя
+      - SEED_USER_LOGIN=test_user_2@mail.ru
+      # Пароль тестового пользователя
+      - SEED_USER_PASSWORD=test_password_123
+    restart: "no"
+
 volumes:
   ollama:
   telegram_data:
