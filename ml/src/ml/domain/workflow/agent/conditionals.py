@@ -18,3 +18,10 @@ def mode_decision(state: GraphState) -> str:
     msg = "Failed to branch into pipeline"
     logger.error(msg)
     raise RuntimeError(msg)
+
+
+def research_decision(state: GraphState) -> str:
+    if state.pending_tool_call is not None:
+        return "tool_call"
+
+    return "finalize"

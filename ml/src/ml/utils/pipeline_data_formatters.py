@@ -1,7 +1,10 @@
-from ml.domain.models import UserProfile
+from typing import TYPE_CHECKING, Sequence
+
+if TYPE_CHECKING:  # pragma: no cover - for type checking only
+    from ml.domain.models import ToolObservation, UserProfile
 
 
-def get_system_prompt(profile: UserProfile) -> str:
+def get_system_prompt(profile: "UserProfile") -> str:
     """
     Creates general system prompt for final answer as a string
     """
@@ -71,3 +74,13 @@ def get_system_prompt(profile: UserProfile) -> str:
 
     system_prompt: str = "\n\n".join(sections)
     return system_prompt
+
+
+def format_research_observations(observations: Sequence["ToolObservation"]) -> str:
+    formatted: list[str] = []
+    for index, observation in enumerate(observations, start=1):
+        formatted.append(
+            f"{index}. {observation.tool_name} => {observation.result.data}"
+        )
+
+    return "\n".join(formatted)

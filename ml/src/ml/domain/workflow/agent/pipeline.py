@@ -8,12 +8,16 @@
 from langgraph.graph import END, StateGraph
 
 from ml.domain.models import GraphState
-from ml.domain.workflow.agent.conditionals import mode_decision
+from ml.domain.workflow.agent.conditionals import mode_decision, research_decision
 from ml.domain.workflow.agent.nodes import (
     define_mode,
     fast_answer,
     final_stream,
     flash_memories,
+    research_answer,
+    research_observer,
+    research_reason,
+    research_tool_call,
     validate_tag,
     validate_voice,
 )
@@ -38,7 +42,7 @@ def create_pipeline() -> StateGraph:
         {
             "fast_pipeline": "Flash memories",
             "thinking_pipeline": "Thinking pipeline",  # TODO: Wire pipeline
-            "research_pipeline": "Research pipeline",  # TODO: Wire here aswell
+            "research_pipeline": "Research reason",
         },
     )
 
@@ -54,7 +58,23 @@ def create_pipeline() -> StateGraph:
     workflow.add_node(...)
 
     # Research
-    # TODO: add research workflow
+    workflow.add_node("Research reason", research_reason)
+    workflow.add_node("Research tool call", research_tool_call)
+    workflow.add_node("Research observer", research_observer)
+    workflow.add_node("Research answer", research_answer)
+
+    workflow.add_conditional_edges(
+        "Research reason",
+        research_decision,
+        {
+            "tool_call": "Research tool call",
+            "finalize": "Research answer",
+        },
+    )
+
+    workflow.add_edge("Research tool call", "Research observer")
+    workflow.add_edge("Research observer", "Research reason")
+    workflow.add_edge("Research answer", "Final node")
 
     # entrypoint
     workflow.set_entry_point("Voice validadtion")

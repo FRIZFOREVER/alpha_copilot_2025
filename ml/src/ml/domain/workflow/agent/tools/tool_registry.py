@@ -1,5 +1,6 @@
 # Global tool registry
 from ml.domain.workflow.agent.tools import BaseTool
+from ml.domain.workflow.agent.tools.websearch import WebSearchTool
 
 _tool_registry: dict[str, BaseTool] = {}
 
