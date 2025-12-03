@@ -61,18 +61,16 @@ def create_pipeline() -> StateGraph:
     workflow.add_node("Research tool call", research_tool_call)
     workflow.add_node("Research observer", research_observer)
 
+    workflow.add_edge("Research reason", "Research tool call")
     workflow.add_conditional_edges(
-        "Research reason",
+        "Research tool call",
         research_decision,
         {
-            "tool_call": "Research tool call",
-            "finalize": "Research answer",
+            "tool_call": "Research observer",
+            "finalize": "Final node",
         },
     )
-
-    workflow.add_edge("Research tool call", "Research observer")
     workflow.add_edge("Research observer", "Research reason")
-    workflow.add_edge("Research answer", "Final node")
 
     # entrypoint
     workflow.set_entry_point("Voice validadtion")
