@@ -17,6 +17,8 @@ from ml.domain.workflow.agent.nodes import (
     research_observer,
     research_reason,
     research_tool_call,
+    thinking_finalize,
+    thinking_planner,
     validate_tag,
     validate_voice,
 )
@@ -40,7 +42,7 @@ def create_pipeline() -> StateGraph:
         mode_decision,
         {
             "fast_pipeline": "Flash memories",
-            "thinking_pipeline": "Thinking pipeline",  # TODO: Wire pipeline
+            "thinking_pipeline": "Thinking planner",
             "research_pipeline": "Research reason",
         },
     )
@@ -53,8 +55,15 @@ def create_pipeline() -> StateGraph:
     workflow.add_edge("Fast answer", "Final node")
 
     # Thinking
-    # TODO: add thinking workflow
-    workflow.add_node(...)
+    workflow.add_node("Thinking planner", thinking_planner)
+    workflow.add_node("Thinking tool call", research_tool_call)
+    workflow.add_node("Thinking observer", research_observer)
+    workflow.add_node("Thinking finalize", thinking_finalize)
+
+    workflow.add_edge("Thinking planner", "Thinking tool call")
+    workflow.add_edge("Thinking tool call", "Thinking observer")
+    workflow.add_edge("Thinking observer", "Thinking finalize")
+    workflow.add_edge("Thinking finalize", "Final node")
 
     # Research
     workflow.add_node("Research reason", research_reason)
