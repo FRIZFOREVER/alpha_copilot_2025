@@ -18,10 +18,7 @@ class WebSearchTool(BaseTool):
     def schema(self) -> dict[str, Any]:
         return {
             "type": "object",
-            "properties": {
-                "query": {"type": "string"},
-                "round": {"type": "integer"},
-            },
+            "query": {"type": "string", "description": "Поисковой запрос."},
             "required": ["query"],
         }
 
@@ -30,4 +27,5 @@ class WebSearchTool(BaseTool):
         if query_argument is None:
             raise ValueError("web_search tool requires 'query' argument")
 
+        # TODO: Implement
         return ToolResult(success=True, data={"query": query_argument, "results": []})

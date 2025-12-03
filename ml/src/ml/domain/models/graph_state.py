@@ -1,24 +1,31 @@
 from __future__ import annotations
 
-from typing import Any, AsyncIterator, Optional
+from typing import Any, AsyncIterator, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ml.domain.models.chat_history import ChatHistory
 from ml.domain.models.payload_data import MetaData, ModelMode, UserProfile
-from ml.domain.models.research import PlannedToolCall, ToolObservation
+from ml.domain.models.tools_data import Evidence, ToolCall
 
 
 class GraphState(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    # model_config = ConfigDict(arbitrary_types_allowed=True)
 
+    # general data
     chat: ChatHistory
     user: UserProfile
     meta: MetaData
+
+    # validational fields
     model_mode: ModelMode
     voice_is_valid: Optional[bool]
+
+    # results
     final_prompt: Optional[ChatHistory]
-    output_stream: AsyncIterator[dict[str, Any]]
-    pending_tool_call: PlannedToolCall | None = None
-    last_tool_result: Any | None = None
-    observations: list[ToolObservation] = Field(default_factory=list)
+    output_stream: Optional[AsyncIterator[dict[str, Any]]]
+
+    # thinking related
+    pending_tool_call: Optional[ToolCall]
+    evidence_list: List[Evidence] = Field(default_factory=list)
+    tool_call_history: List[ToolCall] = Field(default_factory=list)

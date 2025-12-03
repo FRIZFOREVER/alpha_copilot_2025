@@ -14,7 +14,6 @@ from ml.domain.workflow.agent.nodes import (
     fast_answer,
     final_stream,
     flash_memories,
-    research_answer,
     research_observer,
     research_reason,
     research_tool_call,
@@ -61,7 +60,6 @@ def create_pipeline() -> StateGraph:
     workflow.add_node("Research reason", research_reason)
     workflow.add_node("Research tool call", research_tool_call)
     workflow.add_node("Research observer", research_observer)
-    workflow.add_node("Research answer", research_answer)
 
     workflow.add_conditional_edges(
         "Research reason",

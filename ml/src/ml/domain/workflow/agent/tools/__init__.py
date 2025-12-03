@@ -1,4 +1,4 @@
 from .base_tool import BaseTool
-from .websearch import WebSearchTool
+from .websearch.tool import WebSearchTool
 
 __all__ = ["BaseTool", "WebSearchTool"]

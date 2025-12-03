@@ -1,19 +1,21 @@
-from ml.domain.models import GraphState, PlannedToolCall
+from ml.api.external.ollama_client import ReasoningModelClient
+from ml.domain.models import ChatHistory, GraphState
+from ml.domain.workflow.agent.tools import BaseTool
+from ml.domain.workflow.agent.tools.tool_registry import get_tool_registry
+
+from .prompt import get_research_reason_prompt
 
 
 async def research_reason(state: GraphState) -> GraphState:
-    if state.pending_tool_call is not None:
-        return state
+    client = ReasoningModelClient.instance()
+    available_tools: dict[str, BaseTool] = get_tool_registry()
 
-    latest_request = state.chat.last_message()
+    prompt: ChatHistory = get_research_reason_prompt(
+        chat=state.chat,
+        profile=state.user,
+        available_tools=available_tools,
+    )
 
-    if len(state.observations) < 2:
-        state.pending_tool_call = PlannedToolCall(
-            tool_name="web_search",
-            arguments={
-                "query": latest_request.content,
-                "round": len(state.observations) + 1,
-            },
-        )
+    result = await client.call(messages=prompt)
 
     return state

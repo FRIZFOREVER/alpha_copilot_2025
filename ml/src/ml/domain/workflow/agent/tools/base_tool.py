@@ -1,15 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from pydantic import BaseModel
-
-
-class ToolResult(BaseModel):
-    """Result from tool execution."""
-
-    success: bool
-    data: Any
-    error: str | None = None
+from ml.domain.models.tools_data import ToolResult
 
 
 class BaseTool(ABC):
@@ -32,6 +24,10 @@ class BaseTool(ABC):
     def schema(self) -> dict[str, Any]:
         """JSON schema for tool arguments."""
         pass
+
+    @abstractmethod
+    def tool_description(self) -> dict[str, Any]:
+        return {"name": self.name, "description": self.description, "schema": self.schema}
 
     @abstractmethod
     def execute(self, **kwargs: Any) -> ToolResult:
