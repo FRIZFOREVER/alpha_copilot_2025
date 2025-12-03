@@ -1,6 +1,10 @@
+import logging
+
 from ml.domain.models import GraphState, ToolResult
 from ml.domain.workflow.agent.tools.final_answer.tool import FinalAnswerTool
 from ml.domain.workflow.agent.tools.tool_registry import get_tool
+
+logger = logging.getLogger(__name__)
 
 
 def research_tool_call(state: GraphState) -> GraphState:
@@ -23,7 +27,11 @@ def research_tool_call(state: GraphState) -> GraphState:
             }
         )
 
-    result: ToolResult = tool.execute(**execution_arguments)
+    try:
+        result: ToolResult = tool.execute(**execution_arguments)
+    except Exception as exc:
+        logger.exception("Tool execution failed for %s", planned_call.tool_name)
+        result = ToolResult(success=False, data={}, error=str(exc))
     planned_call.result = result
     state.last_tool_result = result
     state.last_executed_tool = tool.name
