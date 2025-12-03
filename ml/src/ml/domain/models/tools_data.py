@@ -16,10 +16,15 @@ class ToolCall(BaseModel):
     arguments: dict[str, Any]
     result: Optional[ToolResult] = None
 
+    @property
+    def tool_name(self) -> str:
+        return self.name
+
 
 class Evidence(BaseModel):
-    evidence: str
+    tool_name: str
+    summary: str
     source: ToolResult
 
     def get_evidence(self) -> str:
-        return self.evidence
+        return self.summary

@@ -1,4 +1,4 @@
-from ml.domain.models import GraphState, ToolObservation
+from ml.domain.models import Evidence, GraphState
 
 
 def research_observer(state: GraphState) -> GraphState:
@@ -10,8 +10,8 @@ def research_observer(state: GraphState) -> GraphState:
     if result is None:
         raise RuntimeError("Missing tool result for observation step")
 
-    observation = ToolObservation(tool_name=tool_call.tool_name, result=result)
-    state.observations.append(observation)
+    observation = Evidence(tool_name=tool_call.tool_name, summary=str(result.data), source=result)
+    state.evidence_list.append(observation)
 
     state.pending_tool_call = None
     state.last_tool_result = None

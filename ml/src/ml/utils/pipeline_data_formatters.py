@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Sequence
 
 if TYPE_CHECKING:  # pragma: no cover - for type checking only
-    from ml.domain.models import ToolObservation, UserProfile
+    from ml.domain.models import Evidence, UserProfile
 
 
 def get_system_prompt(profile: "UserProfile") -> str:
@@ -76,11 +76,11 @@ def get_system_prompt(profile: "UserProfile") -> str:
     return system_prompt
 
 
-def format_research_observations(observations: Sequence["ToolObservation"]) -> str:
+def format_research_observations(observations: Sequence["Evidence"]) -> str:
     formatted: list[str] = []
     for index, observation in enumerate(observations, start=1):
         formatted.append(
-            f"{index}. {observation.tool_name} => {observation.result.data}"
+            f"{index}. {observation.tool_name} => {observation.source.data}"
         )
 
     return "\n".join(formatted)
