@@ -25,7 +25,6 @@ class BaseTool(ABC):
         """JSON schema for tool arguments."""
         pass
 
-    @abstractmethod
     def tool_description(self) -> dict[str, Any]:
         return {"name": self.name, "description": self.description, "schema": self.schema}
 
