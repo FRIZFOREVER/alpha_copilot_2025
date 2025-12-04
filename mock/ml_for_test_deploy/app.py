@@ -41,6 +41,7 @@ class StreamChunk(BaseModel):
     eval_count: Optional[int] = None
     eval_duration: Optional[int] = None
     message: Message = None
+    file_url: Optional[str] = None  # Добавлено поле для ссылки на файл
 
     def __init__(self, **data):
         if 'created_at' not in data:
@@ -88,7 +89,8 @@ def mock_workflow(payload: Dict[str, Any], streaming: bool = True):
         eval_count=len(full_response),
         prompt_eval_count=len(messages) if messages else 1,
         total_duration=int(len(full_response) * 100),
-        eval_duration=int(len(full_response) * 80)
+        eval_duration=int(len(full_response) * 80),
+        file_url="https://example.com/files/generated_file_2024.pdf"  # Добавлена ссылка на файл в последний чанк
     )
     yield final_chunk
 
@@ -163,7 +165,8 @@ async def generate_message(request: Request):
         "prompt_eval_count": 1,
         "prompt_eval_duration": 100000000,
         "eval_count": 10,
-        "eval_duration": 300000000
+        "eval_duration": 300000000,
+        "file_url": "https://example.com/files/non_stream_file.pdf"  # Также добавлено для не-потокового ответа
     }
 
 # Добавляем CORS middleware если нужно тестировать из браузера

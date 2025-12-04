@@ -204,6 +204,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 					}
 					if message.FileURL != nil {
 						file_url = *message.FileURL
+						finalChunk.FileURL = message.FileURL
 					}
 					finalJSON, err := json.Marshal(finalChunk)
 					if err != nil {
