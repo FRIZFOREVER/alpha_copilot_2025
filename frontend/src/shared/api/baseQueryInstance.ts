@@ -54,7 +54,7 @@ export class AxiosClient {
 
   public async get<T>(
     url: string,
-    params: Omit<RequestOptions, "body"> = {},
+    params: Omit<RequestOptions, "body"> = {}
   ): Promise<AxiosResponse<T>> {
     try {
       const response = await this.baseQueryV1Instance.get<T>(url, { params });
@@ -67,13 +67,13 @@ export class AxiosClient {
   public async post<T>(
     url: string,
     data?: Record<string, unknown>,
-    config?: AxiosRequestConfig,
+    config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
     try {
       const response = await this.baseQueryV1Instance.post<T>(
         url,
         data,
-        config,
+        config
       );
       return this.handleResponse(response);
     } catch (error) {
@@ -84,7 +84,7 @@ export class AxiosClient {
   public async put<T>(
     url: string,
     data?: Record<string, unknown>,
-    config?: AxiosRequestConfig,
+    config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
     try {
       const response = await this.baseQueryV1Instance.put<T>(url, data, config);
@@ -97,13 +97,13 @@ export class AxiosClient {
   public async patch<T>(
     url: string,
     data?: Record<string, unknown>,
-    config?: AxiosRequestConfig,
+    config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
     try {
       const response = await this.baseQueryV1Instance.patch<T>(
         url,
         data,
-        config,
+        config
       );
       return this.handleResponse(response);
     } catch (error) {
@@ -113,7 +113,7 @@ export class AxiosClient {
 
   public async delete<T>(
     url: string,
-    config?: AxiosRequestConfig,
+    config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
     try {
       const response = await this.baseQueryV1Instance.delete<T>(url, config);
@@ -124,7 +124,9 @@ export class AxiosClient {
   }
 }
 
-export const axiosNoAuth = new AxiosClient("http://127.0.0.1:8080/");
-export const axiosAuth = new AxiosClient("http://127.0.0.1:8080/", true);
-// Axios client for mock ML service (Telegram integration)
-export const axiosMockML = new AxiosClient("http://localhost:8000/", false);
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const ML_SERVICE_URL = import.meta.env.VITE_ML_SERVICE_URL;
+
+export const axiosNoAuth = new AxiosClient(API_BASE_URL);
+export const axiosAuth = new AxiosClient(API_BASE_URL, true);
+export const axiosMockML = new AxiosClient(ML_SERVICE_URL, false);
