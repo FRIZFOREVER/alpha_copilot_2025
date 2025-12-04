@@ -124,9 +124,9 @@ export class AxiosClient {
   }
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const ML_SERVICE_URL = import.meta.env.VITE_ML_SERVICE_URL;
 
-export const axiosNoAuth = new AxiosClient(API_BASE_URL);
-export const axiosAuth = new AxiosClient(API_BASE_URL, true);
+export const axiosNoAuth = new AxiosClient("http://api.local:8080");
+export const axiosAuth = new AxiosClient("http://api.local:8080", true);
 export const axiosMockML = new AxiosClient(ML_SERVICE_URL, false);
