@@ -2,8 +2,13 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
-ARG VITE_API_URL=http://localhost:8080/
-ENV VITE_API_URL=$VITE_API_URL
+# Build arguments для переменных окружения Vite
+ARG VITE_API_BASE_URL=https://jabkialphacopilot.ru/
+ARG VITE_ML_SERVICE_URL=http://localhost:8000/
+
+# Устанавливаем переменные окружения для сборки
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_ML_SERVICE_URL=$VITE_ML_SERVICE_URL
 
 COPY package.json package-lock.json* ./
 
