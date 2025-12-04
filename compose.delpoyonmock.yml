@@ -143,3 +143,6 @@ volumes:
   postgres_data:
   minio-data: {}
 
+networks:
+  proxy-network:
+    driver: bridge
