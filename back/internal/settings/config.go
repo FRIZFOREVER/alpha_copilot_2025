@@ -25,7 +25,7 @@ type Settings struct {
 	Recognizer       string `envconfig:"RECOGNIZER"       default:"http://recognizer-service:3333"`
 	RecognizerAPIKey string `envconfig:"ASSEMBLYAI_API_KEY"`
 
-	FrontOrigin string `envconfig:"FRONT_ORIGIB"    default:"http://localhost:5173"`
+	FrontOrigin string `envconfig:"FRONT_ORIGIB"    default:"http://frontend.local:80"`
 }
 
 func InitSettings(logger *logrus.Logger) Settings {
