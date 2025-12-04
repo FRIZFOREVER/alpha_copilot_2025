@@ -84,6 +84,7 @@ export interface StreamInitialResponse {
   answer_id: number;
   question_time: string;
   tag: string;
+  file_url: string | null;
 }
 
 export interface StreamChunk {
