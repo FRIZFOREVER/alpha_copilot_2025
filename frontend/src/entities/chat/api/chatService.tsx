@@ -19,7 +19,7 @@ import {
   GetGraphLogsResponse,
 } from "../types/types";
 
-const API_BASE_URL = "http://api.local:8080";
+const API_BASE_URL = "http://51.250.34.5:8080/";
 
 class ChatService {
   public async createChat(
