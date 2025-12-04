@@ -73,7 +73,7 @@ services:
       context: ./back
       dockerfile: deploy/Dockerfile
     expose:
-      - "8080"  # Экспортируем порт только для сети Docker
+      - "8080:8080"  # Экспортируем порт только для сети Docker
     env_file:
       - ./.env
     environment:
