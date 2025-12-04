@@ -8,6 +8,8 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Final, TYPE_CHECKING
 
+from websockets import Request
+
 from ml.api.graph_history import GraphLogClient, PicsTags
 
 if TYPE_CHECKING:
@@ -121,14 +123,15 @@ def get_context_answer_id() -> int | None:
     return answer_id
 
 
-def log_state_event(state: GraphState, tag: PicsTags, message: str) -> None:
+def log_state_event(state: Request, tag: PicsTags, message: str) -> None:
     """Send a graph log event derived from a LangGraph state object."""
 
-    answer_id = state.payload.messages.get_answer_id()
+    print(state+"\n=1-=23=12-=12-1=23-1=23-2=13-12=3-12")
+    answer_id = 1
     send_graph_log(tag=tag, answer_id=answer_id, message=message)
 
 
-def log_think(state: GraphState, message: str) -> None:
+def log_think(state: Request, message: str) -> None:
     """Shortcut helper for emitting PicsTags.Think graph log events."""
 
     log_state_event(state=state, tag=PicsTags.Think, message=message)
