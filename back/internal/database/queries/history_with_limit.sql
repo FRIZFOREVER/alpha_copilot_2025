@@ -9,6 +9,7 @@ WITH latest_messages AS (
         a.time_utc as answer_time,
         q.voice_url,
         q.file_url,
+        a.file_url as answer_file_url, -- Новое поле
         a.rating,
         q.tag,
         1 as priority -- Высший приоритет для последних сообщений
@@ -33,6 +34,7 @@ tagged_messages AS (
         a.time_utc as answer_time,
         q.voice_url,
         q.file_url,
+        a.file_url as answer_file_url, -- Новое поле
         a.rating,
         q.tag,
         2 as priority -- Низший приоритет для сообщений с тегом
@@ -63,6 +65,7 @@ SELECT DISTINCT
     voice_url,
     file_url,
     rating,
-    tag
+    tag,
+    answer_file_url
 FROM combined_messages
 ORDER BY answer_time NULLS LAST;

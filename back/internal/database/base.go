@@ -72,6 +72,7 @@ func getHistory(
 			&msg.FileURL,
 			&msg.Rating,
 			&msg.QuestionTag,
+			&msg.FileURL,
 		)
 		if err != nil {
 			logger.WithError(err).Error("Failed to scan row")
