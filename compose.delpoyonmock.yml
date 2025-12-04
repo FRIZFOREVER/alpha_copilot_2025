@@ -1,6 +1,45 @@
 version: '3.8'
 
 services:
+  # Nginx Proxy Manager
+  nginx-proxy:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '81:81'
+    environment:
+      DB_MYSQL_HOST: nginx-proxy-db
+      DB_MYSQL_PORT: 3306
+      DB_MYSQL_USER: npm
+      DB_MYSQL_PASSWORD: npm
+      DB_MYSQL_NAME: npm
+      # DISABLE_IPV6: 'true'
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    depends_on:
+      - nginx-proxy-db
+    networks:
+      - proxy-network
+
+  # Database for Nginx Proxy Manager
+  nginx-proxy-db:
+    image: jc21/mariadb-aria:latest
+    container_name: nginx-proxy-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: npm
+      MYSQL_DATABASE: npm
+      MYSQL_USER: npm
+      MYSQL_PASSWORD: npm
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    networks:
+      - proxy-network
+
   mock-ml-service:
     build: ./mock/ml_for_test_deploy
     ports:
@@ -98,28 +137,6 @@ services:
       interval: 10s
       start_period: 10s
     security_opt: [no-new-privileges:true]
-
-  ollama:
-    build:
-      context: .
-      dockerfile: model/Dockerfile
-
-    container_name: ollama
-    ports:
-      - "11434:11434"
-
-    volumes:
-      - ollama:/root/.ollama
-
-    restart: unless-stopped
-
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:11434/api/tags"]
-      interval: 60s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-    gpus: all
 
 volumes:
   ollama:
