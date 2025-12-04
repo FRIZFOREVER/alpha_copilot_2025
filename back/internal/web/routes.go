@@ -13,7 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func InitServiceRoutes(server *fiber.App, db *sql.DB, secretServie string, logger *logrus.Logger) {
+func InitServiceRoutes(server fiber.Router, db *sql.DB, secretServie string, logger *logrus.Logger) {
 	history := handlers.NewHistory(database.NewHistoryRepository(db, logger), logger)
 	serviceAuthentication := middlewares.NewServiceAuthentication(secretServie, logger)
 	server.Get("/historyForModel/:uuid/:chat_id", serviceAuthentication.Handler, history.Handler)
@@ -21,7 +21,7 @@ func InitServiceRoutes(server *fiber.App, db *sql.DB, secretServie string, logge
 	server.Get("/graph_log_writer/:chat_id", middlewares.Upgrader, handlers.GraphLogHandlerWS("service", graphLogRepo, logger))
 }
 
-func InitPublicRoutes(server *fiber.App, db *sql.DB, secretUser, frontOrigin string, logger *logrus.Logger) {
+func InitPublicRoutes(server fiber.Router, db *sql.DB, secretUser, frontOrigin string, logger *logrus.Logger) {
 	server.Use(middlewares.Cors(frontOrigin))
 
 	authRepo := database.NewAuthService(db, logger)
@@ -37,13 +37,13 @@ func InitPublicRoutes(server *fiber.App, db *sql.DB, secretUser, frontOrigin str
 	server.Get("/graph_log/:chat_id", handlers.GraphLogHandlerWS(secretUser, graphLogRepo, logger))
 }
 
-func InitJWTMiddleware(server *fiber.App, secret, frontOrigin string, logger *logrus.Logger) {
+func InitJWTMiddleware(server fiber.Router, secret, frontOrigin string, logger *logrus.Logger) {
 	userAuthentication := middlewares.NewUserAuthentication(secret, logger)
 	server.Use(middlewares.Cors(frontOrigin), userAuthentication.Handler)
 }
 
 func InitPrivateRoutes(
-	server *fiber.App,
+	server fiber.Router,
 	db *sql.DB,
 	s3Client *minio.Client,
 	recognizerAssambleAI *client.AssamblyAIClient,
