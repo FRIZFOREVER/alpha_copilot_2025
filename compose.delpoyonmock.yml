@@ -59,21 +59,21 @@ services:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://jabkialphacopilot.ru/}
         VITE_ML_SERVICE_URL: ${VITE_ML_SERVICE_URL:-http://localhost:8000/}
     expose:
-      - "80"  # Экспортируем порт только для сети Docker
+      - "80"
     depends_on:
       - app
     restart: always
     networks:
       proxy-network:
         aliases:
-          - frontend.local  # Добавляем алиас для DNS
+          - frontend.local
 
   app:
     build:
       context: ./back
       dockerfile: deploy/Dockerfile
     ports:
-      - "8080:8080"  # Экспортируем порт только для сети Docker
+      - "0.0.0.0:8080:8080"  # Открываем порт на хосте
     env_file:
       - ./.env
     environment:
@@ -86,7 +86,7 @@ services:
     networks:
       proxy-network:
         aliases:
-          - api.local  # Добавляем алиас для DNS
+          - api.local
 
   postgres:
     image: postgres:15-alpine
@@ -153,4 +153,4 @@ volumes:
 networks:
   proxy-network:
     driver: bridge
-    name: proxy-network  # Явно задаем имя сети
+    name: proxy-network
