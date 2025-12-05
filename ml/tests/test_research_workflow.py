@@ -1,4 +1,4 @@
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 import pytest
 
@@ -27,9 +27,10 @@ async def _empty_stream() -> AsyncIterator[dict[str, str]]:
 
 
 def _build_state() -> GraphState:
-    chat = ChatHistory(messages=[Message(role=Role.user, content="Find AI news")])
+    chat = ChatHistory(messages=[Message(id=1, role=Role.user, content="Find AI news")])
 
     return GraphState(
+        chat_id=1,
         chat=chat,
         user=UserProfile(
             id=1,

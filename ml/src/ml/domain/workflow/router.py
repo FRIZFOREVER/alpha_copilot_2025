@@ -16,6 +16,7 @@ async def workflow_collected(payload: MessagePayload) -> tuple[str, Tag]:
 
 async def workflow(payload: MessagePayload) -> tuple[AsyncIterator[dict[str, Any]], Tag]:
     initial_state = GraphState(
+        chat_id=payload.chat_id,
         chat=payload.messages,
         user=payload.profile,
         meta=MetaData(is_voice=payload.is_voice, tag=payload.tag),

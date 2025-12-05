@@ -1,7 +1,9 @@
 import logging
 
+from ml.api.external import send_graph_log
 from ml.api.external.ollama_client import ReasoningModelClient
 from ml.domain.models import GraphState, PlannedToolCall, ToolCall
+from ml.domain.models.graph_log import PicsTags
 from ml.domain.workflow.agent.tools.tool_registry import get_tool
 
 from .prompt import get_thinking_plan_prompt
@@ -14,6 +16,12 @@ logger = logging.getLogger(__name__)
 async def thinking_planner(state: GraphState) -> GraphState:
     logger.info("Entering thinking_planner node")
 
+    answer_id = state.chat.last_user_message_id()
+
+    await send_graph_log(
+        chat_id=state.chat_id, tag=PicsTags.Think, message="Думаю", answer_id=answer_id
+    )
+
     prompt = get_thinking_plan_prompt(chat=state.chat, profile=state.user)
 
     client = ReasoningModelClient.instance()
@@ -23,7 +31,7 @@ async def thinking_planner(state: GraphState) -> GraphState:
     if web_search_tool is None:
         raise RuntimeError("Web search tool is not registered")
 
-    tool_arguments = {"query": plan.query}
+    tool_arguments = {"query": plan.query, "chat_id": state.chat_id, "answer_id": answer_id}
 
     state.planned_tool_call = PlannedToolCall(
         thought=plan.thought, chosen_tool=web_search_tool.name, tool_args=tool_arguments
