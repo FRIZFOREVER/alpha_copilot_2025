@@ -72,13 +72,14 @@ services:
     build:
       context: ./back
       dockerfile: deploy/Dockerfile
-    ports:
-      - "0.0.0.0:8080:8080"  # Открываем порт на хосте
+    expose:
+      - "8080"
     env_file:
       - ./.env
     environment:
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY:-}
       - MODEL=http://mock-ml-service:8000
+      - FRONT_ORIGIB=https://jabkialphacopilot.ru
     depends_on:
       - postgres
       - minio
