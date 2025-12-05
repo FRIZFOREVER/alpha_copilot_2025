@@ -1,3 +1,4 @@
+import json
 import logging
 from collections.abc import AsyncIterator
 from typing import Union
@@ -32,18 +33,29 @@ async def message_stream(request: Request, payload: MessagePayload) -> Streaming
     async def event_generator() -> AsyncIterator[Union[str, bytes]]:
         async for chunk in stream:
             if isinstance(chunk, ChatResponse):
-                yield chunk.model_dump_json()
+                chunk_payload = chunk.model_dump_json()
+                yield f"data: {chunk_payload}\n\n"
                 continue
 
-            if not isinstance(chunk, (str, bytes)):
-                msg = (
-                    "Workflow output stream yielded unsupported type. "
-                    f"Expected str or bytes, got {type(chunk)}"
-                )
-                logger.error(msg)
-                raise TypeError(msg)
+            if isinstance(chunk, dict):
+                chunk_payload = json.dumps(chunk, ensure_ascii=False)
+                yield f"data: {chunk_payload}\n\n"
+                continue
 
-            yield chunk
+            if isinstance(chunk, str):
+                yield f"data: {chunk}\n\n"
+                continue
+
+            if isinstance(chunk, bytes):
+                yield b"data: " + chunk + b"\n\n"
+                continue
+
+            msg = (
+                "Workflow output stream yielded unsupported type. "
+                f"Expected str, bytes, dict or ChatResponse, got {type(chunk)}"
+            )
+            logger.error(msg)
+            raise TypeError(msg)
 
     return StreamingResponse(
         event_generator(),
