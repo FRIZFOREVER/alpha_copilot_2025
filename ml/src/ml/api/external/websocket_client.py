@@ -5,6 +5,7 @@ import logging
 from typing import ClassVar
 
 from websockets.asyncio.client import ClientConnection, connect
+from websockets.asyncio.connection import State
 
 from ml.domain.models.graph_log import GraphLogMessage, PicsTags
 
@@ -60,16 +61,26 @@ class GraphLogWebSocketClient:
     async def connect(self, chat_id: int) -> ClientConnection:
         connection = self._connections.get(chat_id)
         if connection is not None:
-            if connection.closed:
-                await connection.wait_closed()
-                self._connections.pop(chat_id, None)
-            else:
+            connection_state = connection.state
+            if connection_state is State.OPEN:
                 logger.info(
                     "Reusing open graph log websocket connection for chat_id=%s (url=%s)",
                     chat_id,
                     self.writer_url(chat_id),
                 )
                 return connection
+            if connection_state in (State.CLOSING, State.CLOSED):
+                await connection.wait_closed()
+                self._connections.pop(chat_id, None)
+            else:
+                logger.warning(
+                    "Dropping graph log websocket connection for chat_id=%s due to unexpected state=%s",
+                    chat_id,
+                    connection_state,
+                )
+                await connection.close()
+                await connection.wait_closed()
+                self._connections.pop(chat_id, None)
 
         url = self.writer_url(chat_id)
         try:
@@ -105,7 +116,7 @@ class GraphLogWebSocketClient:
                 "Sending graph log payload to %s: %s (connection_closed=%s)",
                 url,
                 payload,
-                connection.closed,
+                connection.state in (State.CLOSING, State.CLOSED),
             )
             await connection.send(json.dumps(payload, ensure_ascii=False))
             logger.info("Graph log payload sent to %s for chat_id=%s", url, chat_id)
