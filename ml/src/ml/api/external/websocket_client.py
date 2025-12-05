@@ -61,8 +61,6 @@ async def init_graph_log_client(base_url: str = GRAPH_LOG_SERVER_URL) -> GraphLo
     return GraphLogWebSocketClient.instance(base_url=base_url)
 
 
-async def send_graph_log(
-    *, chat_id: int, tag: PicsTags, message: str, answer_id: int
-) -> None:
+async def send_graph_log(*, chat_id: int, tag: PicsTags, message: str, answer_id: int) -> None:
     client = GraphLogWebSocketClient.instance()
     await client.send_action(chat_id=chat_id, tag=tag, message=message, answer_id=answer_id)
