@@ -1,4 +1,5 @@
 import logging
+from collections.abc import AsyncIterator
 
 from ml.api.external.ollama_client import ReasoningModelClient
 from ml.domain.models import ChatHistory, GraphState
@@ -17,7 +18,11 @@ async def final_stream(state: GraphState) -> GraphState:
     if not isinstance(prompt, ChatHistory):
         raise TypeError("Final prompt must be an instance of ChatHistory")
 
-    result = await client.stream(messages=prompt)
+    result = client.stream(messages=prompt)
+    if not isinstance(result, AsyncIterator):
+        msg = "Reasoning client stream did not return an AsyncIterator"
+        logger.error(msg)
+        raise TypeError(msg)
 
     state.output_stream = result
 
