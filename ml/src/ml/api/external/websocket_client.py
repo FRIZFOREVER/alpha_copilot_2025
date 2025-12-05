@@ -13,19 +13,43 @@ logger = logging.getLogger(__name__)
 GRAPH_LOG_SERVER_URL = "ws://app:8080"
 
 
+def _normalize_backend_url(raw_backend_url: str) -> str:
+    if not isinstance(raw_backend_url, str):
+        raise TypeError("Backend url should be a string")
+
+    if raw_backend_url.startswith("http://"):
+        normalized = f"ws://{raw_backend_url[len('http://'):]}"
+    elif raw_backend_url.startswith("https://"):
+        normalized = f"wss://{raw_backend_url[len('https://'):]}"
+    elif raw_backend_url.startswith(("ws://", "wss://")):
+        normalized = raw_backend_url
+    else:
+        normalized = f"ws://{raw_backend_url}"
+
+    if normalized.endswith("/"):
+        return normalized[:-1]
+
+    return normalized
+
+
+def get_backend_url() -> str:
+    return _normalize_backend_url(GRAPH_LOG_SERVER_URL)
+
+
 class GraphLogWebSocketClient:
     _instance: ClassVar[GraphLogWebSocketClient | None] = None
 
-    def __init__(self, base_url: str = GRAPH_LOG_SERVER_URL) -> None:
+    def __init__(self, base_url: str | None = None) -> None:
         if getattr(self, "_initialized", False):
             return
 
-        self.base_url = base_url
+        raw_base_url = base_url if base_url is not None else get_backend_url()
+        self.base_url = _normalize_backend_url(raw_base_url)
         self._connections: dict[int, ClientConnection] = {}
         self._initialized = True
 
     @classmethod
-    def instance(cls, base_url: str = GRAPH_LOG_SERVER_URL) -> GraphLogWebSocketClient:
+    def instance(cls, base_url: str | None = None) -> GraphLogWebSocketClient:
         if cls._instance is None:
             cls._instance = cls(base_url=base_url)
         return cls._instance
@@ -78,7 +102,7 @@ class GraphLogWebSocketClient:
             raise
 
 
-async def init_graph_log_client(base_url: str = GRAPH_LOG_SERVER_URL) -> GraphLogWebSocketClient:
+async def init_graph_log_client(base_url: str | None = None) -> GraphLogWebSocketClient:
     logger.info("Initializing graph log WebSocket client")
     return GraphLogWebSocketClient.instance(base_url=base_url)
 
