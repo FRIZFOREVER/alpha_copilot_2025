@@ -8,6 +8,8 @@ logger = logging.getLogger(__name__)
 
 
 def research_tool_call(state: GraphState) -> GraphState:
+    logger.info("Entering research_tool_call node")
+
     planned_call = state.pending_tool_call
     if planned_call is None:
         raise RuntimeError("No planned tool call found")

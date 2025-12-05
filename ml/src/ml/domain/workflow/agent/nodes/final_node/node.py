@@ -8,6 +8,8 @@ logger = logging.getLogger(__name__)
 
 
 async def final_stream(state: GraphState) -> GraphState:
+    logger.info("Entering final_stream node")
+
     client = ReasoningModelClient.instance()
 
     prompt = state.final_prompt
