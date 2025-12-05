@@ -34,7 +34,7 @@ async def message_stream(request: Request, payload: MessagePayload) -> Streaming
 
     logger.info("Connecting graph log websocket for chat_id=%s", payload.chat_id)
     try:
-        websocket_connection = await graph_log_client.connect(payload.chat_id)
+        await graph_log_client.connect(payload.chat_id)
     except Exception as exc:
         logger.exception("Failed to initialise graph log websocket connection")
         raise HTTPException(
@@ -74,7 +74,7 @@ async def message_stream(request: Request, payload: MessagePayload) -> Streaming
                 logger.error(msg)
                 raise TypeError(msg)
         finally:
-            await websocket_connection.close()
+            await graph_log_client.close(payload.chat_id)
 
     return StreamingResponse(
         event_generator(),

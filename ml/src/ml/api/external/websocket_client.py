@@ -21,6 +21,7 @@ class GraphLogWebSocketClient:
             return
 
         self.base_url = base_url
+        self._connections: dict[int, ClientConnection] = {}
         self._initialized = True
 
     @classmethod
@@ -33,18 +34,35 @@ class GraphLogWebSocketClient:
         return f"{self.base_url}/graph_log_writer/{chat_id}"
 
     async def connect(self, chat_id: int) -> ClientConnection:
+        connection = self._connections.get(chat_id)
+        if connection is not None:
+            if connection.closed:
+                await connection.wait_closed()
+                self._connections.pop(chat_id, None)
+            else:
+                return connection
+
         url = self.writer_url(chat_id)
         try:
             logger.info("Connecting to graph log websocket at %s", url)
-            return await connect(
+            connection = await connect(
                 url,
                 additional_headers={
                     "Authorization": "Token secret_service",
                 },
             )
+            self._connections[chat_id] = connection
+            return connection
         except Exception:
             logger.exception("Failed to connect to graph log websocket at %s", url)
             raise
+
+    async def close(self, chat_id: int) -> None:
+        connection = self._connections.pop(chat_id, None)
+        if connection is None:
+            return
+
+        await connection.close()
 
     async def send_action(
         self, chat_id: int, *, tag: PicsTags, message: str, answer_id: int
@@ -55,8 +73,9 @@ class GraphLogWebSocketClient:
 
         try:
             await connection.send(json.dumps(payload, ensure_ascii=False))
-        finally:
-            await connection.close()
+        except Exception:
+            await self.close(chat_id)
+            raise
 
 
 async def init_graph_log_client(base_url: str = GRAPH_LOG_SERVER_URL) -> GraphLogWebSocketClient:
