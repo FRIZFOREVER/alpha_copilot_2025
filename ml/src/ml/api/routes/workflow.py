@@ -65,7 +65,7 @@ async def message_stream(request: Request, payload: MessagePayload) -> Streaming
             "Connection": "keep-alive",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "Content-Type",
-            "X-Tag": tag.value,
+            "Tag": tag.value,
         },
     )
 
