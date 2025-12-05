@@ -45,8 +45,6 @@ class GraphLogWebSocketClient:
         self, chat_id: int, *, tag: PicsTags, message: str, answer_id: int
     ) -> None:
         connection = await self.connect(chat_id)
-        if not isinstance(connection, ClientConnection):
-            raise TypeError("Graph log connection must be a websockets ClientConnection")
 
         payload: GraphLogMessage = {"tag": tag, "answer_id": answer_id, "message": message}
 
