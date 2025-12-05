@@ -14,7 +14,7 @@ async def workflow_collected(payload: MessagePayload) -> tuple[str, Tag]:
     raise NotImplementedError()
 
 
-async def workflow(payload: MessagePayload) -> AsyncIterator[dict[str, Any]]:
+async def workflow(payload: MessagePayload) -> tuple[AsyncIterator[dict[str, Any]], Tag]:
     initial_state = GraphState(
         chat=payload.messages,
         user=payload.profile,
@@ -50,5 +50,7 @@ async def workflow(payload: MessagePayload) -> AsyncIterator[dict[str, Any]]:
     if not isinstance(output_stream, AsyncIterator):
         raise TypeError("Workflow output_stream is not an AsyncIterator")
 
-    async for chunk in output_stream:
-        yield chunk
+    if not isinstance(validated_state.meta.tag, Tag):
+        raise TypeError("Workflow state meta.tag is not a Tag enum value")
+
+    return output_stream, validated_state.meta.tag
