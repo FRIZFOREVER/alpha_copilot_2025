@@ -36,7 +36,12 @@ class GraphLogWebSocketClient:
         url = self.writer_url(chat_id)
         try:
             logger.info("Connecting to graph log websocket at %s", url)
-            return await connect(url)
+            return await connect(
+                url,
+                additional_headers={
+                    "Authorization": "Token secret_service",
+                },
+            )
         except Exception:
             logger.exception("Failed to connect to graph log websocket at %s", url)
             raise
