@@ -7,4 +7,6 @@ def fast_answer(state: GraphState) -> GraphState:
 
     state.chat.add_or_change_system(system_prompt)
 
+    state.final_prompt = state.chat
+
     return state
