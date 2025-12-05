@@ -27,11 +27,23 @@ async def workflow(payload: MessagePayload) -> AsyncIterator[dict[str, Any]]:
 
     compiled_pipeline = create_pipeline()
 
-    result_state: GraphState = await compiled_pipeline.ainvoke(
+    result_state = await compiled_pipeline.ainvoke(
         initial_state, config={"run_name": "main_pipeline", "recursion_limit": 100}
     )
 
-    output_stream = result_state.output_stream
+    validated_state: GraphState
+
+    if isinstance(result_state, GraphState):
+        validated_state = result_state
+    elif isinstance(result_state, dict):
+        validated_state = GraphState.model_validate(result_state)
+    else:
+        raise TypeError(
+            "Workflow pipeline returned an unexpected type: "
+            f"{type(result_state)}. Expected GraphState or dict."
+        )
+
+    output_stream = validated_state.output_stream
     if output_stream is None:
         raise RuntimeError("Workflow execution completed without producing an output stream")
 
