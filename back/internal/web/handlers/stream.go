@@ -148,7 +148,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 			QuestionID:   questionID,
 			AnswerID:     answerID,
 			QuestionTime: questionTime,
-			Tag:          streamIn.Tag,
+			Tag:          tag, // TODO: Fix this wibe code
 		}
 
 		metaJSON, err := json.Marshal(metaOut)
