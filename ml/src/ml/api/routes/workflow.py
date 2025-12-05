@@ -1,6 +1,6 @@
-import json
 import logging
 from collections.abc import AsyncIterator
+from typing import Union
 
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
@@ -26,11 +26,19 @@ async def message_stream(request: Request, payload: MessagePayload) -> Streaming
 
     logger.info("Invoking workflow for /message_stream request")
 
-    stream = await workflow(payload)
+    stream = workflow(payload)
 
-    async def event_generator() -> AsyncIterator[str]:
+    async def event_generator() -> AsyncIterator[Union[str, bytes]]:
         async for chunk in stream:
-            yield f"data: {json.dumps(chunk)}\n\n"
+            if not isinstance(chunk, (str, bytes)):
+                msg = (
+                    "Workflow output stream yielded unsupported type. "
+                    f"Expected str or bytes, got {type(chunk)}"
+                )
+                logger.error(msg)
+                raise TypeError(msg)
+
+            yield chunk
 
     return StreamingResponse(
         event_generator(),
