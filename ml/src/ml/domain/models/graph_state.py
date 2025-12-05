@@ -15,6 +15,7 @@ class GraphState(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     # general data
+    chat_id: int
     chat: ChatHistory
     user: UserProfile
     meta: MetaData
