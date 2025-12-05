@@ -2,13 +2,12 @@ from .fast_answer.node import fast_answer
 from .final_node.node import final_stream
 from .flash_memories.node import flash_memories
 from .mode_definition.node import define_mode
-from .research_answer.node import research_answer
 from .research_observer.node import research_observer
 from .research_reason.node import research_reason
 from .research_tool_call.node import research_tool_call
+from .tag_validation.node import validate_tag
 from .thinking_finalizer.node import thinking_finalize
 from .thinking_planner.node import thinking_planner
-from .tag_validation.node import validate_tag
 from .voice_validation.node import validate_voice
 
 __all__ = [
@@ -21,7 +20,6 @@ __all__ = [
     "research_reason",
     "research_tool_call",
     "research_observer",
-    "research_answer",
     "thinking_planner",
     "thinking_finalize",
 ]
