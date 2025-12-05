@@ -9,12 +9,13 @@ logger = logging.getLogger(__name__)
 async def final_stream(state: GraphState) -> GraphState:
     client = ReasoningModelClient.instance()
 
-    if state.final_prompt:
-        prompt: ChatHistory = state.final_prompt
-    else:
+    prompt = state.final_prompt
+    if prompt is None:
         msg = "Inside final stream node: final prompt is None, cannot generate final stream"
         logger.error(msg)
         raise RuntimeError(msg)
+    if not isinstance(prompt, ChatHistory):
+        raise TypeError("Final prompt must be an instance of ChatHistory")
 
     result = await client.stream(messages=prompt)
 
