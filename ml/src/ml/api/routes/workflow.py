@@ -28,7 +28,7 @@ async def message_stream(request: Request, payload: MessagePayload) -> Streaming
 
     logger.info("Invoking workflow for /message_stream request")
 
-    stream = workflow(payload)
+    stream, tag = await workflow(payload)
 
     async def event_generator() -> AsyncIterator[Union[str, bytes]]:
         async for chunk in stream:
@@ -65,6 +65,7 @@ async def message_stream(request: Request, payload: MessagePayload) -> Streaming
             "Connection": "keep-alive",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "Content-Type",
+            "X-Tag": tag.value,
         },
     )
 
