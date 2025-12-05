@@ -6,7 +6,6 @@ from ml.domain.models import ChatHistory, GraphState, Tag
 from .prompt import get_tag_validation_prompt
 from .schema import DefinedTag
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -14,6 +13,8 @@ async def validate_tag(state: GraphState) -> GraphState:
     logger.info("Entering validate_tag node")
 
     if state.meta.tag == Tag.Empty:
+        logger.info("Tag is considered as Empty, defining Tag")
+
         prompt: ChatHistory = get_tag_validation_prompt(state.chat.last_message())
 
         client = ReasoningModelClient.instance()
@@ -22,4 +23,5 @@ async def validate_tag(state: GraphState) -> GraphState:
 
         state.meta.tag = result.tag
 
+    logger.info("Tag: %s", state.meta.tag)
     return state
