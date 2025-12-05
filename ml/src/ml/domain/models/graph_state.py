@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, AsyncIterator, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from ml.domain.models.chat_history import ChatHistory
 from ml.domain.models.payload_data import MetaData, ModelMode, UserProfile
@@ -12,7 +12,7 @@ from ml.domain.models.tools_data import Evidence, ToolCall, ToolResult
 
 
 class GraphState(BaseModel):
-    # model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     # general data
     chat: ChatHistory
