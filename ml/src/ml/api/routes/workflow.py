@@ -4,6 +4,7 @@ from typing import Union
 
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
+from ollama._types import ChatResponse
 
 from ml.api.schemas import MessagePayload
 from ml.domain.workflow.router import workflow
@@ -30,6 +31,10 @@ async def message_stream(request: Request, payload: MessagePayload) -> Streaming
 
     async def event_generator() -> AsyncIterator[Union[str, bytes]]:
         async for chunk in stream:
+            if isinstance(chunk, ChatResponse):
+                yield chunk.model_dump_json()
+                continue
+
             if not isinstance(chunk, (str, bytes)):
                 msg = (
                     "Workflow output stream yielded unsupported type. "
