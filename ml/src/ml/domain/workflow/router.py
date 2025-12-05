@@ -1,5 +1,10 @@
+from collections.abc import AsyncIterator
+from typing import Any
+
 from ml.api.schemas import MessagePayload
 from ml.api.schemas.message_payload import Tag
+from ml.domain.models import GraphState, MetaData
+from ml.domain.workflow.agent.pipeline import create_pipeline
 
 
 async def workflow_collected(payload: MessagePayload) -> tuple[str, Tag]:
@@ -9,6 +14,29 @@ async def workflow_collected(payload: MessagePayload) -> tuple[str, Tag]:
     raise NotImplementedError()
 
 
-async def workflow(payload: MessagePayload):  # TODO: decide on return type
-    # TODO: Implement workflow
-    raise NotImplementedError()
+async def workflow(payload: MessagePayload) -> AsyncIterator[dict[str, Any]]:
+    initial_state = GraphState(
+        chat=payload.messages,
+        user=payload.profile,
+        meta=MetaData(is_voice=payload.is_voice, tag=payload.tag),
+        model_mode=payload.mode,
+        voice_is_valid=None,
+        final_prompt=None,
+        output_stream=None,
+    )
+
+    compiled_pipeline = create_pipeline()
+
+    result_state: GraphState = await compiled_pipeline.ainvoke(
+        initial_state, config={"run_name": "main_pipeline", "recursion_limit": 100}
+    )
+
+    output_stream = result_state.output_stream
+    if output_stream is None:
+        raise RuntimeError("Workflow execution completed without producing an output stream")
+
+    if not isinstance(output_stream, AsyncIterator):
+        raise TypeError("Workflow output_stream is not an AsyncIterator")
+
+    async for chunk in output_stream:
+        yield chunk
