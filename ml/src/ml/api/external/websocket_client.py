@@ -64,6 +64,11 @@ class GraphLogWebSocketClient:
                 await connection.wait_closed()
                 self._connections.pop(chat_id, None)
             else:
+                logger.info(
+                    "Reusing open graph log websocket connection for chat_id=%s (url=%s)",
+                    chat_id,
+                    self.writer_url(chat_id),
+                )
                 return connection
 
         url = self.writer_url(chat_id)
@@ -92,12 +97,25 @@ class GraphLogWebSocketClient:
         self, chat_id: int, *, tag: PicsTags, message: str, answer_id: int
     ) -> None:
         connection = await self.connect(chat_id)
-
+        url = self.writer_url(chat_id)
         payload: GraphLogMessage = {"tag": tag, "answer_id": answer_id, "message": message}
 
         try:
+            logger.info(
+                "Sending graph log payload to %s: %s (connection_closed=%s)",
+                url,
+                payload,
+                connection.closed,
+            )
             await connection.send(json.dumps(payload, ensure_ascii=False))
+            logger.info("Graph log payload sent to %s for chat_id=%s", url, chat_id)
         except Exception:
+            logger.exception(
+                "Failed to send graph log payload to %s for chat_id=%s: %s",
+                url,
+                chat_id,
+                payload,
+            )
             await self.close(chat_id)
             raise
 
