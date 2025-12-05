@@ -16,7 +16,7 @@ async def final_stream(state: GraphState) -> GraphState:
         logger.error(msg)
         raise RuntimeError(msg)
 
-    result = await client.stream(messages=prompt)
+    result = client.stream(messages=prompt)
 
     state.output_stream = result
 
