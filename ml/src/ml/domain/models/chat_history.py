@@ -164,3 +164,12 @@ class ChatHistory(BaseModel):
         last_message = self.last_message()
 
         return [{"role": last_message.role, "content": last_message.content}]
+
+    def last_user_message_id(self) -> int:
+        last_user_message = self.last_message(ensure_user=True)
+        last_user_id = last_user_message.id
+
+        if last_user_id is None:
+            raise ValueError("Last user message does not contain an id")
+
+        return last_user_id

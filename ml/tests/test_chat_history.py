@@ -99,3 +99,29 @@ def test_message_accepts_ids_for_non_system_roles() -> None:
 
     assert user_message.id == 1
     assert assistant_message.id == 2
+
+
+def test_last_user_message_id_returns_latest_user_id() -> None:
+    history = ChatHistory(
+        messages=[
+            Message(role=Role.user, content="first", id=3),
+            Message(role=Role.assistant, content="reply"),
+            Message(role=Role.user, content="second", id=7),
+        ]
+    )
+
+    assert history.last_user_message_id() == 7
+
+
+def test_last_user_message_id_requires_id_presence() -> None:
+    history = ChatHistory(messages=[Message(role=Role.user, content="question")])
+
+    with pytest.raises(ValueError):
+        history.last_user_message_id()
+
+
+def test_last_user_message_id_requires_last_message_is_user() -> None:
+    history = ChatHistory(messages=[Message(role=Role.assistant, content="reply", id=5)])
+
+    with pytest.raises(ValueError):
+        history.last_user_message_id()
