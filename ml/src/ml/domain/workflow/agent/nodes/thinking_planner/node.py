@@ -1,3 +1,5 @@
+import logging
+
 from ml.api.external.ollama_client import ReasoningModelClient
 from ml.domain.models import GraphState, PlannedToolCall, ToolCall
 from ml.domain.workflow.agent.tools.tool_registry import get_tool
@@ -6,7 +8,12 @@ from .prompt import get_thinking_plan_prompt
 from .schema import ThinkingPlan
 
 
+logger = logging.getLogger(__name__)
+
+
 async def thinking_planner(state: GraphState) -> GraphState:
+    logger.info("Entering thinking_planner node")
+
     prompt = get_thinking_plan_prompt(chat=state.chat, profile=state.user)
 
     client = ReasoningModelClient.instance()

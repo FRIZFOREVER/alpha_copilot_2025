@@ -1,3 +1,5 @@
+import logging
+
 from ml.api.external.ollama_client import ReasoningModelClient
 from ml.domain.models import GraphState, PlannedToolCall, ToolCall
 from ml.domain.workflow.agent.tools import BaseTool
@@ -7,7 +9,12 @@ from .prompt import get_research_reason_prompt
 from .schema import ResearchPlan
 
 
+logger = logging.getLogger(__name__)
+
+
 async def research_reason(state: GraphState) -> GraphState:
+    logger.info("Entering research_reason node")
+
     client = ReasoningModelClient.instance()
     available_tools: dict[str, BaseTool] = get_tool_registry()
 

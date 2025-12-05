@@ -1,7 +1,13 @@
+import logging
+
 from ml.domain.models import Evidence, GraphState
+
+logger = logging.getLogger(__name__)
 
 
 def research_observer(state: GraphState) -> GraphState:
+    logger.info("Entering research_observer node")
+
     tool_call = state.pending_tool_call
     if tool_call is None:
         raise RuntimeError("No tool call available to observe")
