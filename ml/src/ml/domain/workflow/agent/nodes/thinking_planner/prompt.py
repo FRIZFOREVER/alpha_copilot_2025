@@ -1,19 +1,44 @@
 from ml.domain.models import ChatHistory, UserProfile
-from ml.utils import get_system_prompt
+from ml.domain.models.tools_data import Evidence
+from ml.domain.workflow.agent.tools import BaseTool
+from ml.utils import format_research_observations, get_system_prompt
 
 
-def get_thinking_plan_prompt(chat: ChatHistory, profile: UserProfile) -> ChatHistory:
+def _format_available_tools(available_tools: dict[str, BaseTool]) -> str:
+    tool_lines: list[str] = []
+    for tool in available_tools.values():
+        tool_lines.append(
+            "- {name}: {description}. Schema: {schema}".format(
+                name=tool.name, description=tool.description, schema=tool.schema
+            )
+        )
+    return "\n".join(tool_lines)
+
+
+def get_thinking_plan_prompt(
+    chat: ChatHistory,
+    profile: UserProfile,
+    available_tools: dict[str, BaseTool],
+    evidence_list: list[Evidence],
+    remaining_steps: int,
+) -> ChatHistory:
     system_prompt_parts: list[str] = [get_system_prompt(profile)]
 
+    evidence_block = (
+        "Наблюдений пока нет."
+        if not evidence_list
+        else format_research_observations(evidence_list)
+    )
+
     planning_instructions = (
-        "Вы выполняете один шаг размышления с помощью инструмента web_search.\n"
-        "Найдите формулировку поискового запроса, которая поможет ответить на последнюю "
-        "просьбу пользователя.\n"
-        "Доступный инструмент: web_search с параметром query (string).\n"
-        "Верните JSON со свойствами thought и query.\n"
-        "thought — краткое обоснование поиска. query — поисковый запрос, который нужно "
-        "выполнить.\n"
-        "Не вызывайте инструмент, только сформируйте запрос."
+        "Ты выполняешь один шаг размышления и выбираешь следующий инструмент.\n"
+        "Если готов дать ответ, выбери инструмент final_answer.\n"
+        "Доступные инструменты:\n"
+        f"{_format_available_tools(available_tools)}\n"
+        "Всегда возвращай JSON с полями thought, chosen_tool, tool_args.\n"
+        "Учти текущие наблюдения — каждый пункт содержит источник (tool_name => результат).\n"
+        f"Текущие наблюдения:\n{evidence_block}\n"
+        f"Осталось шагов до обязательного завершения: {remaining_steps}."
     )
 
     system_prompt_parts.append(planning_instructions)
