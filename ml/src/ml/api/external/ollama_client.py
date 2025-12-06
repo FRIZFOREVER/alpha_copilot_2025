@@ -17,6 +17,7 @@ from ml.configs import (
     get_provider_base_url,
 )
 from ml.domain.models import ChatHistory
+from ml.utils import apply_openrouter_provider
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -105,6 +106,8 @@ class ReasoningModelClient:
 
         response_kwargs.update(kwargs)
 
+        apply_openrouter_provider(response_kwargs, self.mode)
+
         response = await self.client.chat.completions.create(**response_kwargs)
 
         content = response.choices[0].message.content
@@ -153,6 +156,8 @@ class ReasoningModelClient:
 
         response_kwargs.update(kwargs)
 
+        apply_openrouter_provider(response_kwargs, self.mode)
+
         stream = await self.client.chat.completions.create(**response_kwargs)
 
         async for chunk in stream:
@@ -197,6 +202,8 @@ class ReasoningModelClient:
 
             response_kwargs.update(kwargs)
 
+            apply_openrouter_provider(response_kwargs, self.mode)
+
             response = await self.client.chat.completions.create(**response_kwargs)
 
             raw = response.choices[0].message.content
@@ -224,7 +231,6 @@ class ReasoningModelClient:
             return settings
 
         return settings.model_copy(update={"base_url": provider_base_url})
-
 
 class EmbeddingModelClient:
     _instance: ClassVar[EmbeddingModelClient | None] = None
