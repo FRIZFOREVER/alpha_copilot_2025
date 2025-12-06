@@ -128,6 +128,21 @@ def _format_file_evidence(index: int, result: "ToolResult") -> str:
 
 
 def _format_created_file_evidence(index: int, result: "ToolResult") -> str:
+    if not isinstance(result.success, bool):
+        raise TypeError("file_writer evidence 'success' must be a boolean")
+
+    if not result.success:
+        error_message = result.error
+        if error_message is None:
+            error_message = "Создание файла завершилось с неизвестной ошибкой"
+        elif not isinstance(error_message, str):
+            raise TypeError("file_writer evidence 'error' must be a string when provided")
+
+        return (
+            f"{index}. Источник: созданный файл (tool: file_writer)\n"
+            f"Ошибка при создании файла: {error_message}"
+        )
+
     data = result.data
     if not isinstance(data, dict):
         raise TypeError("file_writer evidence must be a dictionary")
