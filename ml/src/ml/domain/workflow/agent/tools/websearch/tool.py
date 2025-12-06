@@ -98,7 +98,7 @@ class WebSearchTool(BaseTool):
                     query,
                     region="ru-ru",
                     safesearch="moderate",
-                    backend="api",
+                    backend="duckduckgo",
                     max_results=20,
                 )
 
@@ -164,14 +164,22 @@ class WebSearchTool(BaseTool):
         client = ReasoningModelClient.instance()
         selected: list[str] = []
 
+        remaining_chunk_budget = 5
+
         for chunk in chunks:
+            if remaining_chunk_budget == 0:
+                break
+
             prompt = get_relevance_prompt(query=query, chunk=chunk)
             result: ChunkRelevance = await client.call_structured(
                 messages=prompt, output_schema=ChunkRelevance
             )
 
+            remaining_chunk_budget -= 1
+
             if result.is_chunk_relevant:
                 selected.append(chunk)
+                remaining_chunk_budget = 5
 
         return selected
 
