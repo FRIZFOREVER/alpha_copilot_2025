@@ -55,7 +55,7 @@ class WebSearchTool(BaseTool):
             "required": ["query"],
         }
 
-    def execute(self, **kwargs: Any) -> ToolResult:
+    async def execute(self, **kwargs: Any) -> ToolResult:
         query_argument = kwargs.get("query")
         if not isinstance(query_argument, str):
             raise ValueError("web_search tool requires 'query' argument of type string")
@@ -68,18 +68,18 @@ class WebSearchTool(BaseTool):
         if not isinstance(answer_id, int):
             raise ValueError("web_search tool requires 'answer_id' argument of type int")
 
-        search_hits = self._perform_search(query_argument)
+        search_hits = await self._perform_search(query_argument)
 
         relevant_documents: list[dict[str, str]] = []
         for hit in search_hits:
             domain = urlparse(hit.url).netloc
             if not domain:
                 raise ValueError("Search hit URL is missing a domain")
-            self._dispatch_graph_log(
+            await self._dispatch_graph_log(
                 chat_id=chat_id, answer_id=answer_id, message=f"Изучаю {domain}"
             )
 
-            relevant_text = self._gather_relevant_text(query_argument, hit)
+            relevant_text = await self._gather_relevant_text(query_argument, hit)
             if relevant_text:
                 relevant_documents.append(
                     {"url": hit.url, "title": hit.title, "content": relevant_text}
@@ -87,10 +87,14 @@ class WebSearchTool(BaseTool):
 
         return ToolResult(success=True, data={"query": query_argument, "results": relevant_documents})
 
-    def _perform_search(self, query: str) -> list[SearchHit]:
+    async def _perform_search(self, query: str) -> list[SearchHit]:
         collected: list[SearchHit] = []
-        with DDGS() as client:
-            raw_results = client.text(query, max_results=10)
+
+        def _search() -> list[dict[str, Any]]:
+            with DDGS() as client:
+                return client.text(query, max_results=10)
+
+        raw_results = await asyncio.to_thread(_search)
 
         for raw_result in raw_results:
             if "href" not in raw_result:
@@ -117,9 +121,9 @@ class WebSearchTool(BaseTool):
 
         return collected
 
-    def _gather_relevant_text(self, query: str, hit: SearchHit) -> str:
+    async def _gather_relevant_text(self, query: str, hit: SearchHit) -> str:
         try:
-            document_text = extract_text_from_url(hit.url)
+            document_text = await extract_text_from_url(hit.url)
         except Exception:
             logger.exception("Failed to extract text from URL: %s", hit.url)
             return ""
@@ -128,11 +132,11 @@ class WebSearchTool(BaseTool):
         if not chunks:
             return ""
 
-        relevant_chunks = self._filter_relevant_chunks(query, chunks)
+        relevant_chunks = await self._filter_relevant_chunks(query, chunks)
         return "\n\n".join(relevant_chunks)
 
-    def _filter_relevant_chunks(self, query: str, chunks: list[str]) -> list[str]:
-        return asyncio.run(self._evaluate_chunk_relevance(query, chunks))
+    async def _filter_relevant_chunks(self, query: str, chunks: list[str]) -> list[str]:
+        return await self._evaluate_chunk_relevance(query, chunks)
 
     async def _evaluate_chunk_relevance(self, query: str, chunks: list[str]) -> list[str]:
         client = ReasoningModelClient.instance()
@@ -149,19 +153,7 @@ class WebSearchTool(BaseTool):
 
         return selected
 
-    def _dispatch_graph_log(self, *, chat_id: int, answer_id: int, message: str) -> None:
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            asyncio.run(
-                send_graph_log(
-                    chat_id=chat_id, tag=PicsTags.Web, message=message, answer_id=answer_id
-                )
-            )
-            return
-
-        loop.create_task(
-            send_graph_log(
-                chat_id=chat_id, tag=PicsTags.Web, message=message, answer_id=answer_id
-            )
+    async def _dispatch_graph_log(self, *, chat_id: int, answer_id: int, message: str) -> None:
+        await send_graph_log(
+            chat_id=chat_id, tag=PicsTags.Web, message=message, answer_id=answer_id
         )

@@ -7,7 +7,7 @@ from ml.domain.workflow.agent.tools.tool_registry import get_tool
 logger = logging.getLogger(__name__)
 
 
-def research_tool_call(state: GraphState) -> GraphState:
+async def research_tool_call(state: GraphState) -> GraphState:
     logger.info("Entering research_tool_call node")
 
     planned_call = state.pending_tool_call
@@ -30,7 +30,7 @@ def research_tool_call(state: GraphState) -> GraphState:
         )
 
     try:
-        result: ToolResult = tool.execute(**execution_arguments)
+        result: ToolResult = await tool.execute(**execution_arguments)
     except Exception as exc:
         logger.exception("Tool execution failed for %s", planned_call.tool_name)
         result = ToolResult(success=False, data={}, error=str(exc))

@@ -29,7 +29,7 @@ class FinalAnswerTool(BaseTool):
             },
         }
 
-    def execute(
+    async def execute(
         self,
         *,
         chat: ChatHistory,

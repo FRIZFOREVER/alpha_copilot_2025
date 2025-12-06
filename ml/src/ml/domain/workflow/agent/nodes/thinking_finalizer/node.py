@@ -6,11 +6,11 @@ from ml.domain.workflow.agent.tools.final_answer.tool import FinalAnswerTool
 logger = logging.getLogger(__name__)
 
 
-def thinking_finalize(state: GraphState) -> GraphState:
+async def thinking_finalize(state: GraphState) -> GraphState:
     logger.info("Entering thinking_finalize node")
 
     final_answer_tool = FinalAnswerTool()
-    result = final_answer_tool.execute(
+    result = await final_answer_tool.execute(
         chat=state.chat,
         profile=state.user,
         evidence=state.evidence_list,
