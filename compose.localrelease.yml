@@ -69,8 +69,6 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      ml:
-        condition: service_healthy
     restart: always
     networks:
       - proxy-network
