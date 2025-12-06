@@ -119,29 +119,11 @@ async def message_stream(request: Request) -> StreamingResponse:
 
     def event_generator():
         stream = mock_workflow(payload, streaming=True)
-<<<<<<< HEAD
-        last_file_url: Optional[str] = None
-        for chunk in stream:
-            if chunk.file_url is not None and not isinstance(chunk.file_url, str):
-                raise TypeError("chunk.file_url must be a string when provided")
-
-            if chunk.file_url is not None:
-                last_file_url = chunk.file_url
-
-            # Преобразуем в JSON и отправляем в формате SSE
-            chunk_data = chunk.model_dump_json()
-            yield f"data: {chunk_data}\n\n"
-
-        if last_file_url is not None:
-            yield f"data: {json.dumps({'file_url': last_file_url})}\n\n"
-
-=======
         for chunk in stream:
             # Преобразуем в JSON и отправляем в формате SSE
             chunk_data = chunk.model_dump_json()
             yield f"data: {chunk_data}\n\n"
         
->>>>>>> master
         # Отправляем [DONE] в конце стрима
         yield "data: [DONE]\n\n"
 

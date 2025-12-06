@@ -114,8 +114,6 @@ func InitPrivateRoutes(
 	analyticGroup.Get("/message-counts", analytic.GetMessageCountsHandler)
 	analyticGroup.Get("/tag-counts", analytic.GetTagCountsHandler)
 	analyticGroup.Post("/timeseries-messages", analytic.GetTimeseriesMessagesHandler)
-<<<<<<< HEAD
-=======
 
 	todoistIntegrations := integrations.NewTodoist(integrationsUrl, logger)
 	todoistGroup := server.Group("/todoist")
@@ -134,5 +132,4 @@ func InitPrivateRoutes(
 	telegramGroup.Post("/contacts", telegramIntergration.GetContacts)
 	telegramGroup.Post("/send/message", telegramIntergration.SendMessage)
 	telegramGroup.Post("/disconnect", telegramIntergration.Disconnect)
->>>>>>> master
 }

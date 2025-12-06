@@ -48,30 +48,6 @@ func TestSearch_Handler(t *testing.T) {
 			setupMocks: func(msm *MockSearchManager) {
 				messages := []database.Message{
 					{
-<<<<<<< HEAD
-						QuestionID:   1,
-						AnswerID:     1,
-						Question:     "Test question?",
-						QuestionTag:  stringPtr("general"),
-						Answer:       "Test answer",
-						QuestionTime: testTime,
-						AnswerTime:   testTime,
-						VoiceURL:     "voice.mp3",
-						FileURL:      "file.pdf",
-						Rating:       intPtr(5),
-					},
-					{
-						QuestionID:   2,
-						AnswerID:     2,
-						Question:     "Another test?",
-						QuestionTag:  nil,
-						Answer:       "Another answer",
-						QuestionTime: testTime.Add(-time.Hour),
-						AnswerTime:   testTime.Add(-30 * time.Minute),
-						VoiceURL:     "",
-						FileURL:      "",
-						Rating:       nil,
-=======
 						QuestionID:      1,
 						AnswerID:        1,
 						Question:        "Test question?",
@@ -96,17 +72,12 @@ func TestSearch_Handler(t *testing.T) {
 						QuestionFileURL: "",
 						AnswerFileURL:   "",
 						Rating:          nil,
->>>>>>> master
 					},
 				}
 				msm.On("GetSearchedMessages", testUUID.String(), "test query").Return(messages, nil)
 			},
 			expectedStatus: http.StatusOK,
-<<<<<<< HEAD
-			expectedBody:   `[{"question_id":1,"answer_id":1,"question":"Test question?","tag":"general","answer":"Test answer","question_time":"` + testTime.Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Format(time.RFC3339Nano) + `","voice_url":"voice.mp3","file_url":"file.pdf","rating":5},{"question_id":2,"answer_id":2,"question":"Another test?","tag":null,"answer":"Another answer","question_time":"` + testTime.Add(-time.Hour).Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Add(-30*time.Minute).Format(time.RFC3339Nano) + `","voice_url":"","file_url":"","rating":null}]`,
-=======
 			expectedBody:   `[{"question_id":1,"answer_id":1,"question":"Test question?","tag":"general","answer":"Test answer","question_time":"` + testTime.Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Format(time.RFC3339Nano) + `","voice_url":"voice.mp3","question_file_url":"question_file.pdf","answer_file_url":"answer_file.pdf","rating":5},{"question_id":2,"answer_id":2,"question":"Another test?","tag":null,"answer":"Another answer","question_time":"` + testTime.Add(-time.Hour).Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Add(-30*time.Minute).Format(time.RFC3339Nano) + `","voice_url":"","question_file_url":"","answer_file_url":"","rating":null}]`,
->>>>>>> master
 		},
 		{
 			name:    "Пустой результат поиска",
@@ -132,18 +103,6 @@ func TestSearch_Handler(t *testing.T) {
 			setupMocks: func(msm *MockSearchManager) {
 				messages := []database.Message{
 					{
-<<<<<<< HEAD
-						QuestionID:   3,
-						AnswerID:     3,
-						Question:     "Empty pattern search?",
-						QuestionTag:  stringPtr("test"),
-						Answer:       "Should work with empty pattern",
-						QuestionTime: testTime,
-						AnswerTime:   testTime,
-						VoiceURL:     "",
-						FileURL:      "",
-						Rating:       intPtr(3),
-=======
 						QuestionID:      3,
 						AnswerID:        3,
 						Question:        "Empty pattern search?",
@@ -155,17 +114,12 @@ func TestSearch_Handler(t *testing.T) {
 						QuestionFileURL: "",
 						AnswerFileURL:   "",
 						Rating:          intPtr(3),
->>>>>>> master
 					},
 				}
 				msm.On("GetSearchedMessages", testUUID.String(), "").Return(messages, nil)
 			},
 			expectedStatus: http.StatusOK,
-<<<<<<< HEAD
-			expectedBody:   `[{"question_id":3,"answer_id":3,"question":"Empty pattern search?","tag":"test","answer":"Should work with empty pattern","question_time":"` + testTime.Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Format(time.RFC3339Nano) + `","voice_url":"","file_url":"","rating":3}]`,
-=======
 			expectedBody:   `[{"question_id":3,"answer_id":3,"question":"Empty pattern search?","tag":"test","answer":"Should work with empty pattern","question_time":"` + testTime.Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Format(time.RFC3339Nano) + `","voice_url":"","question_file_url":"","answer_file_url":"","rating":3}]`,
->>>>>>> master
 		},
 		{
 			name:    "Специальные символы в поисковом запросе",

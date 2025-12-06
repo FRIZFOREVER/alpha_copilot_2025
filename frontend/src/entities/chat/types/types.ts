@@ -85,11 +85,7 @@ export interface StreamInitialResponse {
   answer_id: number;
   question_time: string;
   tag: string;
-<<<<<<< HEAD
-  file_url: string | null;
-=======
   file_url: string | null; // В стриме остается file_url, но при обработке переименовывается в answer_file_url
->>>>>>> master
 }
 
 export interface StreamChunk {
