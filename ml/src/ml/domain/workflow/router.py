@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+import logging
 from typing import Any
 
 from ollama._types import ChatResponse
@@ -9,12 +10,21 @@ from ml.domain.models import GraphState, MetaData
 from ml.domain.workflow.agent.pipeline import create_pipeline
 
 
+logger = logging.getLogger(__name__)
+
+
 async def workflow_collected(payload: MessagePayload) -> tuple[str, Tag]:
     output_stream, tag = await workflow(payload)
 
     collected_chunks: list[str] = []
 
+    def append_chunk(chunk_value: str) -> None:
+        print(chunk_value, end="")
+        collected_chunks.append(chunk_value)
+
     async for chunk in output_stream:
+        logger.info("Collecting workflow chunk for /message endpoint: %s", chunk)
+
         if isinstance(chunk, ChatResponse):
             message = chunk.message
 
@@ -26,14 +36,14 @@ async def workflow_collected(payload: MessagePayload) -> tuple[str, Tag]:
                 if not isinstance(thinking, str):
                     raise TypeError("ChatResponse.message.thinking must be a string when provided")
 
-                collected_chunks.append(thinking)
+                append_chunk(thinking)
 
             content = message.content
             if content is not None:
                 if not isinstance(content, str):
                     raise TypeError("ChatResponse.message.content must be a string when provided")
 
-                collected_chunks.append(content)
+                append_chunk(content)
 
             continue
 
@@ -63,16 +73,16 @@ async def workflow_collected(payload: MessagePayload) -> tuple[str, Tag]:
                 if not isinstance(content, str):
                     raise TypeError("Streaming chunk content must be a string when provided")
 
-                collected_chunks.append(content)
+                append_chunk(content)
 
             continue
 
         if isinstance(chunk, str):
-            collected_chunks.append(chunk)
+            append_chunk(chunk)
             continue
 
         if isinstance(chunk, bytes):
-            collected_chunks.append(chunk.decode("utf-8"))
+            append_chunk(chunk.decode("utf-8"))
             continue
 
         msg = (
