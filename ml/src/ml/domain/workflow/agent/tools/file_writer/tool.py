@@ -57,7 +57,7 @@ class FileWriterTool(BaseTool):
         extension = self._extract_extension(file_name)
 
         try:
-            write_minio_file(content, extension=extension)
+            file_url = write_minio_file(content, extension=extension)
         except Exception:
             logger.exception("Failed to write file '%s' to MinIO", file_name)
             raise
@@ -68,7 +68,7 @@ class FileWriterTool(BaseTool):
             f"Создан новый файл: {file_name}"
         )
 
-        return ToolResult(success=True, data=evidence_text)
+        return ToolResult(success=True, data={"message": evidence_text, "file_url": file_url})
 
     def _extract_extension(self, file_name: str) -> str:
         extension = Path(file_name).suffix

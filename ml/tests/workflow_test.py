@@ -85,8 +85,8 @@ def test_message_stream_sets_tag_header(
         async def _dummy_output_stream() -> AsyncIterator[dict[str, str]]:
             yield {"message": "test"}
 
-        async def _dummy_workflow(_: MessagePayload) -> tuple[AsyncIterator[dict[str, str]], Tag]:
-            return _dummy_output_stream(), Tag.Law
+        async def _dummy_workflow(_: MessagePayload) -> tuple[AsyncIterator[dict[str, str]], Tag, str | None]:
+            return _dummy_output_stream(), Tag.Law, None
 
         fastapi_app.state.model_ready = asyncio.Event()
         fastapi_app.state.model_ready.set()
@@ -120,5 +120,54 @@ def test_message_stream_sets_tag_header(
 
         assert response.status_code == 200
         assert response.headers.get("X-Tag") == Tag.Law.value
+
+    asyncio.run(_run())
+
+
+def test_message_stream_emits_null_file_url_when_missing(
+    fastapi_app: FastAPI, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def _run() -> None:
+        async def _dummy_output_stream() -> AsyncIterator[dict[str, str]]:
+            yield {"message": "test"}
+
+        async def _dummy_workflow(_: MessagePayload) -> tuple[AsyncIterator[dict[str, str]], Tag, str | None]:
+            return _dummy_output_stream(), Tag.Sport, ""
+
+        fastapi_app.state.model_ready = asyncio.Event()
+        fastapi_app.state.model_ready.set()
+
+        monkeypatch.setattr(workflow_routes, "workflow", _dummy_workflow)
+
+        payload = MessagePayload(
+            messages=ChatHistory(messages=[Message(role=Role.user, content="hello")]),
+            chat_id=1,
+            tag=Tag.Empty,
+            mode=ModelMode.Fast,
+            file_url="",
+            is_voice=False,
+            profile=UserProfile(
+                id=1,
+                login="user-login",
+                username="User Name",
+                user_info="",
+                business_info="",
+                additional_instructions="",
+            ),
+        )
+
+        transport = ASGITransport(app=fastapi_app)
+
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/message_stream",
+                json=payload.model_dump(mode="json"),
+            )
+
+        assert response.status_code == 200
+
+        data_lines = [line for line in response.text.splitlines() if line.startswith("data: ")]
+
+        assert data_lines[-1] == 'data: {"file_url": null}'
 
     asyncio.run(_run())

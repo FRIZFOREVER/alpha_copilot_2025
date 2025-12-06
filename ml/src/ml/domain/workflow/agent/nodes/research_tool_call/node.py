@@ -38,6 +38,19 @@ async def research_tool_call(state: GraphState) -> GraphState:
     state.last_tool_result = result
     state.last_executed_tool = tool.name
 
+    if tool.name == "file_writer" and result.success:
+        data = result.data
+        if not isinstance(data, dict):
+            raise TypeError("file_writer tool must return a dictionary in result data")
+        if "file_url" not in data:
+            raise ValueError("file_writer tool result missing 'file_url'")
+
+        file_url = data["file_url"]
+        if not isinstance(file_url, str):
+            raise TypeError("file_writer tool result 'file_url' must be a string")
+
+        state.file_url = file_url
+
     if tool.name == final_answer_name:
         if not isinstance(result.data, dict):
             raise ValueError("Final answer tool result must contain final prompt data")
