@@ -32,7 +32,7 @@ type Message struct {
 	VoiceURL        string    `json:"voice_url"`
 	QuestionFileURL string    `json:"question_file_url"`
 	Rating          *int      `json:"rating"`
-	AnswerFileURL   string    `json:"answer_file_url"`
+	AnswerFileURL   *string    `json:"answer_file_url"`
 }
 
 // HistoryService - структура для работы с историей сообщений.
