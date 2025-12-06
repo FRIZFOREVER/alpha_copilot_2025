@@ -196,23 +196,22 @@ export const Message = ({
         {isUser && (
           <>
             {question_file_url && <FileMessage fileUrl={question_file_url} />}
-            {voice_url && voice_url.trim() ? (
+            {voice_url && voice_url.trim() && (
               <div className="mb-2">
                 <VoiceMessage voiceUrl={voice_url} transcription={content} />
               </div>
-            ) : (
-              question_file_url && content && content.trim() && (
-                <div
-                  className={cn(
-                    "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed mt-2",
-                    "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
-                  )}
-                >
-                  {content}
-                </div>
-              )
             )}
-            {!question_file_url && !voice_url && (
+            {question_file_url && content && content.trim() && !voice_url && (
+              <div
+                className={cn(
+                  "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed mt-2",
+                  "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
+                )}
+              >
+                {content}
+              </div>
+            )}
+            {!question_file_url && !voice_url && content && content.trim() && (
               <div
                 className={cn(
                   "rounded-2xl text-sm md:text-base leading-relaxed",
@@ -230,23 +229,17 @@ export const Message = ({
         {!isUser && (
           <>
             {answer_file_url && <FileMessage fileUrl={answer_file_url} />}
-            {voice_url && voice_url.trim() ? (
-              <div className="mb-2">
-                <VoiceMessage voiceUrl={voice_url} transcription={content} />
+            {answer_file_url && content && content.trim() && (
+              <div
+                className={cn(
+                  "rounded-2xl py-0 text-sm md:text-base leading-relaxed mt-2",
+                  "text-foreground rounded-xl dark:border-gray-700"
+                )}
+              >
+                <MarkdownContent content={content} />
               </div>
-            ) : (
-              answer_file_url && content && content.trim() && (
-                <div
-                  className={cn(
-                    "rounded-2xl py-0 text-sm md:text-base leading-relaxed mt-2",
-                    "text-foreground rounded-xl dark:border-gray-700"
-                  )}
-                >
-                  <MarkdownContent content={content} />
-                </div>
-              )
             )}
-            {!answer_file_url && !voice_url && (
+            {!answer_file_url && (
               <div
                 className={cn(
                   "rounded-2xl text-sm md:text-base leading-relaxed",

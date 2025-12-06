@@ -114,7 +114,7 @@ export const MessageList = ({
               tag={message.tag}
               question_file_url={message.isUser ? message.file_url : undefined}
               answer_file_url={message.isUser ? undefined : message.answer_file_url}
-              voice_url={message.isUser ? undefined : message.voice_url}
+              voice_url={message.isUser ? message.voice_url : undefined}
             />
           ))
         )}

@@ -8,6 +8,7 @@ export interface BaseMessage {
 export interface UserMessage extends BaseMessage {
   isUser: true;
   file_url?: string;
+  voice_url?: string;
 }
 
 export interface BotMessage extends BaseMessage {
@@ -16,7 +17,6 @@ export interface BotMessage extends BaseMessage {
   rating?: number | null;
   isTyping?: boolean;
   answer_file_url?: string;
-  voice_url?: string;
 }
 
 export type MessageData = UserMessage | BotMessage;
