@@ -25,6 +25,7 @@ import { TelegramContact } from "@/entities/auth/types/types";
 import { useGraphLogsContext } from "../chat/chat";
 import { useGraphLogsQuery } from "@/entities/chat/hooks/useGraphLogs";
 import { SourcesButton } from "./sourcesButton";
+import { VoiceMessage } from "./voiceMessage";
 
 export interface MessageProps {
   id: string;
@@ -35,6 +36,7 @@ export interface MessageProps {
   isTyping?: boolean;
   question_file_url?: string;
   answer_file_url?: string;
+  voice_url?: string;
   isCompact?: boolean;
   tag: string;
 }
@@ -49,6 +51,7 @@ export const Message = ({
   isTyping = false,
   question_file_url,
   answer_file_url,
+  voice_url,
   isCompact = false,
 }: MessageProps) => {
   const chatId = useParams().chatId;
@@ -190,47 +193,69 @@ export const Message = ({
             </span>
           </div>
         )}
-        {question_file_url && isUser && <FileMessage fileUrl={question_file_url} />}
-        {question_file_url && isUser && content && content.trim() && (
-          <div
-            className={cn(
-              "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed mt-2",
-              "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
+        {isUser && (
+          <>
+            {question_file_url && <FileMessage fileUrl={question_file_url} />}
+            {voice_url && voice_url.trim() && (
+              <div className="mb-2">
+                <VoiceMessage voiceUrl={voice_url} transcription={content} />
+              </div>
             )}
-          >
-            {content}
-          </div>
+            {question_file_url && content && content.trim() && !voice_url && (
+              <div
+                className={cn(
+                  "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed mt-2",
+                  "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
+                )}
+              >
+                {content}
+              </div>
+            )}
+            {!question_file_url && !voice_url && content && content.trim() && (
+              <div
+                className={cn(
+                  "rounded-2xl text-sm md:text-base leading-relaxed",
+                  "break-words overflow-wrap-anywhere w-full",
+                  "px-4 py-3 bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30",
+                  isCompact && "text-sm md:text-sm"
+                )}
+              >
+                {content}
+              </div>
+            )}
+          </>
         )}
-        {answer_file_url && !isUser && <FileMessage fileUrl={answer_file_url} />}
-        {answer_file_url && !isUser && content && content.trim() && (
-          <div
-            className={cn(
-              "rounded-2xl py-0 text-sm md:text-base leading-relaxed mt-2",
-              "text-foreground rounded-xl dark:border-gray-700"
+
+        {!isUser && (
+          <>
+            {answer_file_url && <FileMessage fileUrl={answer_file_url} />}
+            {answer_file_url && content && content.trim() && (
+              <div
+                className={cn(
+                  "rounded-2xl py-0 text-sm md:text-base leading-relaxed mt-2",
+                  "text-foreground rounded-xl dark:border-gray-700"
+                )}
+              >
+                <MarkdownContent content={content} />
+              </div>
             )}
-          >
-            <MarkdownContent content={content} />
-          </div>
-        )}
-        {!question_file_url && !answer_file_url && (
-          <div
-            className={cn(
-              "rounded-2xl text-sm md:text-base leading-relaxed",
-              "break-words overflow-wrap-anywhere w-full",
-              isUser
-                ? "px-4 py-3 bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
-                : "text-foreground rounded-xl dark:border-gray-700",
-              isCompact && "text-sm md:text-sm"
+            {!answer_file_url && (
+              <div
+                className={cn(
+                  "rounded-2xl text-sm md:text-base leading-relaxed",
+                  "break-words overflow-wrap-anywhere w-full",
+                  "text-foreground rounded-xl dark:border-gray-700",
+                  isCompact && "text-sm md:text-sm"
+                )}
+              >
+                {isTyping ? (
+                  <TypingIndicator />
+                ) : (
+                  <MarkdownContent content={content} />
+                )}
+              </div>
             )}
-          >
-            {isTyping ? (
-              <TypingIndicator />
-            ) : isUser ? (
-              content
-            ) : (
-              <MarkdownContent content={content} />
-            )}
-          </div>
+          </>
         )}
         {!isUser && !isTyping && (
           <div className="flex items-center gap-2 mt-1">

@@ -44,10 +44,10 @@ async def message_stream(request: Request, payload: MessagePayload) -> Streaming
 
     logger.info("Invoking workflow for /message_stream request")
 
-    stream, tag, file_url = await workflow(payload)
+    stream, tag, written_file_url = await workflow(payload)
 
-    if file_url is not None and not isinstance(file_url, str):
-        raise TypeError("Workflow file_url must be a string or None")
+    if written_file_url is not None and not isinstance(written_file_url, str):
+        raise TypeError("Workflow written_file_url must be a string or None")
 
     async def event_generator() -> AsyncIterator[Union[str, bytes]]:
         try:
@@ -77,7 +77,7 @@ async def message_stream(request: Request, payload: MessagePayload) -> Streaming
                 logger.error(msg)
                 raise TypeError(msg)
 
-            final_file_url = None if file_url == "" else file_url
+            final_file_url = None if written_file_url == "" else written_file_url
 
             final_chunk_payload = json.dumps({"file_url": final_file_url}, ensure_ascii=False)
             yield f"data: {final_chunk_payload}\n\n"

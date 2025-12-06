@@ -8,6 +8,7 @@ export interface BaseMessage {
 export interface UserMessage extends BaseMessage {
   isUser: true;
   file_url?: string;
+  voice_url?: string;
 }
 
 export interface BotMessage extends BaseMessage {

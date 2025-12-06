@@ -38,7 +38,6 @@ services:
 
   mock-ml-service:
     build: ./mock/ml_for_test_deploy
-    environment:
     restart: unless-stopped
     networks:
       - proxy-network
@@ -77,7 +76,12 @@ services:
     environment:
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY:-}
       - MODEL=http://mock-ml-service:8000
-      - FRONT_ORIGIN=https://jabkialphacopilot.ru/
+      - FRONT_ORIGIN=http://localhost:5173/
+      - DATABASE_URL=postgres://app:app123@postgres:5432/app
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minio-user
+      - MINIO_SECRET_KEY=minio-password
+      - MINIO_USE_SSL=false
     depends_on:
       - postgres
       - minio
