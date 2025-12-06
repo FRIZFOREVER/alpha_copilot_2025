@@ -172,10 +172,38 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		// Обрабатываем поток сообщений
 		for message := range messageChan {
 			if message != nil {
+				var chunkOut streamChunckOut
+				if message.FileURL != nil {
+					file_url = *message.FileURL
+					chunkOut = streamChunckOut{
+						FileURL: message.FileURL,
+						Content: "",
+						Time:    time.Now().UTC(),
+						Done:    true,
+					}
+					chunkOut.FileURL = message.FileURL
+
+					chunkJSON, err := json.Marshal(chunkOut)
+					if err != nil {
+						sh.logger.Errorf("Error encoding chunk: %v", err)
+						continue
+					}
+
+					if _, err := fmt.Fprintf(w, "data: %s\n\n", chunkJSON); err != nil {
+						sh.logger.Errorf("Error writing chunk: %v", err)
+						break
+					}
+					if err := w.Flush(); err != nil {
+						sh.logger.Errorf("Error flush data: %v", err)
+					}
+
+					break
+				}
+
 				builder.WriteString(message.Choices[0].Delta.Content)
 
 				// Отправляем чанк
-				chunkOut := streamChunckOut{
+				chunkOut = streamChunckOut{
 					Content: message.Choices[0].Delta.Content,
 					Time:    time.Now().UTC(),
 					Done:    false,
@@ -193,32 +221,6 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 				}
 				if err := w.Flush(); err != nil {
 					sh.logger.Errorf("Error flush data: %v", err)
-				}
-
-				if message.Usage != nil {
-					// Отправляем финальный чанк с флагом Done
-					finalChunk := streamChunckOut{
-						Content: "",
-						Time:    time.Now().UTC(),
-						Done:    true,
-					}
-					if message.FileURL != nil {
-						file_url = *message.FileURL
-						finalChunk.FileURL = message.FileURL
-					}
-					finalJSON, err := json.Marshal(finalChunk)
-					if err != nil {
-						sh.logger.Errorf("Error encoding final chunk: %v", err)
-					} else {
-						_, err = fmt.Fprintf(w, "data: %s\n\n", finalJSON)
-						if err != nil {
-							sh.logger.Error("Ошибка записи по формату: ", err)
-						}
-						if err := w.Flush(); err != nil {
-							sh.logger.Errorf("Error flush data: %v", err)
-						}
-					}
-					break
 				}
 			}
 		}

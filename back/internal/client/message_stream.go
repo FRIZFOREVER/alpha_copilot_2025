@@ -245,7 +245,7 @@ func (c *StreamMessageClient) processSSEStream(resp *http.Response, messageChan 
 				continue
 			}
 
-			if message.Usage != nil {
+			if message.FileURL != nil {
 				messageChan <- &message
 				continue
 			}
