@@ -95,7 +95,7 @@ export const useSendMessageMutation = () => {
         question_time: new Date().toISOString(),
         answer_time: new Date().toISOString(),
         voice_url: sendMessageDto.voice_url || "",
-        file_url: sendMessageDto.file_url,
+        question_file_url: sendMessageDto.file_url,
         rating: null,
       };
 

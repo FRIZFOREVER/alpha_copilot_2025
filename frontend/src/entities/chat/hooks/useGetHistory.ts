@@ -26,7 +26,7 @@ export const useGetHistoryQuery = (chatId: number | undefined) => {
           content: historyItem.question,
           isUser: true,
           timestamp: historyItem.question_time,
-          file_url: historyItem.file_url,
+          file_url: historyItem.question_file_url,
           tag: historyItem.tag,
         };
         result.push(userMessage);
@@ -44,6 +44,7 @@ export const useGetHistoryQuery = (chatId: number | undefined) => {
             answerId: historyItem.answer_id,
             rating: historyItem.rating,
             tag: !historyItem.tag ? "general" : historyItem.tag,
+            answer_file_url: historyItem.answer_file_url,
           };
           result.push(botMessage);
         }

@@ -7,7 +7,8 @@ SELECT
     a.time_utc AS answer_time,
     q.voice_url,
     q.file_url,
-    a.rating
+    a.rating,
+    a.file_url
 FROM questions q
 LEFT JOIN answers a ON q.answer_id = a.answer_id
 LEFT JOIN chats c ON q.chat_id = c.id

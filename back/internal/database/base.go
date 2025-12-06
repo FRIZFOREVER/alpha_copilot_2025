@@ -69,10 +69,10 @@ func getHistory(
 			&msg.QuestionTime,
 			&msg.AnswerTime,
 			&msg.VoiceURL,
-			&msg.FileURL,
+			&msg.QuestionFileURL,
 			&msg.Rating,
 			&msg.QuestionTag,
-			&msg.FileURL,
+			&msg.AnswerFileURL,
 		)
 		if err != nil {
 			logger.WithError(err).Error("Failed to scan row")

@@ -15,6 +15,7 @@ export interface BotMessage extends BaseMessage {
   answerId?: number;
   rating?: number | null;
   isTyping?: boolean;
+  answer_file_url?: string;
 }
 
 export type MessageData = UserMessage | BotMessage;

@@ -262,7 +262,6 @@ class ChatService {
   public async searchMessages(
     pattern: string
   ): Promise<SearchMessagesResponse> {
-    // Форматируем паттерн для SQL LIKE: добавляем % вокруг текста для поиска в любом месте
     const likePattern = `%${pattern}%`;
     const encodedPattern = encodeURIComponent(likePattern);
     const { data } = await axiosAuth.get<SearchMessagesResponse>(

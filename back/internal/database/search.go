@@ -48,8 +48,9 @@ func (s *SearchService) GetSearchedMessages(uuid string, searchQuery string) ([]
 			&msg.QuestionTime,
 			&msg.AnswerTime,
 			&msg.VoiceURL,
-			&msg.FileURL,
+			&msg.QuestionFileURL,
 			&msg.Rating,
+			&msg.AnswerFileURL,
 		)
 		if err != nil {
 			s.logger.WithError(err).Error("Failed to scan row")

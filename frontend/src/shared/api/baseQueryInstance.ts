@@ -124,9 +124,19 @@ export class AxiosClient {
   }
 }
 
+<<<<<<< HEAD
 // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const ML_SERVICE_URL = import.meta.env.VITE_ML_SERVICE_URL;
 
 export const axiosNoAuth = new AxiosClient("https://jabkialphacopilot-api.ru/");
 export const axiosAuth = new AxiosClient("https://jabkialphacopilot-api.ru/", true);
+=======
+const ML_SERVICE_URL = import.meta.env.VITE_ML_SERVICE_URL;
+
+export const axiosNoAuth = new AxiosClient("https://jabkialphacopilot-api.ru/");
+export const axiosAuth = new AxiosClient(
+  "https://jabkialphacopilot-api.ru/",
+  true
+);
+>>>>>>> master
 export const axiosMockML = new AxiosClient(ML_SERVICE_URL, false);

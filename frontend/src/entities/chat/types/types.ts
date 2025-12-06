@@ -22,7 +22,8 @@ export interface HistoryMessage {
   question_time: string;
   answer_time: string;
   voice_url: string;
-  file_url?: string;
+  question_file_url?: string;
+  answer_file_url?: string;
   rating: number | null;
   tag: string;
 }
@@ -84,7 +85,11 @@ export interface StreamInitialResponse {
   answer_id: number;
   question_time: string;
   tag: string;
+<<<<<<< HEAD
   file_url: string | null;
+=======
+  file_url: string | null; // В стриме остается file_url, но при обработке переименовывается в answer_file_url
+>>>>>>> master
 }
 
 export interface StreamChunk {
@@ -93,6 +98,7 @@ export interface StreamChunk {
   time: string;
   done: boolean;
   tag?: string;
+  file_url?: string; // Файл от ассистента, приходит в последнем чанке при done === true
 }
 
 export interface SendMessageStreamCallbacks {
@@ -102,9 +108,7 @@ export interface SendMessageStreamCallbacks {
   onError?: (error: Error) => void;
 }
 
-export interface SearchMessageResult extends Omit<HistoryMessage, "tag"> {
-  file_url: string;
-}
+export interface SearchMessageResult extends Omit<HistoryMessage, "tag"> {}
 
 export type SearchMessagesResponse = SearchMessageResult[] | null;
 

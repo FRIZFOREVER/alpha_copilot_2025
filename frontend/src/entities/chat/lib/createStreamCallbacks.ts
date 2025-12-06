@@ -44,7 +44,8 @@ export const createStreamCallbacks = ({
             question_time: data.question_time,
             answer_time: data.question_time,
             voice_url: sendMessageDto.voice_url || "",
-            file_url: sendMessageDto.file_url,
+            question_file_url: sendMessageDto.file_url,
+            answer_file_url: data.file_url || undefined,
             rating: null,
             tag: sendMessageDto.tag || "general",
           };
@@ -70,7 +71,7 @@ export const createStreamCallbacks = ({
       );
     },
     onChunk: (chunk: StreamChunk) => {
-      if (!initialData || !chunk.content) return;
+      if (!initialData) return;
 
       queryClient.setQueryData<GetHistoryResponse>(
         [GET_HISTORY_QUERY, chatId],
@@ -83,11 +84,17 @@ export const createStreamCallbacks = ({
               item.answer_id === initialData!.answer_id
             ) {
               hasChanges = true;
-              const newAnswer = (item.answer || "") + chunk.content;
+              const newAnswer = chunk.content
+                ? (item.answer || "") + chunk.content
+                : item.answer;
               return {
                 ...item,
                 answer: newAnswer,
                 answer_time: chunk.time,
+                answer_file_url:
+                  chunk.done && chunk.file_url
+                    ? chunk.file_url
+                    : item.answer_file_url,
               };
             }
             return item;
