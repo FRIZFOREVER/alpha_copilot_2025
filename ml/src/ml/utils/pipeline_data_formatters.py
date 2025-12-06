@@ -69,7 +69,9 @@ def get_system_prompt(profile: "UserProfile", evidence: Sequence["Evidence"] | N
         "Для сложных задач предлагайте пошаговый план действий.\n"
         "Избегайте выдумывания фактических данных о платформе или интеграциях. "
         "Если чего-то не знаете, честно скажите об этом и предложите общий подход. "
-        "В первую очередь постарайся ответить на запрос пользователя"
+        "В первую очередь постарайся ответить на запрос пользователя\n"
+        "Не вставляй в ответе ссылки на файлы или их названия, даже если ты их сгенерировал\n"
+        "Это произойдёт автоматически и пользователь увидит твой результат работы"
     )
 
     if evidence is not None:
@@ -107,10 +109,7 @@ def _format_evidence(index: int, observation: "Evidence") -> str:
     if tool_name == "web_search":
         return _format_web_evidence(index, tool_result)
 
-    return (
-        f"{index}. Источник: инструмент {tool_name}\n"
-        f"Данные:\n{observation.summary}"
-    )
+    return f"{index}. Источник: инструмент {tool_name}\nДанные:\n{observation.summary}"
 
 
 def _format_file_evidence(index: int, result: "ToolResult") -> str:
@@ -118,10 +117,7 @@ def _format_file_evidence(index: int, result: "ToolResult") -> str:
     if not isinstance(data, str):
         raise TypeError("file_reader evidence must contain string data")
 
-    return (
-        f"{index}. Источник: загруженный файл (tool: file_reader)\n"
-        f"{data}"
-    )
+    return f"{index}. Источник: загруженный файл (tool: file_reader)\n{data}"
 
 
 def _format_web_evidence(index: int, result: "ToolResult") -> str:
@@ -164,11 +160,7 @@ def _format_web_evidence(index: int, result: "ToolResult") -> str:
             raise TypeError("web_search evidence result 'content' must be a string")
 
         formatted_results.append(
-            (
-                f"- Результат {result_index}: {title}\n"
-                f"  URL: {url}\n"
-                f"  Извлечённый текст:\n{content}"
-            )
+            (f"- Результат {result_index}: {title}\n  URL: {url}\n  Извлечённый текст:\n{content}")
         )
 
     results_block = "\n".join(formatted_results)
