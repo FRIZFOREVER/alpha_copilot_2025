@@ -3,6 +3,11 @@ from fastapi import APIRouter
 router = APIRouter(tags=["health"])
 
 
+@router.get("/")
+async def root() -> dict[str, str]:
+    return {"status": "ok"}
+
+
 @router.get("/ping")
 async def ping():
     return {"message": "pong"}
@@ -19,6 +24,4 @@ async def ollama():
 
 @router.get("/health")
 async def health():
-    # TODO: check init state
-
-    raise NotImplementedError()
+    return {"status": "ok"}
