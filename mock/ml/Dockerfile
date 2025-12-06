@@ -10,8 +10,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
 COPY config.py .
-COPY telegram_user_service.py .
-COPY todoist_service.py .
 
 COPY models/ ./models/
 COPY utils/ ./utils/

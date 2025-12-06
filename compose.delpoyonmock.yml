@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Nginx Proxy Manager
   nginx-proxy:
@@ -72,14 +70,16 @@ services:
     build:
       context: ./back
       dockerfile: deploy/Dockerfile
-    expose:
-      - "8080"
+    # expose:
+    #   - "8080"
+    ports:
+      - "8080:8080"
     env_file:
       - ./.env
     environment:
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY:-}
       - MODEL=http://mock-ml-service:8000
-      - FRONT_ORIGIB=https://jabkialphacopilot.ru
+      - FRONT_ORIGIB=http://localhost:5173
     depends_on:
       - postgres
       - minio
@@ -88,6 +88,26 @@ services:
       proxy-network:
         aliases:
           - api.local
+
+  integrations:
+    build: ./integration
+    ports:
+      - "4444:4444"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID:-0}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH:-}
+      - TELEGRAM_DATA_DIR=/app/data
+    volumes:
+      - telegram_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - proxy-network
 
   postgres:
     image: postgres:15-alpine
@@ -150,6 +170,7 @@ services:
 volumes:
   postgres_data:
   minio-data: {}
+  telegram_data:
 
 networks:
   proxy-network:
