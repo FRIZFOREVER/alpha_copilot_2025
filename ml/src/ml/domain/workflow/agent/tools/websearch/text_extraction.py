@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 from urllib.parse import urlparse
 
 import httpx
 from bs4 import BeautifulSoup
+
+logger = logging.getLogger(__name__)
 
 BLOCKED_DOMAINS: set[str] = {
     "www.bing.com",
@@ -77,8 +80,12 @@ def is_url_allowed(url: str) -> bool:
 
 async def fetch_html(url: str, *, timeout: float = 10.0) -> str:
     async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-        response = await client.get(url)
-        response.raise_for_status()
+        try:
+            response = await client.get(url)
+            response.raise_for_status()
+        except httpx.HTTPError:
+            logger.exception("Failed to fetch HTML content from %s", url)
+            return ""
 
     content = response.text
     if not isinstance(content, str):
