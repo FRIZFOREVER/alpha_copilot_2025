@@ -11,6 +11,14 @@ async def ingest_file(state: GraphState) -> GraphState:
 
     file_url = state.file_url
     if file_url is None:
+        logger.info("No file URL provided; skipping file ingestion")
+        return state
+
+    if not isinstance(file_url, str):
+        raise TypeError("GraphState.file_url must be a string when provided")
+
+    if file_url == "":
+        logger.info("Empty file URL provided; skipping file ingestion")
         return state
 
     tool = FileReaderTool()

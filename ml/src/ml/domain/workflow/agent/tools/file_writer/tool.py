@@ -54,13 +54,23 @@ class FileWriterTool(BaseTool):
         if content == "":
             raise ValueError("file_writer tool requires non-empty 'content'")
 
+        logger.info(
+            "Preparing to write file '%s' with content length %d characters",
+            file_name,
+            len(content),
+        )
+
         extension = self._extract_extension(file_name)
+
+        logger.info("Writing file '%s' to MinIO with extension '%s'", file_name, extension)
 
         try:
             file_url = write_minio_file(content, extension=extension)
         except Exception:
             logger.exception("Failed to write file '%s' to MinIO", file_name)
             raise
+
+        logger.info("File '%s' successfully written to MinIO at %s", file_name, file_url)
 
         evidence_text = (
             "Источник: файл\n"
