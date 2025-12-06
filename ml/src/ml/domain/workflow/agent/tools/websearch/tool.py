@@ -90,6 +90,8 @@ class WebSearchTool(BaseTool):
     async def _perform_search(self, query: str) -> list[SearchHit]:
         collected: list[SearchHit] = []
 
+        logger.info("Executing DuckDuckGo search with query: %s", query)
+
         def _search() -> list[dict[str, Any]]:
             with DDGS() as client:
                 return client.text(query, max_results=10)
