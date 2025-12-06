@@ -172,11 +172,11 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		// Обрабатываем поток сообщений
 		for message := range messageChan {
 			if message != nil {
-				builder.WriteString(message.Message.Content)
+				builder.WriteString(message.Choices[0].Delta.Content)
 
 				// Отправляем чанк
 				chunkOut := streamChunckOut{
-					Content: message.Message.Content,
+					Content: message.Choices[0].Delta.Content,
 					Time:    time.Now().UTC(),
 					Done:    false,
 				}
@@ -195,7 +195,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 					sh.logger.Errorf("Error flush data: %v", err)
 				}
 
-				if message.Done {
+				if message.Usage != nil {
 					// Отправляем финальный чанк с флагом Done
 					finalChunk := streamChunckOut{
 						Content: "",

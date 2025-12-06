@@ -41,21 +41,82 @@ type PayloadStream struct {
 
 // StreamMessage представляет структуру сообщения из стрима.
 type StreamMessage struct {
-	Model              string         `json:"model"`
-	CreatedAt          string         `json:"created_at"`
-	Done               bool           `json:"done"`
-	DoneReason         string         `json:"done_reason"`
-	TotalDuration      *int64         `json:"total_duration"`
-	LoadDuration       *int64         `json:"load_duration"`
-	PromptEvalCount    *int           `json:"prompt_eval_count"`
-	PromptEvalDuration *int64         `json:"prompt_eval_duration"`
-	EvalCount          *int           `json:"eval_count"`
-	EvalDuration       *int64         `json:"eval_duration"`
-	FileURL            *string        `json:"file_url,omitempty"`
-	Message            MessageContent `json:"message"`
+	ID                string        `json:"id"`
+	Choices           []ChoiceDelta `json:"choices"`
+	Created           int64         `json:"created"`
+	Model             string        `json:"model"`
+	Object            string        `json:"object"`
+	ServiceTier       *string       `json:"service_tier,omitempty"`
+	SystemFingerprint *string       `json:"system_fingerprint,omitempty"`
+	Usage             *UsageStats   `json:"usage,omitempty"`
+	Provider          string        `json:"provider"`
+	FileURL           *string       `json:"file_url,omitempty"`
 }
 
-// MessageContent представляет содержимое сообщения.
+// ChoiceDelta представляет выбор с дельтой изменений.
+type ChoiceDelta struct {
+	Delta              DeltaContent `json:"delta"`
+	FinishReason       *string      `json:"finish_reason"`
+	Index              int          `json:"index"`
+	Logprobs           interface{}  `json:"logprobs"`
+	NativeFinishReason *string      `json:"native_finish_reason,omitempty"`
+}
+
+// DeltaContent представляет инкрементальные изменения в сообщении.
+type DeltaContent struct {
+	Content          string            `json:"content"`
+	FunctionCall     interface{}       `json:"function_call"`
+	Refusal          interface{}       `json:"refusal"`
+	Role             string            `json:"role"`
+	ToolCalls        interface{}       `json:"tool_calls"`
+	Reasoning        *string           `json:"reasoning"`
+	ReasoningDetails []ReasoningDetail `json:"reasoning_details"`
+}
+
+// ReasoningDetail представляет детали reasoning.
+type ReasoningDetail struct {
+	Type   string `json:"type"`
+	Text   string `json:"text"`
+	Format string `json:"format"`
+	Index  int    `json:"index"`
+}
+
+// UsageStats представляет статистику использования токенов.
+type UsageStats struct {
+	CompletionTokens        int                     `json:"completion_tokens"`
+	PromptTokens            int                     `json:"prompt_tokens"`
+	TotalTokens             int                     `json:"total_tokens"`
+	CompletionTokensDetails CompletionTokensDetails `json:"completion_tokens_details"`
+	PromptTokensDetails     PromptTokensDetails     `json:"prompt_tokens_details"`
+	Cost                    float64                 `json:"cost"`
+	IsByok                  bool                    `json:"is_byok"`
+	CostDetails             CostDetails             `json:"cost_details"`
+}
+
+// CompletionTokensDetails представляет детали completion токенов.
+type CompletionTokensDetails struct {
+	AcceptedPredictionTokens *int `json:"accepted_prediction_tokens"`
+	AudioTokens              *int `json:"audio_tokens"`
+	ReasoningTokens          int  `json:"reasoning_tokens"`
+	RejectedPredictionTokens *int `json:"rejected_prediction_tokens"`
+	ImageTokens              int  `json:"image_tokens"`
+}
+
+// PromptTokensDetails представляет детали prompt токенов.
+type PromptTokensDetails struct {
+	AudioTokens  int `json:"audio_tokens"`
+	CachedTokens int `json:"cached_tokens"`
+	VideoTokens  int `json:"video_tokens"`
+}
+
+// CostDetails представляет детали стоимости.
+type CostDetails struct {
+	UpstreamInferenceCost            *float64 `json:"upstream_inference_cost"`
+	UpstreamInferencePromptCost      float64  `json:"upstream_inference_prompt_cost"`
+	UpstreamInferenceCompletionsCost float64  `json:"upstream_inference_completions_cost"`
+}
+
+// MessageContent представляет содержимое сообщения (для не-потоковых ответов).
 type MessageContent struct {
 	Role      string      `json:"role"`
 	Content   string      `json:"content"`
@@ -149,7 +210,7 @@ func (c *StreamMessageClient) processSSEStream(resp *http.Response, messageChan 
 	defer close(messageChan)
 
 	reader := bufio.NewReader(resp.Body)
-	thinkFlag := false
+
 	for {
 		// Читаем строку из потока
 		line, err := reader.ReadString('\n')
@@ -184,17 +245,17 @@ func (c *StreamMessageClient) processSSEStream(resp *http.Response, messageChan 
 				continue
 			}
 
-			if message.Message.Content == "<think>" {
-				thinkFlag = true
-				continue
-			} else if message.Message.Content == "</think>" {
-				thinkFlag = false
+			if message.Usage != nil {
+				messageChan <- &message
 				continue
 			}
-			if thinkFlag {
-				message.Message.Thinking = message.Message.Content
-				message.Message.Content = ""
+
+			if len(message.Choices) > 0 {
+				if message.Choices[0].Delta.Content == "" {
+					continue
+				}
 			}
+
 			// Отправляем сообщение в канал
 			messageChan <- &message
 		}
