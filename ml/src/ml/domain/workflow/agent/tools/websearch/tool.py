@@ -95,7 +95,7 @@ class WebSearchTool(BaseTool):
         def _search() -> list[dict[str, Any]]:
             with DDGS() as client:
                 return client.text(
-                    keywords=query,
+                    query,
                     region="ru-ru",
                     safesearch="moderate",
                     backend="api",
