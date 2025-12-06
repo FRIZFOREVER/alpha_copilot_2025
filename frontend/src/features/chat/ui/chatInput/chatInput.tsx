@@ -334,7 +334,7 @@ export const ChatInput = forwardRef<HTMLDivElement, ChatInputProps>(
         resizeObserver.disconnect();
       };
     }, [scrollButtonContainerRef, message, file, selectedTag]);
-    console.log(selectedTag);
+
     return (
       <div className={cn("md:px-4 lg:px-10", isCompact && "md:px-0 lg:px-0")}>
         <div
