@@ -75,8 +75,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://jabkialphacopilot.ru/}
-        VITE_ML_SERVICE_URL: ${VITE_ML_SERVICE_URL:-http://localhost:8000/}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://jabkialphacopilot-api.ru/}
     expose:
       - "80"
     depends_on:
@@ -102,7 +101,6 @@ services:
     depends_on:
       - postgres
       - minio
-      - ml
     restart: always
     networks:
       proxy-network:
