@@ -23,9 +23,9 @@ type MockSearchManager struct {
 	mock.Mock
 }
 
-func (m *MockSearchManager) GetSearchedMessages(uuid string, searchQuery string) ([]database.Message, error) {
+func (m *MockSearchManager) GetSearchedMessages(uuid string, searchQuery string) ([]database.Search, error) {
 	args := m.Called(uuid, searchQuery)
-	return args.Get(0).([]database.Message), args.Error(1)
+	return args.Get(0).([]database.Search), args.Error(1)
 }
 
 func TestSearch_Handler(t *testing.T) {
@@ -46,7 +46,7 @@ func TestSearch_Handler(t *testing.T) {
 			name:    "Успешный поиск сообщений",
 			pattern: "test query",
 			setupMocks: func(msm *MockSearchManager) {
-				messages := []database.Message{
+				messages := []database.Search{
 					{
 						QuestionID:      1,
 						AnswerID:        1,
@@ -59,6 +59,7 @@ func TestSearch_Handler(t *testing.T) {
 						QuestionFileURL: "question_file.pdf",
 						AnswerFileURL:   "answer_file.pdf",
 						Rating:          intPtr(5),
+						ChatID:          100,
 					},
 					{
 						QuestionID:      2,
@@ -72,18 +73,20 @@ func TestSearch_Handler(t *testing.T) {
 						QuestionFileURL: "",
 						AnswerFileURL:   "",
 						Rating:          nil,
+						ChatID:          101,
 					},
 				}
 				msm.On("GetSearchedMessages", testUUID.String(), "test query").Return(messages, nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `[{"question_id":1,"answer_id":1,"question":"Test question?","tag":"general","answer":"Test answer","question_time":"` + testTime.Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Format(time.RFC3339Nano) + `","voice_url":"voice.mp3","question_file_url":"question_file.pdf","answer_file_url":"answer_file.pdf","rating":5},{"question_id":2,"answer_id":2,"question":"Another test?","tag":null,"answer":"Another answer","question_time":"` + testTime.Add(-time.Hour).Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Add(-30*time.Minute).Format(time.RFC3339Nano) + `","voice_url":"","question_file_url":"","answer_file_url":"","rating":null}]`,
+			expectedBody: `[{"question_id":1,"answer_id":1,"question":"Test question?","tag":"general","answer":"Test answer","question_time":"` + testTime.Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Format(time.RFC3339Nano) + `","voice_url":"voice.mp3","question_file_url":"question_file.pdf","answer_file_url":"answer_file.pdf","rating":5,"chat_id":100},` +
+				`{"question_id":2,"answer_id":2,"question":"Another test?","tag":null,"answer":"Another answer","question_time":"` + testTime.Add(-time.Hour).Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Add(-30*time.Minute).Format(time.RFC3339Nano) + `","voice_url":"","question_file_url":"","answer_file_url":"","rating":null,"chat_id":101}]`,
 		},
 		{
 			name:    "Пустой результат поиска",
 			pattern: "nonexistent",
 			setupMocks: func(msm *MockSearchManager) {
-				msm.On("GetSearchedMessages", testUUID.String(), "nonexistent").Return([]database.Message{}, nil)
+				msm.On("GetSearchedMessages", testUUID.String(), "nonexistent").Return([]database.Search{}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   "[]",
@@ -92,7 +95,7 @@ func TestSearch_Handler(t *testing.T) {
 			name:    "Ошибка базы данных",
 			pattern: "error query",
 			setupMocks: func(msm *MockSearchManager) {
-				msm.On("GetSearchedMessages", testUUID.String(), "error query").Return([]database.Message{}, errors.New("database connection failed"))
+				msm.On("GetSearchedMessages", testUUID.String(), "error query").Return([]database.Search{}, errors.New("database connection failed"))
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectedBody:   `{"error":"Error in database","details":"database connection failed"}`,
@@ -101,7 +104,7 @@ func TestSearch_Handler(t *testing.T) {
 			name:    "Пустой поисковый запрос",
 			pattern: "",
 			setupMocks: func(msm *MockSearchManager) {
-				messages := []database.Message{
+				messages := []database.Search{
 					{
 						QuestionID:      3,
 						AnswerID:        3,
@@ -114,18 +117,19 @@ func TestSearch_Handler(t *testing.T) {
 						QuestionFileURL: "",
 						AnswerFileURL:   "",
 						Rating:          intPtr(3),
+						ChatID:          102,
 					},
 				}
 				msm.On("GetSearchedMessages", testUUID.String(), "").Return(messages, nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `[{"question_id":3,"answer_id":3,"question":"Empty pattern search?","tag":"test","answer":"Should work with empty pattern","question_time":"` + testTime.Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Format(time.RFC3339Nano) + `","voice_url":"","question_file_url":"","answer_file_url":"","rating":3}]`,
+			expectedBody:   `[{"question_id":3,"answer_id":3,"question":"Empty pattern search?","tag":"test","answer":"Should work with empty pattern","question_time":"` + testTime.Format(time.RFC3339Nano) + `","answer_time":"` + testTime.Format(time.RFC3339Nano) + `","voice_url":"","question_file_url":"","answer_file_url":"","rating":3,"chat_id":102}]`,
 		},
 		{
 			name:    "Специальные символы в поисковом запросе",
 			pattern: "test & query % _",
 			setupMocks: func(msm *MockSearchManager) {
-				msm.On("GetSearchedMessages", testUUID.String(), "test & query % _").Return([]database.Message{}, nil)
+				msm.On("GetSearchedMessages", testUUID.String(), "test & query % _").Return([]database.Search{}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   "[]",

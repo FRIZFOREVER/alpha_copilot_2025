@@ -25,6 +25,7 @@ import { TelegramContact } from "@/entities/auth/types/types";
 import { useGraphLogsContext } from "../chat/chat";
 import { useGraphLogsQuery } from "@/entities/chat/hooks/useGraphLogs";
 import { SourcesButton } from "./sourcesButton";
+import { VoiceMessage } from "./voiceMessage";
 
 export interface MessageProps {
   id: string;
@@ -35,6 +36,7 @@ export interface MessageProps {
   isTyping?: boolean;
   question_file_url?: string;
   answer_file_url?: string;
+  voice_url?: string;
   isCompact?: boolean;
   tag: string;
 }
@@ -49,6 +51,7 @@ export const Message = ({
   isTyping = false,
   question_file_url,
   answer_file_url,
+  voice_url,
   isCompact = false,
 }: MessageProps) => {
   const chatId = useParams().chatId;
@@ -201,18 +204,23 @@ export const Message = ({
             {content}
           </div>
         )}
+        {voice_url && voice_url.trim() && !isUser && (
+          <div className="mb-2">
+            <VoiceMessage voiceUrl={voice_url} transcription={content} />
+          </div>
+        )}
         {answer_file_url && !isUser && <FileMessage fileUrl={answer_file_url} />}
-        {answer_file_url && !isUser && content && content.trim() && (
+        {answer_file_url && !isUser && content && content.trim() && !voice_url && (
           <div
             className={cn(
-              "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed mt-2",
+              "rounded-2xl py-0 text-sm md:text-base leading-relaxed mt-2",
               "text-foreground rounded-xl dark:border-gray-700"
             )}
           >
             <MarkdownContent content={content} />
           </div>
         )}
-        {!question_file_url && !answer_file_url && (
+        {!question_file_url && !answer_file_url && !voice_url && (
           <div
             className={cn(
               "rounded-2xl text-sm md:text-base leading-relaxed",

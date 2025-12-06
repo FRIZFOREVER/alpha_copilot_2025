@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	_ "embed"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -24,8 +25,23 @@ func NewSearchRepository(db *sql.DB, logger *logrus.Logger) *SearchService {
 	}
 }
 
+type Search struct {
+	QuestionID      int       `json:"question_id"`
+	AnswerID        int       `json:"answer_id"`
+	Question        string    `json:"question"`
+	QuestionTag     *string   `json:"tag"`
+	Answer          string    `json:"answer"`
+	QuestionTime    time.Time `json:"question_time"`
+	AnswerTime      time.Time `json:"answer_time"`
+	VoiceURL        string    `json:"voice_url"`
+	QuestionFileURL string    `json:"question_file_url"`
+	Rating          *int      `json:"rating"`
+	AnswerFileURL   string    `json:"answer_file_url"`
+	ChatID          int       `json:"chat_id"`
+}
+
 // GetSearchedMessages - метод для поиска сообщений.
-func (s *SearchService) GetSearchedMessages(uuid string, searchQuery string) ([]Message, error) {
+func (s *SearchService) GetSearchedMessages(uuid string, searchQuery string) ([]Search, error) {
 	rows, err := s.db.Query(searchMessageQuery, uuid, searchQuery)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to query search")
@@ -37,26 +53,27 @@ func (s *SearchService) GetSearchedMessages(uuid string, searchQuery string) ([]
 		}
 	}()
 
-	var messages []Message
+	var search []Search
 	for rows.Next() {
-		var msg Message
+		var srch Search
 		err := rows.Scan(
-			&msg.QuestionID,
-			&msg.AnswerID,
-			&msg.Question,
-			&msg.Answer,
-			&msg.QuestionTime,
-			&msg.AnswerTime,
-			&msg.VoiceURL,
-			&msg.QuestionFileURL,
-			&msg.Rating,
-			&msg.AnswerFileURL,
+			&srch.QuestionID,
+			&srch.AnswerID,
+			&srch.Question,
+			&srch.Answer,
+			&srch.QuestionTime,
+			&srch.AnswerTime,
+			&srch.VoiceURL,
+			&srch.QuestionFileURL,
+			&srch.Rating,
+			&srch.AnswerFileURL,
+			&srch.ChatID,
 		)
 		if err != nil {
 			s.logger.WithError(err).Error("Failed to scan row")
 			continue
 		}
-		messages = append(messages, msg)
+		search = append(search, srch)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -64,10 +81,10 @@ func (s *SearchService) GetSearchedMessages(uuid string, searchQuery string) ([]
 		return nil, err
 	}
 
-	return messages, nil
+	return search, nil
 }
 
 // SearchManager - интерфейс для поиска сообщений.
 type SearchManager interface {
-	GetSearchedMessages(uuid string, searchQuery string) ([]Message, error)
+	GetSearchedMessages(uuid string, searchQuery string) ([]Search, error)
 }
