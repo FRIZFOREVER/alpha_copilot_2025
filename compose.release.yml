@@ -36,19 +36,39 @@ services:
     networks:
       - proxy-network
 
-  mock-ml-service:
-    build: ./mock/ml_for_test_deploy
+  ml:
+    build:
+      context: ./ml
+      dockerfile: deploy/Dockerfile
+    env_file:
+      - ./.env
     environment:
-    restart: unless-stopped
-    networks:
-      - proxy-network
+      - OLLAMA_HOST=http://ollama:11434
     ports:
-      - '8000:8000'
+      - "8000:8000"
+    restart: unless-stopped
+    depends_on:
+      - ollama
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - proxy-network
+
+  ollama:
+    build:
+      context: .
+      dockerfile: model/Dockerfile
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - proxy-network
 
   frontend:
     build:
@@ -76,7 +96,7 @@ services:
       - ./.env
     environment:
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY:-}
-      - MODEL=http://mock-ml-service:8000
+      - MODEL=http://ml:8000
       - FRONT_ORIGIN=https://jabkialphacopilot.ru/
     depends_on:
       - postgres
@@ -169,6 +189,7 @@ volumes:
   postgres_data:
   minio-data: {}
   telegram_data:
+  ollama:
 
 networks:
   proxy-network:

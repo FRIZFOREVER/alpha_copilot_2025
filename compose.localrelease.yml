@@ -1,91 +1,77 @@
 services:
-  # Nginx Proxy Manager
-  nginx-proxy:
-    image: jc21/nginx-proxy-manager:latest
-    container_name: nginx-proxy-manager
-    restart: unless-stopped
-    ports:
-      - '80:80'
-      - '443:443'
-      - '81:81'
+  ml:
+    build:
+      context: ./ml
+      dockerfile: deploy/Dockerfile
+    env_file:
+      - ./.env
     environment:
-      DB_MYSQL_HOST: nginx-proxy-db
-      DB_MYSQL_PORT: 3306
-      DB_MYSQL_USER: npm
-      DB_MYSQL_PASSWORD: npm
-      DB_MYSQL_NAME: npm
-    volumes:
-      - ./nginx-proxy-manager/data:/data
-      - ./nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+      - OLLAMA_HOST=http://ollama:11434
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
     depends_on:
-      - nginx-proxy-db
-    networks:
-      - proxy-network
-
-  nginx-proxy-db:
-    image: jc21/mariadb-aria:latest
-    container_name: nginx-proxy-db
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: npm
-      MYSQL_DATABASE: npm
-      MYSQL_USER: npm
-      MYSQL_PASSWORD: npm
-    volumes:
-      - ./nginx-proxy-manager/data/mysql:/var/lib/mysql
-    networks:
-      - proxy-network
-
-  mock-ml-service:
-    build: ./mock/ml_for_test_deploy
-    environment:
-    restart: unless-stopped
-    networks:
-      - proxy-network
-    ports:
-      - '8000:8000'
+      - ollama
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ping"]
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - proxy-network
+
+  ollama:
+    build:
+      context: .
+      dockerfile: model/Dockerfile
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - proxy-network
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://jabkialphacopilot-api.ru/}
-    expose:
-      - "80"
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+    ports:
+      - "5173:80"
     depends_on:
       - app
     restart: always
     networks:
-      proxy-network:
-        aliases:
-          - frontend.local
+      - proxy-network
 
   app:
     build:
       context: ./back
       dockerfile: deploy/Dockerfile
     ports:
-      - '8080:8080'
+      - "8080:8080"
     env_file:
       - ./.env
     environment:
       - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY:-}
-      - MODEL=http://mock-ml-service:8000
-      - FRONT_ORIGIN=https://jabkialphacopilot.ru/
+      - MODEL=http://ml:8000
+      - FRONT_ORIGIN=http://localhost:5173
+      - DATABASE_URL=postgres://app:app123@postgres:5432/app
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minio-user
+      - MINIO_SECRET_KEY=minio-password
+      - MINIO_USE_SSL=false
     depends_on:
-      - postgres
-      - minio
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     restart: always
     networks:
-      proxy-network:
-        aliases:
-          - api.local
+      - proxy-network
 
   integrations:
     build: ./integration
@@ -96,8 +82,11 @@ services:
       - TELEGRAM_API_ID=${TELEGRAM_API_ID:-0}
       - TELEGRAM_API_HASH=${TELEGRAM_API_HASH:-}
       - TELEGRAM_DATA_DIR=/app/data
+      - API_BASE_URL=http://app:8080
     volumes:
       - telegram_data:/app/data
+    depends_on:
+      - app
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4444/health"]
@@ -115,6 +104,8 @@ services:
       - POSTGRES_PASSWORD=app123
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app -d app"]
       interval: 5s
@@ -127,6 +118,8 @@ services:
     build:
       context: ./back/internal/database/migrations
       dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgres://app:app123@postgres:5432/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -166,6 +159,7 @@ services:
       - proxy-network
 
 volumes:
+  ollama:
   postgres_data:
   minio-data: {}
   telegram_data:
