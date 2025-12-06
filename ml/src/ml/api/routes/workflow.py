@@ -4,12 +4,12 @@ from collections.abc import AsyncIterator
 from typing import Union
 
 from fastapi import APIRouter, HTTPException, Request, status
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from ollama._types import ChatResponse
 
 from ml.api.schemas import MessagePayload
 from ml.api.external import GraphLogWebSocketClient
-from ml.domain.workflow.router import workflow
+from ml.domain.workflow.router import workflow, workflow_collected
 
 router = APIRouter(tags=["workflow"])
 
@@ -90,9 +90,36 @@ async def message_stream(request: Request, payload: MessagePayload) -> Streaming
 
 
 @router.post("/message")
-async def message(payload: MessagePayload):
-    # TODO: error 503 on init handling
+async def message(request: Request, payload: MessagePayload) -> JSONResponse:
+    model_ready = request.app.state.model_ready
+    if not model_ready.is_set():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Models are still initialising",
+        )
 
-    # TODO: workflow_collected calling
+    graph_log_client = request.app.state.graph_log_client
+    if not isinstance(graph_log_client, GraphLogWebSocketClient):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Graph log client is not configured",
+        )
 
-    raise NotImplementedError()
+    logger.info("Connecting graph log websocket for chat_id=%s", payload.chat_id)
+    try:
+        await graph_log_client.connect(payload.chat_id)
+    except Exception as exc:
+        logger.exception("Failed to initialise graph log websocket connection")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Graph log websocket connection failed",
+        ) from exc
+
+    logger.info("Invoking workflow for /message request")
+
+    try:
+        collected_response, tag = await workflow_collected(payload)
+    finally:
+        await graph_log_client.close(payload.chat_id)
+
+    return JSONResponse(content={"content": collected_response, "tag": tag.value})
