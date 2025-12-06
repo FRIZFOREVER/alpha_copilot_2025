@@ -1,6 +1,9 @@
 import asyncio
 import sys
+from collections.abc import Awaitable, Callable, Iterator
+from contextlib import contextmanager
 from types import ModuleType
+from typing import ContextManager, Literal
 
 import pytest
 from fastapi.testclient import TestClient
@@ -142,49 +145,21 @@ class DummyGraphLogWebSocketClient(GraphLogWebSocketClient):
     async def close(self, chat_id: int) -> None:  # type: ignore[override]
         return None
 
-@pytest.fixture()
-def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
-    async def fake_workflow_collected(payload: object) -> tuple[str, Tag]:
-        return "Workflow output", Tag.General
 
-    async def _return_empty_list() -> list[str]:
-        return []
+class FailingGraphLogWebSocketClient(GraphLogWebSocketClient):
+    def __init__(self) -> None:
+        super().__init__(base_url="ws://test")
 
-    async def _noop_download(available_models: list[str], requested_models: list[str]) -> None:
-        return None
-
-    async def _noop_warmup() -> None:
-        return None
-
-    async def _init_graph_log_client() -> GraphLogWebSocketClient:
-        return DummyGraphLogWebSocketClient()
-
-    monkeypatch.setattr(workflow_routes, "workflow_collected", fake_workflow_collected)
-    monkeypatch.setattr(app_module, "get_llm_mode", lambda: LLMMode.OLLAMA)
-    monkeypatch.setattr(app_module, "fetch_available_models", _return_empty_list)
-    monkeypatch.setattr(app_module, "get_models_from_env", _return_empty_list)
-    monkeypatch.setattr(app_module, "download_missing_models", _noop_download)
-    monkeypatch.setattr(app_module, "init_warmup_clients", _noop_warmup)
-    monkeypatch.setattr(app_module, "clients_warmup", _noop_warmup)
-    monkeypatch.setattr(app_module, "init_graph_log_client", _init_graph_log_client)
-
-    app = create_app()
-    app.state.model_ready = asyncio.Event()
-    app.state.model_ready.set()
-
-    with TestClient(app) as test_client:
-        yield test_client
+    async def connect(self, chat_id: int):  # type: ignore[override]
+        msg = f"Failed to open websocket for chat {chat_id}"
+        raise RuntimeError(msg)
 
 
-def test_ping_endpoint_returns_pong(client: TestClient) -> None:
-    response = client.get("/ping")
-
-    assert response.status_code == 200
-    assert response.json() == {"message": "pong"}
+_DEFAULT_CLIENT_SENTINEL: Literal["default"] = "default"
 
 
-def test_message_endpoint_returns_collected_response(client: TestClient) -> None:
-    payload = {
+def _valid_payload() -> dict[str, object]:
+    return {
         "messages": [{"role": "user", "content": "Hello"}],
         "chat_id": 1,
         "tag": Tag.General.value,
@@ -201,7 +176,142 @@ def test_message_endpoint_returns_collected_response(client: TestClient) -> None
         },
     }
 
-    response = client.post("/message", json=payload)
+
+@contextmanager
+def _build_test_client(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    graph_log_client: GraphLogWebSocketClient | None,
+    workflow_collected_impl: Callable[[object], Awaitable[tuple[str, Tag]]],
+    model_ready: bool,
+) -> Iterator[TestClient]:
+    async def _return_empty_list() -> list[str]:
+        return []
+
+    async def _noop_download(available_models: list[str], requested_models: list[str]) -> None:
+        return None
+
+    async def _noop_warmup() -> None:
+        return None
+
+    async def _init_graph_log_client() -> GraphLogWebSocketClient | None:
+        return graph_log_client
+
+    monkeypatch.setattr(workflow_routes, "workflow_collected", workflow_collected_impl)
+    monkeypatch.setattr(app_module, "get_llm_mode", lambda: LLMMode.OLLAMA)
+    monkeypatch.setattr(app_module, "fetch_available_models", _return_empty_list)
+    monkeypatch.setattr(app_module, "get_models_from_env", _return_empty_list)
+    monkeypatch.setattr(app_module, "download_missing_models", _noop_download)
+    monkeypatch.setattr(app_module, "init_warmup_clients", _noop_warmup)
+    monkeypatch.setattr(app_module, "clients_warmup", _noop_warmup)
+    monkeypatch.setattr(app_module, "init_graph_log_client", _init_graph_log_client)
+
+    app = create_app()
+
+    with TestClient(app) as test_client:
+        if not model_ready:
+            test_client.app.state.model_ready = asyncio.Event()
+        if graph_log_client is not None:
+            test_client.app.state.graph_log_client = graph_log_client
+
+        yield test_client
+
+
+@pytest.fixture()
+def test_client_factory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> Callable[..., ContextManager[TestClient]]:
+    async def default_workflow_collected(payload: object) -> tuple[str, Tag]:
+        return "Workflow output", Tag.General
+
+    @contextmanager
+    def _factory(
+        graph_log_client: GraphLogWebSocketClient | None | Literal["default"] = (
+            _DEFAULT_CLIENT_SENTINEL
+        ),
+        workflow_collected_impl: Callable[[object], Awaitable[tuple[str, Tag]]] = (
+            default_workflow_collected
+        ),
+        model_ready: bool = True,
+    ) -> Iterator[TestClient]:
+        resolved_graph_client = (
+            DummyGraphLogWebSocketClient()
+            if graph_log_client is _DEFAULT_CLIENT_SENTINEL
+            else graph_log_client
+        )
+
+        with _build_test_client(
+            monkeypatch,
+            graph_log_client=resolved_graph_client,
+            workflow_collected_impl=workflow_collected_impl,
+            model_ready=model_ready,
+        ) as client:
+            yield client
+
+    return _factory
+
+@pytest.fixture()
+def client(test_client_factory: Callable[..., ContextManager[TestClient]]) -> Iterator[TestClient]:
+    with test_client_factory() as default_client:
+        yield default_client
+
+
+def test_ping_endpoint_returns_pong(client: TestClient) -> None:
+    response = client.get("/ping")
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "pong"}
+
+
+def test_message_endpoint_returns_collected_response(client: TestClient) -> None:
+    response = client.post("/message", json=_valid_payload())
 
     assert response.status_code == 200
     assert response.json() == {"content": "Workflow output", "tag": Tag.General.value}
+
+
+def test_message_endpoint_returns_service_unavailable_when_models_not_ready(
+    test_client_factory: Callable[..., ContextManager[TestClient]],
+) -> None:
+    with test_client_factory(model_ready=False) as test_client:
+        response = test_client.post("/message", json=_valid_payload())
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Models are still initialising"
+
+
+def test_message_endpoint_returns_internal_error_when_graph_client_missing(
+    test_client_factory: Callable[..., ContextManager[TestClient]],
+) -> None:
+    with test_client_factory(graph_log_client=None) as test_client:
+        response = test_client.post("/message", json=_valid_payload())
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "Graph log client is not configured"
+
+
+def test_message_endpoint_returns_bad_gateway_when_websocket_connect_fails(
+    test_client_factory: Callable[..., ContextManager[TestClient]],
+) -> None:
+    failing_client = FailingGraphLogWebSocketClient()
+
+    with test_client_factory(graph_log_client=failing_client) as test_client:
+        response = test_client.post("/message", json=_valid_payload())
+
+    assert response.status_code == 502
+    assert response.json()["detail"] == "Graph log websocket connection failed"
+
+
+def test_message_endpoint_rejects_invalid_payload(
+    test_client_factory: Callable[..., ContextManager[TestClient]]
+) -> None:
+    invalid_payload = _valid_payload()
+    invalid_payload["messages"] = [
+        {"role": "assistant", "content": "first"},
+        {"role": "assistant", "content": "second"},
+    ]
+
+    with test_client_factory() as test_client:
+        response = test_client.post("/message", json=invalid_payload)
+
+    assert response.status_code == 422
