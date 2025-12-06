@@ -25,7 +25,7 @@ type Settings struct {
 	Recognizer       string `envconfig:"RECOGNIZER"          default:"http://recognizer-service:3333"`
 	RecognizerAPIKey string `envconfig:"ASSEMBLYAI_API_KEY"`
 
-	FrontOrigin string `envconfig:"FRONT_ORIGIB"             default:"http://localhost:5173"`
+	FrontOrigin string `envconfig:"FRONT_ORIGIN"             default:"http://localhost:5173"`
 
 	Inteagrations string `envconfig:"INTEGRATIONS"           default:"http://integrations:4444"`
 }
