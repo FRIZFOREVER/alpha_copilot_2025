@@ -12,6 +12,7 @@ from ml.domain.workflow.agent.conditionals import mode_decision, research_decisi
 from ml.domain.workflow.agent.nodes import (
     define_mode,
     fast_answer,
+    ingest_file,
     final_stream,
     flash_memories,
     research_observer,
@@ -31,11 +32,13 @@ def create_pipeline() -> StateGraph:
     # TODO: Add conditional validation jump node
     workflow.add_node("Voice validadtion", validate_voice)
     workflow.add_node("Tag validadtion", validate_tag)
+    workflow.add_node("File ingestion", ingest_file)
     workflow.add_node("Mode definition", define_mode)
     workflow.add_node("Final node", final_stream)
 
     workflow.add_edge("Voice validadtion", "Tag validadtion")
-    workflow.add_edge("Tag validadtion", "Mode definition")
+    workflow.add_edge("Tag validadtion", "File ingestion")
+    workflow.add_edge("File ingestion", "Mode definition")
     workflow.add_conditional_edges(
         "Mode definition",
         mode_decision,

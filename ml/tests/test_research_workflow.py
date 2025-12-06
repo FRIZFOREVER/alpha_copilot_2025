@@ -41,6 +41,7 @@ def _build_state() -> GraphState:
             additional_instructions="",
         ),
         meta=MetaData(is_voice=False, tag=Tag.General),
+        file_url=None,
         model_mode=ModelMode.Research,
         voice_is_valid=None,
         final_prompt=None,

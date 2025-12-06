@@ -1,4 +1,5 @@
 from .fast_answer.node import fast_answer
+from .file_ingestion.node import ingest_file
 from .final_node.node import final_stream
 from .flash_memories.node import flash_memories
 from .mode_definition.node import define_mode
@@ -14,6 +15,7 @@ from .voice_validation.node import validate_voice
 __all__ = [
     "validate_voice",
     "validate_tag",
+    "ingest_file",
     "define_mode",
     "flash_memories",
     "fast_answer",
