@@ -24,3 +24,20 @@ class StreamChunk(BaseModel):
     eval_count: int | None = None
     eval_duration: int | None = None
     message: Message = None
+
+
+class TelegramAuthStartRequest(BaseModel):
+    user_id: str
+    phone_number: str
+
+
+class TelegramAuthVerifyRequest(BaseModel):
+    user_id: str
+    phone_code: str
+    password: str | None = None
+
+
+class TelegramUserSendRequest(BaseModel):
+    user_id: str
+    recipient_id: str
+    text: str

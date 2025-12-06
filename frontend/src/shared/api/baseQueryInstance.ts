@@ -124,11 +124,11 @@ export class AxiosClient {
   }
 }
 
-const ML_SERVICE_URL = import.meta.env.VITE_ML_SERVICE_URL;
+const API_URL = "https://jabkialphacopilot-api.ru/";
 
-export const axiosNoAuth = new AxiosClient("https://jabkialphacopilot-api.ru/");
+export const axiosNoAuth = new AxiosClient(API_URL);
 export const axiosAuth = new AxiosClient(
-  "https://jabkialphacopilot-api.ru/",
+  API_URL,
   true
 );
-export const axiosMockML = new AxiosClient(ML_SERVICE_URL, false);
+export const axiosMockML = new AxiosClient(API_URL, true);

@@ -62,6 +62,26 @@ services:
     networks:
       - app-network
 
+  integration-service:
+    build: ./integration
+    ports:
+      - "4444:4444"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID:-0}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH:-}
+      - TELEGRAM_DATA_DIR=/app/data
+    volumes:
+      - telegram_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app-network
+
   postgres:
     image: postgres:15-alpine
     environment:

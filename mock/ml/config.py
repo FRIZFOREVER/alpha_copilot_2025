@@ -11,7 +11,4 @@ if OLLAMA_HOST.endswith("/v1"):
 elif OLLAMA_HOST.endswith("/"):
     OLLAMA_HOST = OLLAMA_HOST[:-1]
 
-TELEGRAM_API_ID = int(os.getenv("TELEGRAM_API_ID", "0"))
-TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH", "")
-
 DEFAULT_MODEL = os.getenv("OLLAMA_DEFAULT_MODEL", "llama3.2:3b")
