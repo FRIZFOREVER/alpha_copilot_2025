@@ -73,6 +73,9 @@ async def message_stream(request: Request, payload: MessagePayload) -> Streaming
                 )
                 logger.error(msg)
                 raise TypeError(msg)
+
+            final_chunk_payload = json.dumps({"file_url": payload.file_url}, ensure_ascii=False)
+            yield f"data: {final_chunk_payload}\n\n"
         finally:
             await graph_log_client.close(payload.chat_id)
 
