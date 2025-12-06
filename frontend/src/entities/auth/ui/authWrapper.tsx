@@ -29,7 +29,7 @@ export const AuthWrapper = ({ children }: PropsWithChildren) => {
       >
         <div className="w-full md:py-0 p-8 flex items-center justify-center bg-[#EF3124] rounded-4xl">
           <Image
-            src={"/images/4.png"}
+            src={"/images/people-maskot-2.png"}
             alt="logo"
             className="w-[200px] md:w-[250px] select-none"
           />

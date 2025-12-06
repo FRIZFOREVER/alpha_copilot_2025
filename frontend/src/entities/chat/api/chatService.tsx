@@ -19,7 +19,7 @@ import {
   GetGraphLogsResponse,
 } from "../types/types";
 
-const API_BASE_URL = "https://jabkialphacopilot-api.ru/";
+const API_BASE_URL =  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/";
 
 class ChatService {
   public async createChat(

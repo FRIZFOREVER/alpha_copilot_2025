@@ -124,7 +124,7 @@ export class AxiosClient {
   }
 }
 
-const API_URL = "https://jabkialphacopilot-api.ru/";
+const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/";
 
 export const axiosNoAuth = new AxiosClient(API_URL);
 export const axiosAuth = new AxiosClient(

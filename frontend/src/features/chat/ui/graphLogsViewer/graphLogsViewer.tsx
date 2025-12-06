@@ -71,7 +71,7 @@ export const GraphLogsViewer = ({
     <>
       <div
         className={cn(
-          "bg-white border-l border-[#0000000f] flex-shrink-0 transition-all duration-300 ease-in-out md:flex hidden flex-col h-full overflow-hidden",
+          "bg-white border-l border-[#0000000f] shrink-0 transition-all duration-300 ease-in-out md:flex hidden flex-col h-full overflow-hidden",
           isOpen && !isLgView ? "w-96 opacity-100" : "w-0 opacity-0"
         )}
       >
