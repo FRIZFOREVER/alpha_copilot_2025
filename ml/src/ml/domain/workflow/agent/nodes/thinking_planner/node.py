@@ -35,7 +35,19 @@ async def thinking_planner(state: GraphState) -> GraphState:
     tool_arguments: dict[str, Any]
     thought: str
 
-    if remaining_steps == 0:
+    if state.file_url is not None:
+        final_tool_name = FinalAnswerTool().name
+        final_tool = available_tools.get(final_tool_name)
+        if final_tool is None:
+            raise RuntimeError("Final answer tool is not registered")
+        chosen_tool_name = final_tool.name
+        thought = "Файл создан, формирую итоговый ответ."
+        tool_arguments = {
+            "chat": state.chat,
+            "profile": state.user,
+            "evidence": state.evidence_list,
+        }
+    elif remaining_steps == 0:
         final_tool_name = FinalAnswerTool().name
         final_tool = available_tools.get(final_tool_name)
         if final_tool is None:
