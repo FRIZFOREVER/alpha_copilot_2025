@@ -18,7 +18,7 @@ DEFAULT_MINIO_ENDPOINT = "http://minio:9000"
 DEFAULT_MINIO_ACCESS_KEY = "minio-user"
 DEFAULT_MINIO_SECRET_KEY = "minio-password"
 DEFAULT_BUCKET_NAME = "files"
-UNICODE_FONT_PATH = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+UNICODE_FONT_PATH = Path(__file__).parent / "fonts" / "DejaVuSans.ttf"
 UNICODE_FONT_NAME = "DejaVuSans"
 
 
