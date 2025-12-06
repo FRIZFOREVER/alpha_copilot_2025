@@ -6,6 +6,7 @@ from ml.domain.models.tools_data import Evidence, ToolResult
 from ml.utils.download_formatters import format_bytes, format_progress
 from ml.utils.pipeline_data_formatters import (
     _format_evidence,
+    _format_created_file_evidence,
     _format_file_evidence,
     _format_web_evidence,
     format_research_observations,
@@ -63,6 +64,43 @@ def test_format_file_evidence_rejects_non_string_data() -> None:
 
     with pytest.raises(TypeError):
         _format_file_evidence(1, tool_result)
+
+
+def test_format_created_file_evidence_outputs_message_and_url() -> None:
+    tool_result = ToolResult(
+        success=True,
+        data={"message": "Created file report.txt", "file_url": "http://example.com"},
+        error=None,
+    )
+
+    assert _format_created_file_evidence(1, tool_result) == (
+        "1. Источник: созданный файл (tool: file_writer)\n"
+        "Created file report.txt\n"
+        "URL файла: http://example.com"
+    )
+
+
+def test_format_created_file_evidence_validates_input() -> None:
+    invalid_type_result = ToolResult(success=True, data="not a dict", error=None)
+    missing_message_result = ToolResult(success=True, data={"file_url": "url"}, error=None)
+    missing_file_url_result = ToolResult(success=True, data={"message": "msg"}, error=None)
+    wrong_types_result = ToolResult(
+        success=True,
+        data={"message": 123, "file_url": 456},
+        error=None,
+    )
+
+    with pytest.raises(TypeError):
+        _format_created_file_evidence(1, invalid_type_result)
+
+    with pytest.raises(ValueError):
+        _format_created_file_evidence(1, missing_message_result)
+
+    with pytest.raises(ValueError):
+        _format_created_file_evidence(1, missing_file_url_result)
+
+    with pytest.raises(TypeError):
+        _format_created_file_evidence(1, wrong_types_result)
 
 
 def test_format_web_evidence_outputs_results() -> None:
@@ -147,10 +185,18 @@ def test_format_evidence_delegates_to_specific_handlers() -> None:
         data={"query": "alpha", "results": [{"url": "u", "title": "t", "content": "c"}]},
         error=None,
     )
+    file_writer_result = ToolResult(
+        success=True,
+        data={"message": "Created report.txt", "file_url": "http://example.com"},
+        error=None,
+    )
     default_result = ToolResult(success=True, data="unused", error=None)
 
     file_evidence = Evidence(tool_name="file_reader", summary="", source=file_result)
     web_evidence = Evidence(tool_name="web_search", summary="", source=web_result)
+    file_writer_evidence = Evidence(
+        tool_name="file_writer", summary="", source=file_writer_result
+    )
     other_evidence = Evidence(tool_name="custom", summary="summary", source=default_result)
 
     assert _format_evidence(1, file_evidence) == (
@@ -159,8 +205,11 @@ def test_format_evidence_delegates_to_specific_handlers() -> None:
     assert _format_evidence(2, web_evidence).startswith(
         "2. Источник: веб-поиск (tool: web_search)\nПоисковый запрос: alpha"
     )
-    assert _format_evidence(3, other_evidence) == (
-        "3. Источник: инструмент custom\nДанные:\nsummary"
+    assert _format_evidence(3, file_writer_evidence).startswith(
+        "3. Источник: созданный файл (tool: file_writer)"
+    )
+    assert _format_evidence(4, other_evidence) == (
+        "4. Источник: инструмент custom\nДанные:\nsummary"
     )
 
 

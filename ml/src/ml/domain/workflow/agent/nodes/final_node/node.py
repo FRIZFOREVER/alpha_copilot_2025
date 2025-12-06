@@ -27,7 +27,7 @@ async def final_stream(state: GraphState) -> GraphState:
     if not isinstance(prompt, ChatHistory):
         raise TypeError("Final prompt must be an instance of ChatHistory")
 
-    logger.info("final_prompt: %s", prompt.model_dump_json(indent=2))
+    logger.debug("final_prompt: %s", prompt.model_dump_json(indent=2))
     result = client.stream(messages=prompt)
     if not isinstance(result, AsyncIterator):
         msg = "Reasoning client stream did not return an AsyncIterator"

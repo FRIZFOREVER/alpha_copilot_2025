@@ -8,6 +8,9 @@ import uuid
 from typing import ClassVar
 from urllib.parse import urlparse
 
+from matplotlib import rcParams
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
 from minio import Minio
 
 logger = logging.getLogger(__name__)
@@ -100,6 +103,38 @@ class MinioStorageClient:
         timestamp = int(time.time())
         return f"{uuid.uuid4()}_{timestamp}{extension}"
 
+    def _render_pdf(self, content: str) -> bytes:
+        if not isinstance(content, str):
+            raise TypeError("PDF content must be a string")
+
+        rcParams["pdf.compression"] = 0
+
+        figure = Figure(figsize=(8.27, 11.69))
+        FigureCanvasAgg(figure)
+
+        axis = figure.add_subplot(111)
+        axis.axis("off")
+        axis.set_xlim(0, 1)
+        axis.set_ylim(0, 1)
+        axis.text(
+            0.05,
+            0.95,
+            content,
+            fontsize=12,
+            fontfamily="DejaVu Sans",
+            va="top",
+            wrap=True,
+        )
+
+        buffer = io.BytesIO()
+        figure.savefig(buffer, format="pdf", bbox_inches="tight")
+        rendered = buffer.getvalue()
+
+        if not isinstance(rendered, (bytes, bytearray)):
+            raise TypeError("PDF renderer returned unexpected data type")
+
+        return bytes(rendered)
+
     def read_text(self, object_path: str) -> str:
         object_name = self._normalize_object_path(object_path)
         try:
@@ -133,7 +168,11 @@ class MinioStorageClient:
         normalized_extension = self._normalize_extension(extension)
         object_name = self._build_object_name(normalized_extension)
         content_type = self._guess_content_type(normalized_extension)
-        encoded_content = content.encode("utf-8")
+        encoded_content = (
+            self._render_pdf(content)
+            if normalized_extension.lower() == ".pdf"
+            else content.encode("utf-8")
+        )
 
         try:
             self._client.put_object(

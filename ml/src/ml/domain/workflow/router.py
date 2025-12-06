@@ -100,6 +100,7 @@ async def workflow(payload: MessagePayload) -> tuple[AsyncIterator[dict[str, Any
         user=payload.profile,
         meta=MetaData(is_voice=payload.is_voice, tag=payload.tag),
         file_url=payload.file_url,
+        written_file_url=None,
         model_mode=payload.mode,
         voice_is_valid=None,
         final_prompt=None,
@@ -134,8 +135,8 @@ async def workflow(payload: MessagePayload) -> tuple[AsyncIterator[dict[str, Any
     if not isinstance(validated_state.meta.tag, Tag):
         raise TypeError("Workflow state meta.tag is not a Tag enum value")
 
-    file_url = validated_state.file_url
+    file_url = validated_state.written_file_url
     if file_url is not None and not isinstance(file_url, str):
-        raise TypeError("Workflow state file_url is not a string or None")
+        raise TypeError("Workflow state written_file_url is not a string or None")
 
     return output_stream, validated_state.meta.tag, file_url

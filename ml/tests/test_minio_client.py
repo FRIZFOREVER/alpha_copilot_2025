@@ -101,6 +101,29 @@ def test_write_text_uploads_and_returns_path(
     ]
 
 
+def test_write_pdf_generates_valid_document(
+    monkeypatch: pytest.MonkeyPatch, fixed_uuid: uuid.UUID, fixed_timestamp: int
+) -> None:
+    fake = FakeMinio()
+    monkeypatch.setattr(minio_client, "Minio", lambda *args, **kwargs: fake)
+
+    path = minio_client.write_minio_file("pdf content", extension=".pdf")
+
+    expected_name = f"{fixed_uuid}_{fixed_timestamp}.pdf"
+    assert path == f"/files/{expected_name}"
+    assert fake.put_calls == [
+        {
+            "bucket": "files",
+            "object_name": expected_name,
+            "length": len(fake._objects[f"files/{expected_name}"].read()),
+            "content_type": "application/pdf",
+        }
+    ]
+    payload = fake._objects[f"files/{expected_name}"].read()
+    assert payload.startswith(b"%PDF")
+    assert b"pdf content" in payload
+
+
 def test_read_text_fetches_object(monkeypatch: pytest.MonkeyPatch) -> None:
     fake = FakeMinio()
     fake._objects["files/sample.txt"] = FakeResponse(payload=b"sample text")
