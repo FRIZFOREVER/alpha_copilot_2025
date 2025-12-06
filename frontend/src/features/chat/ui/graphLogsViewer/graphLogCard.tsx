@@ -1,4 +1,4 @@
-import { Globe, Brain, Mic } from "lucide-react";
+import { Globe, Brain, Mic, Wrench } from "lucide-react";
 import { cn } from "@/shared/lib/mergeClass";
 import type { GraphLog } from "@/entities/chat/types/types";
 
@@ -43,6 +43,18 @@ const getTagConfig = (tag: string) => {
       borderColor: "border-pink-200",
       iconColor: "text-pink-600",
       badgeBg: "bg-pink-500",
+    };
+  }
+
+  if (normalizedTag === "tool") {
+    return {
+      icon: Wrench,
+      bgColor: "bg-orange-50",
+      hoverBgColor: "hover:bg-orange-100",
+      textColor: "text-orange-700",
+      borderColor: "border-orange-200",
+      iconColor: "text-orange-600",
+      badgeBg: "bg-orange-500",
     };
   }
 
