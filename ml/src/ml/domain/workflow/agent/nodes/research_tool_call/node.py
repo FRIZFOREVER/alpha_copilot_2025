@@ -69,7 +69,7 @@ async def research_tool_call(state: GraphState) -> GraphState:
         if not isinstance(file_url, str):
             raise TypeError("file_writer tool result 'file_url' must be a string")
 
-        state.file_url = file_url
+        state.written_file_url = file_url
 
     if tool.name == final_answer_name:
         if not isinstance(result.data, dict):

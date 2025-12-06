@@ -20,6 +20,7 @@ class GraphState(BaseModel):
     user: UserProfile
     meta: MetaData
     file_url: str | None
+    written_file_url: str | None = None
 
     # validational fields
     model_mode: ModelMode
