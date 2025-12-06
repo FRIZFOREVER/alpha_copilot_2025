@@ -166,17 +166,8 @@ const LandingPage = () => {
                     onClick={handleStartWork}
                     className="w-full sm:w-auto rounded-4xl bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 lg:px-10 py-6 sm:py-6 lg:py-8 cursor-pointer text-base sm:text-lg font-semibold shadow-lg shadow-red-600/30"
                   >
-                    Начать работу
+                    {isAuthenticated ? "Продолжить работу" : "Начать работу"}
                   </Button>
-                  {!isAuthenticated && (
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate(`/${ERouteNames.AUTH_ROUTE}`)}
-                      className="w-full sm:w-auto rounded-4xl border-2 border-gray-300 dark:border-gray-600 px-6 sm:px-8 lg:px-10 py-6 sm:py-6 lg:py-8 cursor-pointer text-base sm:text-lg"
-                    >
-                      Войти
-                    </Button>
-                  )}
                 </motion.div>
               </motion.div>
 
