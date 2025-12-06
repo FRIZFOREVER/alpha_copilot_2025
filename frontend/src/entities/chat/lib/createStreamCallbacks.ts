@@ -71,7 +71,7 @@ export const createStreamCallbacks = ({
       );
     },
     onChunk: (chunk: StreamChunk) => {
-      if (!initialData || !chunk.content) return;
+      if (!initialData) return;
 
       queryClient.setQueryData<GetHistoryResponse>(
         [GET_HISTORY_QUERY, chatId],
@@ -84,11 +84,17 @@ export const createStreamCallbacks = ({
               item.answer_id === initialData!.answer_id
             ) {
               hasChanges = true;
-              const newAnswer = (item.answer || "") + chunk.content;
+              const newAnswer = chunk.content
+                ? (item.answer || "") + chunk.content
+                : item.answer;
               return {
                 ...item,
                 answer: newAnswer,
                 answer_time: chunk.time,
+                answer_file_url:
+                  chunk.done && chunk.file_url
+                    ? chunk.file_url
+                    : item.answer_file_url,
               };
             }
             return item;

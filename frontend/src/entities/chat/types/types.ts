@@ -94,6 +94,7 @@ export interface StreamChunk {
   time: string;
   done: boolean;
   tag?: string;
+  file_url?: string; // Файл от ассистента, приходит в последнем чанке при done === true
 }
 
 export interface SendMessageStreamCallbacks {
