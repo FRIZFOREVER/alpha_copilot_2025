@@ -87,7 +87,18 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 		}
 	}()
 
-	web.InitPrivateRoutes(server, db, s3client, recognizerAssamblyAI, config.RecognizerAPIKey != "", recognizerWhisper, isWisperServiceAlive, streamClient, logger)
+	web.InitPrivateRoutes(
+		server,
+		db,
+		s3client,
+		recognizerAssamblyAI,
+		config.RecognizerAPIKey != "",
+		recognizerWhisper,
+		isWisperServiceAlive,
+		streamClient,
+		config.Inteagrations,
+		logger,
+	)
 
 	return newApp(config, server, db, s3client, logger), nil
 }
