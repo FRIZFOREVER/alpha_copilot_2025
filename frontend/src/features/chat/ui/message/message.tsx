@@ -205,7 +205,7 @@ export const Message = ({
         {answer_file_url && !isUser && content && content.trim() && (
           <div
             className={cn(
-              "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed mt-2",
+              "rounded-2xl py-0 text-sm md:text-base leading-relaxed mt-2",
               "text-foreground rounded-xl dark:border-gray-700"
             )}
           >
