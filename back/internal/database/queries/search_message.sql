@@ -8,7 +8,8 @@ SELECT
     q.voice_url,
     q.file_url,
     a.rating,
-    a.file_url
+    a.file_url,
+    q.chat_id
 FROM questions q
 LEFT JOIN answers a ON q.answer_id = a.answer_id
 LEFT JOIN chats c ON q.chat_id = c.id
