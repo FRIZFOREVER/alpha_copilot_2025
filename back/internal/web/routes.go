@@ -3,6 +3,7 @@ package web
 import (
 	"database/sql"
 	"jabki/internal/client"
+	"jabki/internal/client/integrations"
 	"jabki/internal/database"
 	"jabki/internal/s3"
 	"jabki/internal/web/handlers"
@@ -51,6 +52,7 @@ func InitPrivateRoutes(
 	recognizerWhisper *client.WhisperClient,
 	isWhisperAlive *bool,
 	streamClient *client.StreamMessageClient,
+	integrationsUrl string,
 	logger *logrus.Logger,
 ) {
 	historyRepo := database.NewHistoryRepository(db, logger)
@@ -112,4 +114,22 @@ func InitPrivateRoutes(
 	analyticGroup.Get("/message-counts", analytic.GetMessageCountsHandler)
 	analyticGroup.Get("/tag-counts", analytic.GetTagCountsHandler)
 	analyticGroup.Post("/timeseries-messages", analytic.GetTimeseriesMessagesHandler)
+
+	todoistIntegrations := integrations.NewTodoist(integrationsUrl, logger)
+	todoistGroup := server.Group("/todoist")
+	// Эндпоинты проксирования
+	todoistGroup.Post("/auth/save", todoistIntegrations.SaveToken)
+	todoistGroup.Post("/status", todoistIntegrations.GetStatus)
+	todoistGroup.Post("/projects", todoistIntegrations.GetProjects)
+	todoistGroup.Post("/create/task", todoistIntegrations.CreateTask)
+
+	telegramIntergration := integrations.NewTelegram(integrationsUrl, logger)
+	telegramGroup := server.Group("/telegram/user")
+	// Эндпоинты с валидацией перед проксированием
+	telegramGroup.Post("/auth/start", telegramIntergration.StartAuth)
+	telegramGroup.Post("/auth/verify", telegramIntergration.VerifyAuth)
+	telegramGroup.Post("/status", telegramIntergration.GetStatus)
+	telegramGroup.Post("/contacts", telegramIntergration.GetContacts)
+	telegramGroup.Post("/send/message", telegramIntergration.SendMessage)
+	telegramGroup.Post("/disconnect", telegramIntergration.Disconnect)
 }
