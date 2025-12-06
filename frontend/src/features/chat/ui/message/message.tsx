@@ -193,52 +193,76 @@ export const Message = ({
             </span>
           </div>
         )}
-        {question_file_url && isUser && <FileMessage fileUrl={question_file_url} />}
-        {question_file_url && isUser && content && content.trim() && (
-          <div
-            className={cn(
-              "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed mt-2",
-              "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
-            )}
-          >
-            {content}
-          </div>
-        )}
-        {voice_url && voice_url.trim() && isUser && (
-          <div className="mb-2">
-            <VoiceMessage voiceUrl={voice_url} transcription={content} />
-          </div>
-        )}
-        {answer_file_url && !isUser && <FileMessage fileUrl={answer_file_url} />}
-        {answer_file_url && !isUser && content && content.trim() && !voice_url && (
-          <div
-            className={cn(
-              "rounded-2xl py-0 text-sm md:text-base leading-relaxed mt-2",
-              "text-foreground rounded-xl dark:border-gray-700"
-            )}
-          >
-            <MarkdownContent content={content} />
-          </div>
-        )}
-        {!question_file_url && !answer_file_url && !voice_url && (
-          <div
-            className={cn(
-              "rounded-2xl text-sm md:text-base leading-relaxed",
-              "break-words overflow-wrap-anywhere w-full",
-              isUser
-                ? "px-4 py-3 bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
-                : "text-foreground rounded-xl dark:border-gray-700",
-              isCompact && "text-sm md:text-sm"
-            )}
-          >
-            {isTyping ? (
-              <TypingIndicator />
-            ) : isUser ? (
-              content
+        {isUser && (
+          <>
+            {question_file_url && <FileMessage fileUrl={question_file_url} />}
+            {voice_url && voice_url.trim() ? (
+              <div className="mb-2">
+                <VoiceMessage voiceUrl={voice_url} transcription={content} />
+              </div>
             ) : (
-              <MarkdownContent content={content} />
+              question_file_url && content && content.trim() && (
+                <div
+                  className={cn(
+                    "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed mt-2",
+                    "bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30"
+                  )}
+                >
+                  {content}
+                </div>
+              )
             )}
-          </div>
+            {!question_file_url && !voice_url && (
+              <div
+                className={cn(
+                  "rounded-2xl text-sm md:text-base leading-relaxed",
+                  "break-words overflow-wrap-anywhere w-full",
+                  "px-4 py-3 bg-red-50 dark:bg-red-500/20 text-foreground rounded-tr-sm border border-red-100 dark:border-red-500/30",
+                  isCompact && "text-sm md:text-sm"
+                )}
+              >
+                {content}
+              </div>
+            )}
+          </>
+        )}
+
+        {!isUser && (
+          <>
+            {answer_file_url && <FileMessage fileUrl={answer_file_url} />}
+            {voice_url && voice_url.trim() ? (
+              <div className="mb-2">
+                <VoiceMessage voiceUrl={voice_url} transcription={content} />
+              </div>
+            ) : (
+              answer_file_url && content && content.trim() && (
+                <div
+                  className={cn(
+                    "rounded-2xl py-0 text-sm md:text-base leading-relaxed mt-2",
+                    "text-foreground rounded-xl dark:border-gray-700"
+                  )}
+                >
+                  <MarkdownContent content={content} />
+                </div>
+              )
+            )}
+            {!answer_file_url && !voice_url && (
+              <div
+                className={cn(
+                  "rounded-2xl text-sm md:text-base leading-relaxed",
+                  "break-words overflow-wrap-anywhere w-full",
+                  "text-foreground rounded-xl dark:border-gray-700",
+                  isCompact && "text-sm md:text-sm"
+                )}
+              >
+                {isTyping ? (
+                  <TypingIndicator />
+                ) : (
+                  <MarkdownContent content={content} />
+                )}
+              </div>
+            )}
+          </>
         )}
         {!isUser && !isTyping && (
           <div className="flex items-center gap-2 mt-1">
