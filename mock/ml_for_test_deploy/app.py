@@ -1,4 +1,3 @@
-from contextlib import AsyncExitStack
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -9,7 +8,7 @@ from typing import Dict, Any, Optional, List
 import time
 import uuid
 from datetime import datetime
-
+import random
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -21,82 +20,205 @@ app = FastAPI(title="Mock ML Service")
 app.state.models_ready = asyncio.Event()
 app.state.models_ready.set()  # Модели всегда готовы в моке
 
-class Message(BaseModel):
-    role: str = "assistant"
-    content: str = ""
-    thinking: Optional[str] = None
-    images: Optional[str] = None
-    tool_name: Optional[str] = None
-    tool_calls: Optional[str] = None
-
 class StreamChunk(BaseModel):
-    model: str = "qwen3:0.6b"
-    created_at: str = None
-    done: bool = False
-    done_reason: Optional[str] = None
-    total_duration: Optional[int] = None
-    load_duration: Optional[int] = None
-    prompt_eval_count: Optional[int] = None
-    prompt_eval_duration: Optional[int] = None
-    eval_count: Optional[int] = None
-    eval_duration: Optional[int] = None
-    message: Message = None
-    file_url: Optional[str] = None  # Добавлено поле для ссылки на файл
+    id: str
+    choices: List[Dict[str, Any]]
+    created: int
+    model: str
+    object: str = "chat.completion.chunk"
+    service_tier: Optional[str] = None
+    system_fingerprint: Optional[str] = ""
+    usage: Optional[Dict[str, Any]] = None
+    provider: str = "SiliconFlow"
 
-    def __init__(self, **data):
-        if 'created_at' not in data:
-            data['created_at'] = datetime.utcnow().isoformat() + "Z"
-        if 'message' not in data:
-            data['message'] = Message()
-        super().__init__(**data)
+def generate_stream_id() -> str:
+    """Генерация ID для стрима"""
+    timestamp = int(time.time())
+    random_id = ''.join(random.choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=20))
+    return f"gen-{timestamp}-{random_id}"
 
-def mock_workflow(payload: Dict[str, Any], streaming: bool = True):
-    """Моковая функция workflow, которая генерирует поток данных посимвольно"""
-    model = payload.get("model", "qwen3:0.6b")
+def create_initial_chunk(stream_id: str, model: str) -> Dict[str, Any]:
+    """Создание первого чанка"""
+    return {
+        "id": stream_id,
+        "choices": [
+            {
+                "delta": {
+                    "content": "",
+                    "function_call": None,
+                    "refusal": None,
+                    "role": "assistant",
+                    "tool_calls": None,
+                    "reasoning": None,
+                    "reasoning_details": []
+                },
+                "finish_reason": None,
+                "index": 0,
+                "logprobs": None,
+                    "native_finish_reason": None
+            }
+        ],
+        "created": int(time.time()),
+        "model": model,
+        "provider": "SiliconFlow"
+    }
+
+def create_reasoning_chunk(stream_id: str, model: str, reasoning_text: str) -> Dict[str, Any]:
+    """Создание чанка с reasoning"""
+    return {
+        "id": stream_id,
+        "choices": [
+            {
+                "delta": {
+                    "content": "",
+                    "function_call": None,
+                    "refusal": None,
+                    "role": "assistant",
+                    "tool_calls": None,
+                    "reasoning": reasoning_text,
+                    "reasoning_details": [
+                        {
+                            "type": "reasoning.text",
+                            "text": reasoning_text,
+                            "format": "unknown",
+                            "index": 0
+                        }
+                    ]
+                },
+                "finish_reason": None,
+                "index": 0,
+                "logprobs": None,
+                "native_finish_reason": None
+            }
+        ],
+        "created": int(time.time()),
+        "model": model,
+        "provider": "SiliconFlow"
+    }
+
+def create_content_chunk(stream_id: str, model: str, content: str) -> Dict[str, Any]:
+    """Создание чанка с контентом"""
+    return {
+        "id": stream_id,
+        "choices": [
+            {
+                "delta": {
+                    "content": content,
+                    "function_call": None,
+                    "refusal": None,
+                    "role": "assistant",
+                    "tool_calls": None,
+                    "reasoning": None,
+                    "reasoning_details": []
+                },
+                "finish_reason": None,
+                "index": 0,
+                "logprobs": None,
+                "native_finish_reason": None
+            }
+        ],
+        "created": int(time.time()),
+        "model": model,
+        "provider": "SiliconFlow"
+    }
+
+def create_final_chunk(stream_id: str, model: str, prompt_tokens: int, completion_tokens: int, reasoning_tokens: int = 0) -> Dict[str, Any]:
+    """Создание финального чанка с usage статистикой"""
+    total_tokens = prompt_tokens + completion_tokens
+    
+    # Расчет стоимости (примерные значения)
+    cost = 0.0005  # Примерная стоимость
+    
+    return {
+        "id": stream_id,
+        "choices": [
+            {
+                "delta": {
+                    "content": "",
+                    "function_call": None,
+                    "refusal": None,
+                    "role": "assistant",
+                    "tool_calls": None
+                },
+                "finish_reason": None,
+                "index": 0,
+                "logprobs": None,
+                "native_finish_reason": None
+            }
+        ],
+        "created": int(time.time()),
+        "model": model,
+        "system_fingerprint": None,
+        "usage": {
+            "completion_tokens": completion_tokens,
+            "prompt_tokens": prompt_tokens,
+            "total_tokens": total_tokens,
+            "completion_tokens_details": {
+                "accepted_prediction_tokens": None,
+                "audio_tokens": None,
+                "reasoning_tokens": reasoning_tokens,
+                "rejected_prediction_tokens": None,
+                "image_tokens": 0
+            },
+            "prompt_tokens_details": {
+                "audio_tokens": 0,
+                "cached_tokens": 0,
+                "video_tokens": 0
+            },
+            "cost": cost,
+            "is_byok": False,
+            "cost_details": {
+                "upstream_inference_cost": None,
+                "upstream_inference_prompt_cost": 0.00006,
+                "upstream_inference_completions_cost": 0.00044
+            }
+        },
+        "provider": "SiliconFlow"
+    }
+
+def mock_streaming_response(payload: Dict[str, Any]):
+    """Генерация потокового ответа в формате SiliconFlow/Qwen"""
+    model = payload.get("model", "qwen/qwen3-235b-a22b-thinking-2507")
     messages = payload.get("messages", [])
+    stream_id = generate_stream_id()
     
     # Полный текст ответа
     full_response = "Это моковый ответ от ML сервиса для тестирования потоковой передачи. Эта конфигурация используется для тестирования бэкенда, фронтенда и деплоя."
-
-    # Генерируем чанки по одному символу
-    for i, char in enumerate(full_response):
-        # Каждое сообщение содержит только текущий символ
-        chunk = StreamChunk(
-            model=model,
-            done=False,
-            message=Message(
-                role="assistant",
-                content=char,  # Только один символ!
-                thinking=f"Генерация символа {i+1} из {len(full_response)}" if i % 10 == 0 else None
-            ),
-            eval_count=i+1,
-            prompt_eval_count=len(messages) if messages else 1,
-            total_duration=int((i + 1) * 100),
-            eval_duration=int((i + 1) * 80)
-        )
-        yield chunk
-        time.sleep(0.03)  # Задержка 0.03 секунды между символами
     
-    # Финальный чанк с полным текстом (или можно оставить пустым)
-    final_chunk = StreamChunk(
-        model=model,
-        done=True,
-        done_reason="stop",
-        message=Message(
-            role="assistant",
-            content=""  # Пустой контент в финальном чанке, так как все символы уже отправлены
-        ),
-        eval_count=len(full_response),
-        prompt_eval_count=len(messages) if messages else 1,
-        total_duration=int(len(full_response) * 100),
-        eval_duration=int(len(full_response) * 80),
-        file_url="https://example.com/files/generated_file_2024.pdf"  # Добавлена ссылка на файл в последний чанк
-    )
-    yield final_chunk
+    # 1. Первый чанк
+    yield create_initial_chunk(stream_id, model)
+    time.sleep(0.05)
+    
+    # 2. Reasoning чанки (разбиваем на части)
+    reasoning_parts = ["Рассуждаю", " над", " вопросом", " пользователя", " и", " генерирую", " ответ..."]
+    for part in reasoning_parts:
+        yield create_reasoning_chunk(stream_id, model, part)
+        time.sleep(0.03)
+    
+    # 3. Контент чанки (по словам)
+    words = full_response.split()
+    for word in words:
+        content = word + (" " if word != words[-1] else "")
+        # Иногда добавляем знаки препинания как отдельные чанки
+        if word.endswith(('.', ',', '!', '?')):
+            yield create_content_chunk(stream_id, model, word[:-1])
+            time.sleep(0.02)
+            yield create_content_chunk(stream_id, model, word[-1] + " ")
+            time.sleep(0.02)
+        else:
+            yield create_content_chunk(stream_id, model, content)
+            time.sleep(0.03)
+    
+    # 4. Финальный чанк с usage
+    prompt_tokens = sum(len(str(msg)) // 4 for msg in messages) if messages else 462
+    completion_tokens = len(full_response) // 2
+    reasoning_tokens = sum(len(part) // 2 for part in reasoning_parts)
+    
+    yield create_final_chunk(stream_id, model, prompt_tokens, completion_tokens, reasoning_tokens)
 
 @app.get("/")
 async def root():
-    return {"message": "Mock ML Service is running"}
+    return {"message": "Mock ML Service is running (SiliconFlow/Qwen format)"}
 
 @app.get("/health")
 async def health():
@@ -107,26 +229,90 @@ async def ping():
     """Эндпоинт для проверки доступности сервиса"""
     return {"status": "ok", "message": "pong"}
 
-@app.post("/message_stream")
-async def message_stream(request: Request) -> StreamingResponse:
-    models_ready = app.state.models_ready
+@app.post("/v1/chat/completions")
+async def chat_completions(request: Request):
+    """Эндпоинт совместимый с OpenAI API format"""
+    
+    if not app.state.models_ready.is_set():
+        raise HTTPException(status_code=503, detail="Models are still initialising")
+    
+    payload: Dict[str, Any] = await request.json()
+    logger.info(f"Handling /v1/chat/completions request with payload keys: {list(payload.keys())}")
+    
+    stream = payload.get("stream", False)
+    
+    if stream:
+        def event_generator():
+            for chunk in mock_streaming_response(payload):
+                chunk_data = json.dumps(chunk, ensure_ascii=False)
+                yield f"data: {chunk_data}\n\n"
+            
+            yield "data: [DONE]\n\n"
+        
+        return StreamingResponse(
+            event_generator(), 
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "Content-Type"
+            }
+        )
+    else:
+        # Не-потоковый ответ
+        await asyncio.sleep(0.5)
+        
+        model = payload.get("model", "qwen/qwen3-235b-a22b-thinking-2507")
+        messages = payload.get("messages", [])
+        full_response = "Это моковый ответ от ML сервиса для не-потокового запроса."
+        
+        return {
+            "id": generate_stream_id(),
+            "object": "chat.completion",
+            "created": int(time.time()),
+            "model": model,
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": full_response,
+                        "reasoning": "Рассуждаю над вопросом пользователя и генерирую ответ..."
+                    },
+                    "finish_reason": "stop",
+                    "logprobs": None
+                }
+            ],
+            "usage": {
+                "prompt_tokens": sum(len(str(msg)) // 4 for msg in messages) if messages else 100,
+                "completion_tokens": len(full_response) // 2,
+                "total_tokens": 150,
+                "completion_tokens_details": {
+                    "reasoning_tokens": 50
+                }
+            },
+            "provider": "SiliconFlow"
+        }
 
+# Сохранение старого endpoint для обратной совместимости
+@app.post("/message_stream")
+async def message_stream(request: Request):
+    models_ready = app.state.models_ready
+    
     if not models_ready.is_set():
         raise HTTPException(status_code=503, detail="Models are still initialising")
-
+    
     payload: Dict[str, Any] = await request.json()
     logger.info(f"Handling /message_stream request with payload: {payload}")
-
+    
     def event_generator():
-        stream = mock_workflow(payload, streaming=True)
-        for chunk in stream:
-            # Преобразуем в JSON и отправляем в формате SSE
-            chunk_data = chunk.model_dump_json()
+        for chunk in mock_streaming_response(payload):
+            chunk_data = json.dumps(chunk, ensure_ascii=False)
             yield f"data: {chunk_data}\n\n"
         
-        # Отправляем [DONE] в конце стрима
         yield "data: [DONE]\n\n"
-
+    
     return StreamingResponse(
         event_generator(), 
         media_type="text/event-stream",
@@ -137,37 +323,6 @@ async def message_stream(request: Request) -> StreamingResponse:
             "Access-Control-Allow-Headers": "Content-Type"
         }
     )
-
-@app.post("/generate")
-async def generate_message(request: Request):
-    """Альтернативный endpoint для не-потокового ответа"""
-    payload: Dict[str, Any] = await request.json()
-    logger.info(f"Handling /generate request with payload: {payload}")
-    
-    # Имитация обработки
-    await asyncio.sleep(0.5)
-    
-    return {
-        "model": payload.get("model", "qwen3:0.6b"),
-        "created_at": datetime.utcnow().isoformat() + "Z",
-        "message": {
-            "role": "assistant",
-            "content": "Это моковый ответ от ML сервиса для не-потокового запроса. Эта конфигурация используется для тестирования бэкенда, фронтенда и деплоя.",
-            "thinking": "Completed mock thinking process",
-            "images": None,
-            "tool_name": None,
-            "tool_calls": None
-        },
-        "done": True,
-        "done_reason": "stop",
-        "total_duration": 500000000,
-        "load_duration": 100000000,
-        "prompt_eval_count": 1,
-        "prompt_eval_duration": 100000000,
-        "eval_count": 10,
-        "eval_duration": 300000000,
-        "file_url": "https://example.com/files/non_stream_file.pdf"  # Также добавлено для не-потокового ответа
-    }
 
 # Добавляем CORS middleware если нужно тестировать из браузера
 from fastapi.middleware.cors import CORSMiddleware

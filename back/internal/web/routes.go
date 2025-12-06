@@ -14,7 +14,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func InitServiceRoutes(server *fiber.App, db *sql.DB, secretServie string, logger *logrus.Logger) {
+func InitServiceRoutes(
+	server *fiber.App,
+	db *sql.DB,
+	secretServie string,
+	logger *logrus.Logger,
+) {
 	history := handlers.NewHistory(database.NewHistoryRepository(db, logger), logger)
 	serviceAuthentication := middlewares.NewServiceAuthentication(secretServie, logger)
 	server.Get("/historyForModel/:uuid/:chat_id", serviceAuthentication.Handler, history.Handler)
@@ -22,7 +27,11 @@ func InitServiceRoutes(server *fiber.App, db *sql.DB, secretServie string, logge
 	server.Get("/graph_log_writer/:chat_id", middlewares.Upgrader, handlers.GraphLogHandlerWS("service", graphLogRepo, logger))
 }
 
-func InitPublicRoutes(server *fiber.App, db *sql.DB, secretUser, frontOrigin string, logger *logrus.Logger) {
+func InitPublicRoutes(server *fiber.App,
+	db *sql.DB, secretUser,
+	frontOrigin string,
+	logger *logrus.Logger,
+) {
 	server.Use(middlewares.Cors(frontOrigin))
 
 	authRepo := database.NewAuthService(db, logger)
@@ -117,7 +126,6 @@ func InitPrivateRoutes(
 
 	todoistIntegrations := integrations.NewTodoist(integrationsUrl, logger)
 	todoistGroup := server.Group("/todoist")
-	// Эндпоинты проксирования
 	todoistGroup.Post("/auth/save", todoistIntegrations.SaveToken)
 	todoistGroup.Post("/status", todoistIntegrations.GetStatus)
 	todoistGroup.Post("/projects", todoistIntegrations.GetProjects)
@@ -125,7 +133,6 @@ func InitPrivateRoutes(
 
 	telegramIntergration := integrations.NewTelegram(integrationsUrl, logger)
 	telegramGroup := server.Group("/telegram/user")
-	// Эндпоинты с валидацией перед проксированием
 	telegramGroup.Post("/auth/start", telegramIntergration.StartAuth)
 	telegramGroup.Post("/auth/verify", telegramIntergration.VerifyAuth)
 	telegramGroup.Post("/status", telegramIntergration.GetStatus)

@@ -124,11 +124,11 @@ export class AxiosClient {
   }
 }
 
-const ML_SERVICE_URL = "http://127.0.0.1:8080/";
+const API_URL = "https://jabkialphacopilot-api.ru/";
 
-export const axiosNoAuth = new AxiosClient("http://127.0.0.1:8080/");
+export const axiosNoAuth = new AxiosClient(API_URL);
 export const axiosAuth = new AxiosClient(
-  "http://127.0.0.1:8080/",
+  API_URL,
   true
 );
-export const axiosMockML = new AxiosClient(ML_SERVICE_URL, true);
+export const axiosMockML = new AxiosClient(API_URL, true);
