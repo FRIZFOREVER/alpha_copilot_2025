@@ -110,6 +110,9 @@ def _format_evidence(index: int, observation: "Evidence") -> str:
     if tool_name == "file_reader":
         return _format_file_evidence(index, tool_result)
 
+    if tool_name == "file_writer":
+        return _format_created_file_evidence(index, tool_result)
+
     if tool_name == "web_search":
         return _format_web_evidence(index, tool_result)
 
@@ -122,6 +125,30 @@ def _format_file_evidence(index: int, result: "ToolResult") -> str:
         raise TypeError("file_reader evidence must contain string data")
 
     return f"{index}. Источник: загруженный файл (tool: file_reader)\n{data}"
+
+
+def _format_created_file_evidence(index: int, result: "ToolResult") -> str:
+    data = result.data
+    if not isinstance(data, dict):
+        raise TypeError("file_writer evidence must be a dictionary")
+    if "message" not in data:
+        raise ValueError("file_writer evidence is missing 'message'")
+    if "file_url" not in data:
+        raise ValueError("file_writer evidence is missing 'file_url'")
+
+    message = data["message"]
+    file_url = data["file_url"]
+
+    if not isinstance(message, str):
+        raise TypeError("file_writer evidence 'message' must be a string")
+    if not isinstance(file_url, str):
+        raise TypeError("file_writer evidence 'file_url' must be a string")
+
+    return (
+        f"{index}. Источник: созданный файл (tool: file_writer)\n"
+        f"{message}\n"
+        f"URL файла: {file_url}"
+    )
 
 
 def _format_web_evidence(index: int, result: "ToolResult") -> str:
