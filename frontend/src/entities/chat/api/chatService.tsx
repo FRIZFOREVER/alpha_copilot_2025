@@ -19,7 +19,7 @@ import {
   GetGraphLogsResponse,
 } from "../types/types";
 
-const API_BASE_URL = "https://jabkialphacopilot-api.ru/";
+const API_BASE_URL = "http://127.0.0.1:8080/";
 
 class ChatService {
   public async createChat(

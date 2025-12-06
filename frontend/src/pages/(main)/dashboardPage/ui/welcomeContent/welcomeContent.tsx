@@ -16,28 +16,28 @@ const CAPABILITIES = [
     title: "Документы и письма",
     description:
       "Пишет и редактирует письма и документы, резюмирует переписку и встречи, собирает черновые презентации и таблицы.",
-    imageSrc: "/images/1.png",
+    imageSrc: "/images/people-maskot-4.png",
     imageAlt: "Документы и письма",
   },
   {
     title: "Экономия времени",
     description:
       "У владельцев бизнеса уходит меньше времени на операционные задачи и больше - на стратегию и работу с людьми.",
-    imageSrc: "/images/4.png",
+    imageSrc: "/images/people-maskot-2.png",
     imageAlt: "Экономия времени",
   },
   {
     title: "Маркетинг и аналитика",
     description:
       "Помогает с маркетингом (посты, промомеханики). Анализирует операционные данные (продажи, остатки, платежи) и рекомендует следующие шаги.",
-    imageSrc: "/images/5.png",
+    imageSrc: "/images/people-maskot-6.png",
     imageAlt: "Маркетинг и аналитика",
   },
   {
     title: "Юридические вопросы",
     description:
       "Отвечает на типовые юридические и финансовые вопросы, предлагает шаблоны и чек-листы.",
-    imageSrc: "/images/6.png",
+    imageSrc: "/images/people-maskot-3.png",
     imageAlt: "Юридические вопросы",
   },
 ] as const;
