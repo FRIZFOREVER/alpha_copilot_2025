@@ -112,7 +112,8 @@ export const MessageList = ({
               rating={message.isUser ? undefined : message.rating}
               isTyping={message.isUser ? undefined : message.isTyping}
               tag={message.tag}
-              file_url={message.isUser ? message.file_url : undefined}
+              question_file_url={message.isUser ? message.file_url : undefined}
+              answer_file_url={message.isUser ? undefined : message.answer_file_url}
             />
           ))
         )}

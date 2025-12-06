@@ -33,7 +33,8 @@ export interface MessageProps {
   answerId?: number;
   rating?: number | null;
   isTyping?: boolean;
-  file_url?: string;
+  question_file_url?: string;
+  answer_file_url?: string;
   isCompact?: boolean;
   tag: string;
 }
@@ -46,7 +47,8 @@ export const Message = ({
   tag,
   rating,
   isTyping = false,
-  file_url,
+  question_file_url,
+  answer_file_url,
   isCompact = false,
 }: MessageProps) => {
   const chatId = useParams().chatId;
@@ -188,8 +190,8 @@ export const Message = ({
             </span>
           </div>
         )}
-        {file_url && isUser && <FileMessage fileUrl={file_url} />}
-        {file_url && isUser && content && content.trim() && (
+        {question_file_url && isUser && <FileMessage fileUrl={question_file_url} />}
+        {question_file_url && isUser && content && content.trim() && (
           <div
             className={cn(
               "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed mt-2",
@@ -199,7 +201,18 @@ export const Message = ({
             {content}
           </div>
         )}
-        {!file_url && (
+        {answer_file_url && !isUser && <FileMessage fileUrl={answer_file_url} />}
+        {answer_file_url && !isUser && content && content.trim() && (
+          <div
+            className={cn(
+              "rounded-2xl px-4 py-3 text-sm md:text-base leading-relaxed mt-2",
+              "text-foreground rounded-xl dark:border-gray-700"
+            )}
+          >
+            <MarkdownContent content={content} />
+          </div>
+        )}
+        {!question_file_url && !answer_file_url && (
           <div
             className={cn(
               "rounded-2xl text-sm md:text-base leading-relaxed",
