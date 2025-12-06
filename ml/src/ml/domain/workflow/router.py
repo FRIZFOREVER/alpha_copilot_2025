@@ -1,5 +1,5 @@
-from collections.abc import AsyncIterator
 import logging
+from collections.abc import AsyncIterator
 from typing import Any
 
 from ollama._types import ChatResponse
@@ -8,7 +8,6 @@ from ml.api.schemas import MessagePayload
 from ml.api.schemas.message_payload import Tag
 from ml.domain.models import GraphState, MetaData
 from ml.domain.workflow.agent.pipeline import create_pipeline
-
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +22,6 @@ async def workflow_collected(payload: MessagePayload) -> tuple[str, Tag]:
         collected_chunks.append(chunk_value)
 
     async for chunk in output_stream:
-        logger.info("Collecting workflow chunk for /message endpoint: %s", chunk)
-
         if isinstance(chunk, ChatResponse):
             message = chunk.message
 
