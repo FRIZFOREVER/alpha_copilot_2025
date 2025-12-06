@@ -30,7 +30,6 @@ func InitServiceRoutes(
 func InitPublicRoutes(server *fiber.App,
 	db *sql.DB, secretUser,
 	frontOrigin string,
-	integrationsUrl string,
 	logger *logrus.Logger,
 ) {
 	server.Use(middlewares.Cors(frontOrigin))
@@ -42,7 +41,7 @@ func InitPublicRoutes(server *fiber.App,
 	regRepo := database.NewRegistrationService(db, logger)
 	reg := handlers.NewReg(regRepo, secretUser, logger)
 	server.Post("/reg", reg.Handler)
-	
+
 	server.Use("/graph_log", middlewares.Upgrader)
 	graphLogRepo := database.NewGraphLogRepository(db, logger)
 	server.Get("/graph_log/:chat_id", handlers.GraphLogHandlerWS(secretUser, graphLogRepo, logger))
@@ -62,6 +61,7 @@ func InitPrivateRoutes(
 	recognizerWhisper *client.WhisperClient,
 	isWhisperAlive *bool,
 	streamClient *client.StreamMessageClient,
+	integrationsUrl string,
 	logger *logrus.Logger,
 ) {
 	historyRepo := database.NewHistoryRepository(db, logger)
