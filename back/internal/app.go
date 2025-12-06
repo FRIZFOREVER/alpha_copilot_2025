@@ -73,7 +73,7 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 	streamClient := client.NewStreamMessageClient(http.MethodPost, config.Model, "/message_stream", config.HistoryLen, logger)
 
 	web.InitServiceRoutes(server, db, config.SecretSerice, logger)
-	web.InitPublicRoutes(server, db, config.SecretUser, config.FrontOrigin, logger)
+	web.InitPublicRoutes(server, db, config.SecretUser, config.FrontOrigin, config.Inteagrations, logger)
 	web.InitJWTMiddleware(server, config.SecretUser, config.FrontOrigin, logger)
 
 	var isWisperServiceAlive *bool
@@ -96,7 +96,6 @@ func InitApp(config *settings.Settings, logger *logrus.Logger) (*App, error) {
 		recognizerWhisper,
 		isWisperServiceAlive,
 		streamClient,
-		config.Inteagrations,
 		logger,
 	)
 
