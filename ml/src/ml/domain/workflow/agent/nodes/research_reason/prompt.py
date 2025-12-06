@@ -25,7 +25,9 @@ def get_research_reason_prompt(
 
     available_tools_text = _format_available_tools(available_tools)
 
-    evidence_block = "Наблюдений пока нет." if not evidence_list else format_research_observations(evidence_list)
+    evidence_block = (
+        "Наблюдений пока нет." if not evidence_list else format_research_observations(evidence_list)
+    )
 
     reasoning_instructions = (
         "Ты управляешь исследовательским циклом с инструментами.\n"
@@ -34,7 +36,8 @@ def get_research_reason_prompt(
         "Всегда возвращай JSON со следующими полями: thought, chosen_tool, tool_args.\n"
         "Если готов отвечать пользователю, выбирай инструмент final_answer.\n"
         f"Доступные инструменты:\n{available_tools_text}\n"
-        f"Текущие наблюдения:\n{evidence_block}"
+        f"Текущие наблюдения:\n{evidence_block}\n"
+        "Не вызвай инструмент для создания файла повторно, если он уже создан"
     )
 
     system_sections.append(reasoning_instructions)

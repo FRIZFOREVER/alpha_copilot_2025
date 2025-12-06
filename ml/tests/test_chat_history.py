@@ -26,6 +26,16 @@ def test_validate_turn_order_rejects_consecutive_non_system() -> None:
         )
 
 
+def test_validate_turn_order_rejects_consecutive_assistant_messages() -> None:
+    with pytest.raises(ValueError):
+        ChatHistory(
+            messages=[
+                Message(role=Role.assistant, content="first reply"),
+                Message(role=Role.assistant, content="second reply"),
+            ]
+        )
+
+
 def test_add_user_rejects_consecutive_user_messages() -> None:
     history = ChatHistory(messages=[Message(role=Role.user, content="first")])
 
@@ -38,6 +48,18 @@ def test_add_assistant_rejects_consecutive_assistant_messages() -> None:
 
     with pytest.raises(RuntimeError):
         history.add_assistant("another reply")
+
+
+def test_add_user_and_assistant_append_in_turn_order() -> None:
+    history = ChatHistory(messages=[Message(role=Role.system, content="initial")])
+
+    history.add_user("hello")
+    history.add_assistant("hi there")
+
+    assert history.messages[-2].role is Role.user
+    assert history.messages[-2].content == "hello"
+    assert history.messages[-1].role is Role.assistant
+    assert history.messages[-1].content == "hi there"
 
 
 def test_add_or_change_system_replaces_previous_system_message() -> None:
@@ -68,6 +90,28 @@ def test_last_message_requires_user_message_when_ensure_flag_set() -> None:
 
     with pytest.raises(ValueError):
         history.last_message(ensure_user=True)
+
+
+def test_model_dump_chat_last_returns_latest_user_message() -> None:
+    history = ChatHistory(
+        messages=[
+            Message(role=Role.system, content="guide"),
+            Message(role=Role.user, content="question"),
+            Message(role=Role.assistant, content="answer"),
+            Message(role=Role.user, content="follow up"),
+        ]
+    )
+
+    assert history.model_dump_chat_last() == [
+        {"role": Role.user, "content": "follow up"},
+    ]
+
+
+def test_model_dump_chat_last_raises_on_empty_history() -> None:
+    history = ChatHistory(messages=[])
+
+    with pytest.raises(RuntimeError):
+        history.model_dump_chat_last()
 
 
 def test_model_dump_chat_returns_expected_shape() -> None:
