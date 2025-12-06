@@ -1,6 +1,9 @@
-from fastapi.applications import FastAPI
+import uvicorn
 
-from ml.api.app import create_app
 
-# Uvicorn expects an ASGI application object at this path (`ml.main:app`).
-app: FastAPI = create_app()
+def main():
+    uvicorn.run("ml.api.app:app", host="127.0.0.1", port=8000, reload=True)
+
+
+if __name__ == "__main__":
+    main()

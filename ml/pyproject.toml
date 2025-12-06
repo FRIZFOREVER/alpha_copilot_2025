@@ -1,30 +1,48 @@
 [project]
 name = "ml"
 version = "0.1.0"
-description = "Basic project for agent-hackathones"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "FRIZFOREVER", email = "kirillhromov@mail.ru" }
+]
 requires-python = ">=3.13"
 dependencies = [
-    "colorlog>=6.10.1",
-    "fastapi>=0.120.0",
-    "langgraph>=0.2.0",
-    "logging>=0.4.9.6",
-    "ollama>=0.6.0",
-    "ddgs>=5.0.0",
-    "httpx>=0.27.2",
+    "fastapi>=0.121.3",
+    "httpx>=0.28.1",
+    "langgraph>=1.0.4",
+    "ollama>=0.6.1",
+    "openai>=1.51.2",
     "beautifulsoup4>=4.12.3",
-    "pytest>=8.4.2",
-    "python-json-logger>=4.0.0",
-    "python-dotenv>=1.0.1",
-    "pyyaml>=6.0.3",
+    "ddgs>=2.4.0",
+    "pydantic>=2.12.4",
+    "pydantic-settings>=2.12.0",
+    "pytest>=8.3.3",
     "uvicorn>=0.38.0",
-    "rope>=1.14.0",
-    "pylsp-rope>=0.1.17",
-    "websockets>=15.0.1",
+    "websockets>=14.1",
 ]
 
-[tool.uv.build-backend]
-module-root = "src"
+[project.scripts]
+ml = "ml.main:main"
 
 [build-system]
-requires = ["uv_build>=0.9.5,<0.10.0"]
+requires = ["uv_build>=0.9.4,<0.10.0"]
 build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 101
+target-version = "py312"
+
+[tool.ruff.lint]
+# PEP8-ish: E/W (pycodestyle), F (pyflakes), B (bugbear), I (imports)
+select = ["E", "W", "F", "B", "I"]
+ignore = []
+
+[tool.ruff.format]
+line-ending = "lf"
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
