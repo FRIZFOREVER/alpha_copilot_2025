@@ -1,0 +1,199 @@
+services:
+  # Nginx Proxy Manager
+  nginx-proxy:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '81:81'
+    environment:
+      DB_MYSQL_HOST: nginx-proxy-db
+      DB_MYSQL_PORT: 3306
+      DB_MYSQL_USER: npm
+      DB_MYSQL_PASSWORD: npm
+      DB_MYSQL_NAME: npm
+    volumes:
+      - ./nginx-proxy-manager/data:/data
+      - ./nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+    depends_on:
+      - nginx-proxy-db
+    networks:
+      - proxy-network
+
+  nginx-proxy-db:
+    image: jc21/mariadb-aria:latest
+    container_name: nginx-proxy-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: npm
+      MYSQL_DATABASE: npm
+      MYSQL_USER: npm
+      MYSQL_PASSWORD: npm
+    volumes:
+      - ./nginx-proxy-manager/data/mysql:/var/lib/mysql
+    networks:
+      - proxy-network
+
+  ml:
+    build:
+      context: ./ml
+      dockerfile: deploy/Dockerfile
+    env_file:
+      - ./.env
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - proxy-network
+
+  ollama:
+    build:
+      context: .
+      dockerfile: model/Dockerfile
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - proxy-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://jabkialphacopilot.ru/}
+        VITE_ML_SERVICE_URL: ${VITE_ML_SERVICE_URL:-http://localhost:8000/}
+    expose:
+      - "80"
+    depends_on:
+      - app
+    restart: always
+    networks:
+      proxy-network:
+        aliases:
+          - frontend.local
+
+  app:
+    build:
+      context: ./back
+      dockerfile: deploy/Dockerfile
+    ports:
+      - '8080:8080'
+    env_file:
+      - ./.env
+    environment:
+      - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY:-}
+      - MODEL=http://ml:8000
+      - FRONT_ORIGIN=https://jabkialphacopilot.ru/
+    depends_on:
+      - postgres
+      - minio
+      - ml
+    restart: always
+    networks:
+      proxy-network:
+        aliases:
+          - api.local
+
+  integrations:
+    build: ./integration
+    ports:
+      - "4444:4444"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID:-0}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH:-}
+      - TELEGRAM_DATA_DIR=/app/data
+    volumes:
+      - telegram_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - proxy-network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=app
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=app123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proxy-network
+
+  migrations:
+    build:
+      context: ./back/internal/database/migrations
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - proxy-network
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2024-05-28T17-19-04Z
+    environment:
+      MINIO_ROOT_USER: minio-user
+      MINIO_ROOT_PASSWORD: minio-password
+      MINIO_UPDATE: "off"
+    entrypoint: >
+      /bin/sh -c '
+        isAlive() { curl -sf http://127.0.0.1:9000/minio/health/live; }
+        minio $$0 "$$@" --quiet & echo $$! > /tmp/minio.pid
+        while ! isAlive; do sleep 0.1; done
+        mc alias set minio http://127.0.0.1:9000 minio-user minio-password
+        mc mb minio/voices || true
+        mc mb minio/files || true
+        mc anonymous set public minio/voices
+        mc anonymous set public minio/files
+        kill -s INT $$(cat /tmp/minio.pid) && rm /tmp/minio.pid
+        while isAlive; do sleep 0.1; done
+        exec minio $$0 "$$@"
+      '
+    command: server /data --json --console-address ':9090'
+    volumes:
+      - minio-data:/data:rw
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 10s
+      start_period: 10s
+    security_opt: [no-new-privileges:true]
+    networks:
+      - proxy-network
+
+volumes:
+  postgres_data:
+  minio-data: {}
+  telegram_data:
+  ollama:
+
+networks:
+  proxy-network:
+    driver: bridge
+    name: proxy-network
