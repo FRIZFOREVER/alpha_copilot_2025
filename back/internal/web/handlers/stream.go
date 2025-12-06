@@ -195,7 +195,7 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 					sh.logger.Errorf("Error flush data: %v", err)
 				}
 
-				if message.Usage != nil{
+				if message.Usage != nil {
 					// Отправляем финальный чанк с флагом Done
 					finalChunk := streamChunckOut{
 						Content: "",
