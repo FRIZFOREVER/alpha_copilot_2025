@@ -79,3 +79,38 @@ def test_reasoning_model_raises_without_environment(monkeypatch: pytest.MonkeyPa
         ReasoningClientSettings.model_validate({"base_url": None, "model": None})
 
     assert "Environment variable OLLAMA_REASONING_MODEL is required" in str(excinfo.value)
+
+
+def test_reasoning_settings_defaults_are_kept() -> None:
+    settings = ReasoningClientSettings(base_url="http://custom-url", model="local-model")
+
+    assert settings.base_url == "http://custom-url"
+    assert settings.model == "local-model"
+    assert settings.keep_alive == -1
+    assert settings.options.temperature == 0.1
+    assert settings.options.top_p == 0.9
+    assert settings.options.num_ctx == 32768
+    assert settings.options.num_predict == -1
+
+
+def test_embedding_model_is_loaded_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    patch_httpx_client(monkeypatch, [DummyResponse(200), DummyResponse(200)])
+    monkeypatch.setenv("OLLAMA_EMBEDDING_MODEL", "embedding-model")
+
+    settings = settings_module.EmbeddingClientSettings.model_validate(
+        {"base_url": None, "model": None}
+    )
+
+    assert settings.model == "embedding-model"
+    assert settings.base_url == settings_module._DEFAULT_BASE_URLS[0]
+    assert settings.options.num_ctx == 32768
+
+
+def test_embedding_model_raises_without_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    patch_httpx_client(monkeypatch, [DummyResponse(200), DummyResponse(200)])
+    monkeypatch.delenv("OLLAMA_EMBEDDING_MODEL", raising=False)
+
+    with pytest.raises(RuntimeError) as excinfo:
+        settings_module.EmbeddingClientSettings.model_validate({"base_url": None, "model": None})
+
+    assert "Environment variable OLLAMA_EMBEDDING_MODEL is required" in str(excinfo.value)
