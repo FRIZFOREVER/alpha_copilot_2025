@@ -70,9 +70,9 @@ def is_url_allowed(url: str) -> bool:
     return True
 
 
-def fetch_html(url: str, *, timeout: float = 10.0) -> str:
-    with httpx.Client(timeout=timeout, follow_redirects=True) as client:
-        response = client.get(url)
+async def fetch_html(url: str, *, timeout: float = 10.0) -> str:
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+        response = await client.get(url)
         response.raise_for_status()
 
     content = response.text
@@ -95,8 +95,8 @@ def html_to_text(html: str) -> str:
     return normalized
 
 
-def extract_text_from_url(url: str) -> str:
-    html = fetch_html(url)
+async def extract_text_from_url(url: str) -> str:
+    html = await fetch_html(url)
     return html_to_text(html)
 
 

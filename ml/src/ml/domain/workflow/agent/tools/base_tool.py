@@ -29,7 +29,7 @@ class BaseTool(ABC):
         return {"name": self.name, "description": self.description, "schema": self.schema}
 
     @abstractmethod
-    def execute(self, **kwargs: Any) -> ToolResult:
+    async def execute(self, **kwargs: Any) -> ToolResult:
         """
         Execute the tool with given arguments.
 
