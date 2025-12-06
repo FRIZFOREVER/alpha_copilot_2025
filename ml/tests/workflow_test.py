@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 
 langgraph_module = types.ModuleType("langgraph")
 langgraph_graph_module = types.ModuleType("langgraph.graph")
-duckduckgo_module = types.ModuleType("duckduckgo_search")
+ddgs_module = types.ModuleType("ddgs")
 bs4_module = types.ModuleType("bs4")
 
 
@@ -45,7 +45,7 @@ class _DummyDDGS:
         return []
 
 
-duckduckgo_module.DDGS = _DummyDDGS
+ddgs_module.DDGS = _DummyDDGS
 
 
 class _DummyBeautifulSoup:
@@ -60,7 +60,7 @@ bs4_module.BeautifulSoup = _DummyBeautifulSoup
 
 sys.modules.setdefault("langgraph", langgraph_module)
 sys.modules.setdefault("langgraph.graph", langgraph_graph_module)
-sys.modules.setdefault("duckduckgo_search", duckduckgo_module)
+sys.modules.setdefault("ddgs", ddgs_module)
 sys.modules.setdefault("bs4", bs4_module)
 
 from ml.api import app as create_app

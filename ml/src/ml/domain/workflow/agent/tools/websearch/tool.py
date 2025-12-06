@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlparse
 
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 from ml.api.external import send_graph_log
 from ml.api.external.ollama_client import ReasoningModelClient
@@ -94,9 +94,18 @@ class WebSearchTool(BaseTool):
 
         def _search() -> list[dict[str, Any]]:
             with DDGS() as client:
-                return client.text(query, max_results=10)
+                return client.text(
+                    keywords=query,
+                    region="ru-ru",
+                    safesearch="moderate",
+                    backend="api",
+                    max_results=20,
+                )
 
         raw_results = await asyncio.to_thread(_search)
+
+        unique_urls: set[str] = set()
+        query_tokens = [token.lower() for token in query.split() if token]
 
         for raw_result in raw_results:
             if "href" not in raw_result:
@@ -116,6 +125,17 @@ class WebSearchTool(BaseTool):
             if not is_url_allowed(url):
                 continue
 
+            lowered_title = title.lower()
+            lowered_snippet = snippet.lower()
+            if query_tokens and not any(
+                token in lowered_title or token in lowered_snippet for token in query_tokens
+            ):
+                continue
+
+            if url in unique_urls:
+                continue
+
+            unique_urls.add(url)
             collected.append(SearchHit(url=url, title=title, snippet=snippet))
 
             if len(collected) >= self.max_results:

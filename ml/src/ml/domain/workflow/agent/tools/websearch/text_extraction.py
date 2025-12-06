@@ -18,6 +18,10 @@ BLOCKED_DOMAINS: set[str] = {
     "search.yahoo.com",
     "yandex.ru",
     "yandex.com",
+    "www.tiktok.com",
+    "tiktok.com",
+    "play.google.com",
+    "apps.apple.com",
 }
 
 BLOCKED_PATH_PREFIXES: tuple[str, ...] = (
