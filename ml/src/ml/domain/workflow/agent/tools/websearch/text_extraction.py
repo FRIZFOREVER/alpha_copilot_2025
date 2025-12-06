@@ -12,6 +12,7 @@ BLOCKED_DOMAINS: set[str] = {
     "bing.com",
     "www.google.com",
     "google.com",
+    "support.google.com",
     "duckduckgo.com",
     "www.duckduckgo.com",
     "search.yahoo.com",
