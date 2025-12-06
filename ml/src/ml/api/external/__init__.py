@@ -4,6 +4,7 @@ from ml.api.external.ollama_init import (
     get_models_from_env,
 )
 from ml.api.external.ollama_warmup import clients_warmup, init_warmup_clients
+from ml.api.external.minio_client import read_minio_file, write_minio_file
 from ml.api.external.websocket_client import (
     GraphLogWebSocketClient,
     init_graph_log_client,
@@ -19,4 +20,6 @@ __all__ = [
     "GraphLogWebSocketClient",
     "init_graph_log_client",
     "send_graph_log",
+    "read_minio_file",
+    "write_minio_file",
 ]
