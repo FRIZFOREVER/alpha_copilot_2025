@@ -17,7 +17,6 @@ from ml.domain.workflow.agent.nodes import (
     research_observer,
     research_reason,
     research_tool_call,
-    thinking_finalize,
     thinking_planner,
     validate_tag,
     validate_voice,
@@ -58,12 +57,17 @@ def create_pipeline() -> StateGraph:
     workflow.add_node("Thinking planner", thinking_planner)
     workflow.add_node("Thinking tool call", research_tool_call)
     workflow.add_node("Thinking observer", research_observer)
-    workflow.add_node("Thinking finalize", thinking_finalize)
 
     workflow.add_edge("Thinking planner", "Thinking tool call")
-    workflow.add_edge("Thinking tool call", "Thinking observer")
-    workflow.add_edge("Thinking observer", "Thinking finalize")
-    workflow.add_edge("Thinking finalize", "Final node")
+    workflow.add_conditional_edges(
+        "Thinking tool call",
+        research_decision,
+        {
+            "tool_call": "Thinking observer",
+            "finalize": "Final node",
+        },
+    )
+    workflow.add_edge("Thinking observer", "Thinking planner")
 
     # Research
     workflow.add_node("Research reason", research_reason)
