@@ -8,6 +8,7 @@ import uuid
 from typing import ClassVar
 from urllib.parse import urlparse
 
+from fpdf import FPDF
 from minio import Minio
 
 logger = logging.getLogger(__name__)
@@ -100,6 +101,20 @@ class MinioStorageClient:
         timestamp = int(time.time())
         return f"{uuid.uuid4()}_{timestamp}{extension}"
 
+    def _render_pdf(self, content: str) -> bytes:
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_compression(False)
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.set_font("Helvetica", size=12)
+        pdf.multi_cell(0, 10, text=content)
+        rendered = pdf.output()
+
+        if not isinstance(rendered, (bytes, bytearray)):
+            raise TypeError("PDF renderer returned unexpected data type")
+
+        return bytes(rendered)
+
     def read_text(self, object_path: str) -> str:
         object_name = self._normalize_object_path(object_path)
         try:
@@ -133,7 +148,11 @@ class MinioStorageClient:
         normalized_extension = self._normalize_extension(extension)
         object_name = self._build_object_name(normalized_extension)
         content_type = self._guess_content_type(normalized_extension)
-        encoded_content = content.encode("utf-8")
+        encoded_content = (
+            self._render_pdf(content)
+            if normalized_extension.lower() == ".pdf"
+            else content.encode("utf-8")
+        )
 
         try:
             self._client.put_object(
