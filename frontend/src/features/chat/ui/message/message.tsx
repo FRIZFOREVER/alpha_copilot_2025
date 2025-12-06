@@ -204,7 +204,7 @@ export const Message = ({
             {content}
           </div>
         )}
-        {voice_url && voice_url.trim() && !isUser && (
+        {voice_url && voice_url.trim() && isUser && (
           <div className="mb-2">
             <VoiceMessage voiceUrl={voice_url} transcription={content} />
           </div>
