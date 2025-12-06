@@ -35,7 +35,7 @@ async def thinking_planner(state: GraphState) -> GraphState:
     tool_arguments: dict[str, Any]
     thought: str
 
-    if state.file_url is not None:
+    if state.written_file_url is not None:
         final_tool_name = FinalAnswerTool().name
         final_tool = available_tools.get(final_tool_name)
         if final_tool is None:
