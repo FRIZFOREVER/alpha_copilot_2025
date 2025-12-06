@@ -6,7 +6,7 @@ from ml.configs import LLMMode
 
 OPENROUTER_PROVIDER_BODY: dict[str, dict[str, object]] = {
     "provider": {
-        "only": ["novita/fp8"],
+        "only": ["siliconflow/fp8"],
         "allow_fallbacks": False,
         "require_parameters": True,
     }
