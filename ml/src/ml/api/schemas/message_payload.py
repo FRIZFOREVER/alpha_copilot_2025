@@ -8,6 +8,6 @@ class MessagePayload(BaseModel):
     chat_id: int
     tag: Tag
     mode: ModelMode
-    file_url: str
+    file_url: str | None
     is_voice: bool
     profile: UserProfile

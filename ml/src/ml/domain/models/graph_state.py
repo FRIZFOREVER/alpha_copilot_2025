@@ -19,6 +19,7 @@ class GraphState(BaseModel):
     chat: ChatHistory
     user: UserProfile
     meta: MetaData
+    file_url: str | None
 
     # validational fields
     model_mode: ModelMode

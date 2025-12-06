@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 def fast_answer(state: GraphState) -> GraphState:
     logger.info("Entering fast_answer node")
 
-    system_prompt: str = get_system_prompt(state.user)
+    system_prompt: str = get_system_prompt(state.user, evidence=state.evidence_list)
 
     state.chat.add_or_change_system(system_prompt)
 

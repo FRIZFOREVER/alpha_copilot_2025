@@ -99,6 +99,7 @@ async def workflow(payload: MessagePayload) -> tuple[AsyncIterator[dict[str, Any
         chat=payload.messages,
         user=payload.profile,
         meta=MetaData(is_voice=payload.is_voice, tag=payload.tag),
+        file_url=payload.file_url,
         model_mode=payload.mode,
         voice_is_valid=None,
         final_prompt=None,

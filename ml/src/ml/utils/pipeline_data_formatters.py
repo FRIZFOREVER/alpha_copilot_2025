@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING, Sequence
 
 if TYPE_CHECKING:  # pragma: no cover - for type checking only
-    from ml.domain.models import Evidence, UserProfile
+    from ml.domain.models import Evidence, ToolResult, UserProfile
 
 
-def get_system_prompt(profile: "UserProfile") -> str:
+def get_system_prompt(profile: "UserProfile", evidence: Sequence["Evidence"] | None = None) -> str:
     """
     Creates general system prompt for final answer as a string
     """
@@ -72,6 +72,19 @@ def get_system_prompt(profile: "UserProfile") -> str:
         "В первую очередь постарайся ответить на запрос пользователя"
     )
 
+    if evidence is not None:
+        evidence_text = format_research_observations(evidence)
+        evidence_section = (
+            "Доступных материалов из загруженных файлов или поиска нет."
+            if not evidence_text
+            else (
+                "Полагайся на проверенные материалы ниже.\n"
+                "Эти данные получены из файлов или веб-поиска:\n"
+                f"{evidence_text}"
+            )
+        )
+        sections.append(evidence_section)
+
     system_prompt: str = "\n\n".join(sections)
     return system_prompt
 
@@ -79,8 +92,89 @@ def get_system_prompt(profile: "UserProfile") -> str:
 def format_research_observations(observations: Sequence["Evidence"]) -> str:
     formatted: list[str] = []
     for index, observation in enumerate(observations, start=1):
-        formatted.append(
-            f"{index}. {observation.tool_name} => {observation.source.data}"
+        formatted.append(_format_evidence(index, observation))
+
+    return "\n\n".join(formatted)
+
+
+def _format_evidence(index: int, observation: "Evidence") -> str:
+    tool_name = observation.tool_name
+    tool_result = observation.source
+
+    if tool_name == "file_reader":
+        return _format_file_evidence(index, tool_result)
+
+    if tool_name == "web_search":
+        return _format_web_evidence(index, tool_result)
+
+    return (
+        f"{index}. Источник: инструмент {tool_name}\n"
+        f"Данные:\n{observation.summary}"
+    )
+
+
+def _format_file_evidence(index: int, result: "ToolResult") -> str:
+    data = result.data
+    if not isinstance(data, str):
+        raise TypeError("file_reader evidence must contain string data")
+
+    return (
+        f"{index}. Источник: загруженный файл (tool: file_reader)\n"
+        f"{data}"
+    )
+
+
+def _format_web_evidence(index: int, result: "ToolResult") -> str:
+    data = result.data
+    if not isinstance(data, dict):
+        raise TypeError("web_search evidence must be a dictionary")
+    if "query" not in data:
+        raise ValueError("web_search evidence is missing 'query'")
+    if "results" not in data:
+        raise ValueError("web_search evidence is missing 'results'")
+
+    query = data["query"]
+    results = data["results"]
+
+    if not isinstance(query, str):
+        raise TypeError("web_search evidence 'query' must be a string")
+    if not isinstance(results, list):
+        raise TypeError("web_search evidence 'results' must be a list")
+
+    formatted_results: list[str] = []
+    for result_index, result_entry in enumerate(results, start=1):
+        if not isinstance(result_entry, dict):
+            raise TypeError("web_search evidence result entry must be a dictionary")
+        if "url" not in result_entry:
+            raise ValueError("web_search evidence result entry is missing 'url'")
+        if "title" not in result_entry:
+            raise ValueError("web_search evidence result entry is missing 'title'")
+        if "content" not in result_entry:
+            raise ValueError("web_search evidence result entry is missing 'content'")
+
+        url = result_entry["url"]
+        title = result_entry["title"]
+        content = result_entry["content"]
+
+        if not isinstance(url, str):
+            raise TypeError("web_search evidence result 'url' must be a string")
+        if not isinstance(title, str):
+            raise TypeError("web_search evidence result 'title' must be a string")
+        if not isinstance(content, str):
+            raise TypeError("web_search evidence result 'content' must be a string")
+
+        formatted_results.append(
+            (
+                f"- Результат {result_index}: {title}\n"
+                f"  URL: {url}\n"
+                f"  Извлечённый текст:\n{content}"
+            )
         )
 
-    return "\n".join(formatted)
+    results_block = "\n".join(formatted_results)
+
+    return (
+        f"{index}. Источник: веб-поиск (tool: web_search)\n"
+        f"Поисковый запрос: {query}\n"
+        f"Детали результатов:\n{results_block}"
+    )
