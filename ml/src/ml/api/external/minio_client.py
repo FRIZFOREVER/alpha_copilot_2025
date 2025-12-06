@@ -5,6 +5,7 @@ import logging
 import mimetypes
 import time
 import uuid
+from importlib import resources
 from pathlib import Path
 from typing import ClassVar
 from urllib.parse import urlparse
@@ -18,8 +19,8 @@ DEFAULT_MINIO_ENDPOINT = "http://minio:9000"
 DEFAULT_MINIO_ACCESS_KEY = "minio-user"
 DEFAULT_MINIO_SECRET_KEY = "minio-password"
 DEFAULT_BUCKET_NAME = "files"
-UNICODE_FONT_PATH = Path(__file__).parent / "fonts" / "DejaVuSans.ttf"
-UNICODE_FONT_NAME = "DejaVuSans"
+BUNDLED_UNICODE_FONT_NAME = "DejaVuSansCondensed"
+BUNDLED_UNICODE_FONT_FILE = "DejaVuSansCondensed.ttf"
 
 
 class MinioStorageClient:
@@ -104,19 +105,33 @@ class MinioStorageClient:
         timestamp = int(time.time())
         return f"{uuid.uuid4()}_{timestamp}{extension}"
 
+    def _get_bundled_font_path(self) -> Path:
+        try:
+            fonts_dir = resources.files("fpdf").joinpath("fonts")
+        except Exception as exc:  # pragma: no cover - defensive branch
+            msg = "Bundled fonts directory is unavailable in the fpdf package"
+            raise RuntimeError(msg) from exc
+
+        font_path = fonts_dir.joinpath(BUNDLED_UNICODE_FONT_FILE)
+        if not font_path.is_file():
+            raise FileNotFoundError(
+                f"Unicode font file not found in bundled fonts: {font_path}"  # noqa: EM101
+            )
+
+        return Path(font_path)
+
     def _render_pdf(self, content: str) -> bytes:
         if not isinstance(content, str):
             raise TypeError("PDF content must be a string")
 
-        if not UNICODE_FONT_PATH.is_file():
-            raise FileNotFoundError(f"Unicode font file not found at {UNICODE_FONT_PATH}")
+        font_path = self._get_bundled_font_path()
 
         pdf = FPDF()
         pdf.add_page()
         pdf.set_compression(False)
         pdf.set_auto_page_break(auto=True, margin=15)
-        pdf.add_font(UNICODE_FONT_NAME, fname=str(UNICODE_FONT_PATH), uni=True)
-        pdf.set_font(UNICODE_FONT_NAME, size=12)
+        pdf.add_font(BUNDLED_UNICODE_FONT_NAME, fname=str(font_path), uni=True)
+        pdf.set_font(BUNDLED_UNICODE_FONT_NAME, size=12)
         pdf.multi_cell(0, 10, text=content)
         rendered = pdf.output()
 
