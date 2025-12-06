@@ -355,7 +355,7 @@ const LandingPage = () => {
                   {
                     name: "Егор - Frontend",
                     telegram: "https://t.me/egoryaaa",
-                    github: "https://github.com/developer2",
+                    github: "https://github.com/flavokrkkk",
                     image: "/images/developers/IMG_3510.webp",
                   },
                   {
@@ -367,7 +367,7 @@ const LandingPage = () => {
                   {
                     name: "Лана - UI/UX",
                     telegram: "https://t.me/Llaceyne",
-                    github: "https://github.com/VG-Greed",
+                    github: "https://github.com/Wespa4",
                     image: "/images/developers/photo_2025-11-16_01-50-37.jpg",
                   },
                 ].map((developer, index) => (
