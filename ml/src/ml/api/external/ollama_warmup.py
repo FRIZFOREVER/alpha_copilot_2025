@@ -1,15 +1,19 @@
 import logging
 
 from ml.api.external.ollama_client import EmbeddingModelClient, ReasoningModelClient
+from ml.configs import LLMMode, get_llm_mode
 from ml.domain.models import ChatHistory
 
 logger = logging.getLogger(__name__)
 
 
 async def init_warmup_clients():
-    logger.debug("Initiating ReasoningModelClient")
+    mode = get_llm_mode()
+
+    logger.debug("Initiating ReasoningModelClient for mode=%s", mode.value)
     ReasoningModelClient.instance()
-    logger.debug("Initiating EmbeddingModelClient")
+
+    logger.debug("Initiating EmbeddingModelClient for mode=%s", mode.value)
     EmbeddingModelClient.instance()
 
 
@@ -30,10 +34,16 @@ async def _reasoning_warmup() -> None:
 
 
 async def clients_warmup() -> None:
-    logger.info("Started embedding client warmup")
+    mode = get_llm_mode()
+
+    if mode is not LLMMode.OLLAMA:
+        logger.info("Skipping local client warmup for remote mode=%s", mode.value)
+        return
+
+    logger.info("Started embedding client warmup for mode=%s", mode.value)
     await _embedding_warmup()
 
-    logger.info("Started reasoner client warmup")
+    logger.info("Started reasoner client warmup for mode=%s", mode.value)
     await _reasoning_warmup()
 
 

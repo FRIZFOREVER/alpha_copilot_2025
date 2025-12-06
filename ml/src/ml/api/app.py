@@ -13,6 +13,7 @@ from ml.api.external import (
     init_warmup_clients,
     init_graph_log_client,
 )
+from ml.configs import LLMMode, get_llm_mode
 from ml.api.routes.health import router as health_router
 from ml.api.routes.workflow import router as workflow_router
 
@@ -24,22 +25,31 @@ async def lifespan(app: FastAPI):
     app.state.model_ready = asyncio.Event()
 
     async def _init() -> None:
-        logger.info("Starting Ollama model initialization")
+        mode = get_llm_mode()
+        logger.info("Starting model initialization for mode=%s", mode.value)
 
         try:
-            available_models = await fetch_available_models()
-            requested_models = await get_models_from_env()
+            if mode is LLMMode.OLLAMA:
+                available_models = await fetch_available_models()
+                requested_models = await get_models_from_env()
 
-            await download_missing_models(available_models, requested_models)
+                await download_missing_models(available_models, requested_models)
+            else:
+                logger.info(
+                    "Skipping local model discovery and download for non-Ollama mode=%s", mode.value
+                )
 
             await init_warmup_clients()
             await clients_warmup()
 
             app.state.graph_log_client = await init_graph_log_client()
 
-            logger.info("All models successfully initialized, ready to accept connections")
+            logger.info(
+                "Model initialization completed for mode=%s; ready to accept connections",
+                mode.value,
+            )
         except Exception:
-            logger.exception("Failed to initialize Ollama models")
+            logger.exception("Failed to initialize models for mode %s", mode.value)
             raise
         finally:
             app.state.model_ready.set()
