@@ -5,6 +5,7 @@ import logging
 import mimetypes
 import time
 import uuid
+from pathlib import Path
 from typing import ClassVar
 from urllib.parse import urlparse
 
@@ -17,6 +18,8 @@ DEFAULT_MINIO_ENDPOINT = "http://minio:9000"
 DEFAULT_MINIO_ACCESS_KEY = "minio-user"
 DEFAULT_MINIO_SECRET_KEY = "minio-password"
 DEFAULT_BUCKET_NAME = "files"
+UNICODE_FONT_PATH = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+UNICODE_FONT_NAME = "DejaVuSans"
 
 
 class MinioStorageClient:
@@ -102,11 +105,18 @@ class MinioStorageClient:
         return f"{uuid.uuid4()}_{timestamp}{extension}"
 
     def _render_pdf(self, content: str) -> bytes:
+        if not isinstance(content, str):
+            raise TypeError("PDF content must be a string")
+
+        if not UNICODE_FONT_PATH.is_file():
+            raise FileNotFoundError(f"Unicode font file not found at {UNICODE_FONT_PATH}")
+
         pdf = FPDF()
         pdf.add_page()
         pdf.set_compression(False)
         pdf.set_auto_page_break(auto=True, margin=15)
-        pdf.set_font("Helvetica", size=12)
+        pdf.add_font(UNICODE_FONT_NAME, fname=str(UNICODE_FONT_PATH), uni=True)
+        pdf.set_font(UNICODE_FONT_NAME, size=12)
         pdf.multi_cell(0, 10, text=content)
         rendered = pdf.output()
 
