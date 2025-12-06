@@ -1,5 +1,7 @@
 import { FileText, File, FileSpreadsheet } from "lucide-react";
 import { cn } from "@/shared/lib/mergeClass";
+import { axiosAuth } from "@/shared/api/baseQueryInstance";
+import { useState } from "react";
 
 export type FileType = "pdf" | "txt" | "excel" | "word" | "unknown";
 
@@ -72,21 +74,80 @@ const truncateFileName = (fileName: string, maxLength: number = 25): string => {
   return nameWithoutExtension.substring(0, availableLength) + "..." + extension;
 };
 
+const downloadFile = async (fileUrl: string, fileName: string) => {
+  try {
+    // Извлекаем имя файла из URL (последняя часть после /)
+    const fileNameFromUrl = fileUrl.split("/").pop() || fileName;
+    
+    // Получаем базовый экземпляр axios для прямого доступа
+    const axiosInstance = (axiosAuth as any).baseQueryV1Instance;
+    
+    // Делаем запрос с responseType: 'blob' для скачивания файла
+    const response = await axiosInstance.get(fileUrl, {
+      responseType: "blob",
+    });
+
+    // Создаем blob из ответа
+    const blob = response.data as Blob;
+    const url = window.URL.createObjectURL(blob);
+    
+    // Создаем временную ссылку и кликаем по ней для скачивания
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileNameFromUrl;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Очищаем
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Ошибка при скачивании файла:", error);
+    throw error;
+  }
+};
+
 export const FileMessage = ({ fileUrl, className }: FileMessageProps) => {
   const fileType = getFileTypeFromUrl(fileUrl);
   const fileTypeLabel = getFileTypeLabel(fileType);
   const Icon = getFileIcon(fileType);
   const fileName = getFileNameFromUrl(fileUrl);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (isDownloading) return;
+
+    setIsDownloading(true);
+    try {
+      // Извлекаем путь к файлу из URL (убираем базовый URL если есть)
+      const filePath = fileUrl.startsWith("http")
+        ? `/files/${getFileNameFromUrl(fileUrl)}`
+        : fileUrl.startsWith("/files/")
+        ? fileUrl
+        : `/files/${fileUrl}`;
+
+      await downloadFile(filePath, fileName);
+    } catch (error) {
+      console.error("Не удалось скачать файл:", error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <button
+      onClick={handleDownload}
+      disabled={isDownloading}
       className={cn(
         "flex items-center gap-3 rounded-2xl px-3 py-2.5",
         "bg-gray-50 border border-gray-200",
         "hover:bg-gray-100 transition-colors",
         "cursor-pointer text-left w-full",
+        isDownloading && "opacity-50 cursor-wait",
         className
       )}
+      aria-label={`Скачать файл ${fileName}`}
+      title={`Скачать файл ${fileName}`}
     >
       <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center">
         <Icon className="h-5 w-5 text-white" />
