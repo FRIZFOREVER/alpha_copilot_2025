@@ -108,8 +108,21 @@ func (t *Todoist) proxyRequest(c *fiber.Ctx, endpoint string) error {
 		})
 	}
 
-	// Копируем заголовки ответа
+	// Копируем заголовки ответа, исключая CORS заголовки (их устанавливает бэкенд)
+	corsHeaders := map[string]bool{
+		"Access-Control-Allow-Origin":      true,
+		"Access-Control-Allow-Methods":    true,
+		"Access-Control-Allow-Headers":    true,
+		"Access-Control-Allow-Credentials": true,
+		"Access-Control-Expose-Headers":   true,
+		"Access-Control-Max-Age":         true,
+	}
+	
 	for key, values := range resp.Header {
+		// Пропускаем CORS заголовки - их устанавливает бэкенд
+		if corsHeaders[key] {
+			continue
+		}
 		for _, value := range values {
 			c.Response().Header.Add(key, value)
 		}

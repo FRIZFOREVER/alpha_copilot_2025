@@ -42,25 +42,7 @@ func InitPublicRoutes(server *fiber.App,
 	regRepo := database.NewRegistrationService(db, logger)
 	reg := handlers.NewReg(regRepo, secretUser, logger)
 	server.Post("/reg", reg.Handler)
-
-	todoistIntegrations := integrations.NewTodoist(integrationsUrl, logger)
-	todoistGroup := server.Group("/todoist")
-	// Эндпоинты проксирования
-	todoistGroup.Post("/auth/save", todoistIntegrations.SaveToken)
-	todoistGroup.Post("/status", todoistIntegrations.GetStatus)
-	todoistGroup.Post("/projects", todoistIntegrations.GetProjects)
-	todoistGroup.Post("/create/task", todoistIntegrations.CreateTask)
-
-	telegramIntergration := integrations.NewTelegram(integrationsUrl, logger)
-	telegramGroup := server.Group("/telegram/user")
-	// Эндпоинты с валидацией перед проксированием
-	telegramGroup.Post("/auth/start", telegramIntergration.StartAuth)
-	telegramGroup.Post("/auth/verify", telegramIntergration.VerifyAuth)
-	telegramGroup.Post("/status", telegramIntergration.GetStatus)
-	telegramGroup.Post("/contacts", telegramIntergration.GetContacts)
-	telegramGroup.Post("/send/message", telegramIntergration.SendMessage)
-	telegramGroup.Post("/disconnect", telegramIntergration.Disconnect)
-
+	
 	server.Use("/graph_log", middlewares.Upgrader)
 	graphLogRepo := database.NewGraphLogRepository(db, logger)
 	server.Get("/graph_log/:chat_id", handlers.GraphLogHandlerWS(secretUser, graphLogRepo, logger))
@@ -141,4 +123,20 @@ func InitPrivateRoutes(
 	analyticGroup.Get("/message-counts", analytic.GetMessageCountsHandler)
 	analyticGroup.Get("/tag-counts", analytic.GetTagCountsHandler)
 	analyticGroup.Post("/timeseries-messages", analytic.GetTimeseriesMessagesHandler)
+
+	todoistIntegrations := integrations.NewTodoist(integrationsUrl, logger)
+	todoistGroup := server.Group("/todoist")
+	todoistGroup.Post("/auth/save", todoistIntegrations.SaveToken)
+	todoistGroup.Post("/status", todoistIntegrations.GetStatus)
+	todoistGroup.Post("/projects", todoistIntegrations.GetProjects)
+	todoistGroup.Post("/create/task", todoistIntegrations.CreateTask)
+
+	telegramIntergration := integrations.NewTelegram(integrationsUrl, logger)
+	telegramGroup := server.Group("/telegram/user")
+	telegramGroup.Post("/auth/start", telegramIntergration.StartAuth)
+	telegramGroup.Post("/auth/verify", telegramIntergration.VerifyAuth)
+	telegramGroup.Post("/status", telegramIntergration.GetStatus)
+	telegramGroup.Post("/contacts", telegramIntergration.GetContacts)
+	telegramGroup.Post("/send/message", telegramIntergration.SendMessage)
+	telegramGroup.Post("/disconnect", telegramIntergration.Disconnect)
 }
