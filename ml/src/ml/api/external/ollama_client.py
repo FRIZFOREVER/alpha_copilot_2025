@@ -188,12 +188,24 @@ class ReasoningModelClient:
         else:
             max_tokens = _limit_tokens(self.settings.options.num_predict)
 
+            response_format: dict[str, Any] = {"type": "json_object"}
+
+            if self.mode is LLMMode.OPENROUTER:
+                response_format = {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": output_schema.__name__,
+                        "schema": output_schema.model_json_schema(),
+                        "strict": True,
+                    },
+                }
+
             response_kwargs: dict[str, Any] = {
                 "model": self.settings.model,
                 "messages": messages.model_dump_chat(),
                 "temperature": self.settings.options.temperature,
                 "top_p": self.settings.options.top_p,
-                "response_format": {"type": "json_object"},
+                "response_format": response_format,
                 "stream": False,
             }
 
