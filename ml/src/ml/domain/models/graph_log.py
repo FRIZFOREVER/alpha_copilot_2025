@@ -6,6 +6,7 @@ class PicsTags(str, Enum):
     Web = "web"
     Think = "think"
     Mic = "mic"
+    Tool = "tool"
 
 
 class GraphLogMessage(TypedDict):

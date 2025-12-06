@@ -1,10 +1,18 @@
 import logging
 
+from ml.api.external import send_graph_log
 from ml.domain.models import GraphState, ToolResult
+from ml.domain.models.graph_log import PicsTags
 from ml.domain.workflow.agent.tools.final_answer.tool import FinalAnswerTool
 from ml.domain.workflow.agent.tools.tool_registry import get_tool
 
 logger = logging.getLogger(__name__)
+
+
+TOOL_RU_NAMES: dict[str, str] = {
+    "web_search": "Веб-поиск",
+    "file_writer": "Создание файла",
+}
 
 
 async def research_tool_call(state: GraphState) -> GraphState:
@@ -18,6 +26,7 @@ async def research_tool_call(state: GraphState) -> GraphState:
     if tool is None:
         raise RuntimeError(f"Tool '{planned_call.tool_name}' is not registered")
 
+    answer_id = state.chat.last_user_message_id()
     execution_arguments = dict(planned_call.arguments)
     final_answer_name = FinalAnswerTool().name
     if tool.name == final_answer_name:
@@ -27,6 +36,17 @@ async def research_tool_call(state: GraphState) -> GraphState:
                 "profile": state.user,
                 "evidence": state.evidence_list,
             }
+        )
+    else:
+        russian_tool_name = TOOL_RU_NAMES.get(tool.name)
+        if russian_tool_name is None:
+            raise KeyError(f"Русское название для инструмента '{tool.name}' не определено")
+
+        await send_graph_log(
+            chat_id=state.chat_id,
+            tag=PicsTags.Tool,
+            message=russian_tool_name,
+            answer_id=answer_id,
         )
 
     try:
