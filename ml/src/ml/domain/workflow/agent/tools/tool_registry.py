@@ -1,5 +1,6 @@
 from ml.domain.workflow.agent.tools import BaseTool
 from ml.domain.workflow.agent.tools.final_answer.tool import FinalAnswerTool
+from ml.domain.workflow.agent.tools.file_writer.tool import FileWriterTool
 from ml.domain.workflow.agent.tools.websearch.tool import WebSearchTool
 
 _tool_registry: dict[str, BaseTool] = {}
@@ -23,6 +24,7 @@ def initialize_tools() -> None:
     """Initialize default tools."""
     register_tool(WebSearchTool())
     register_tool(FinalAnswerTool())
+    register_tool(FileWriterTool())
 
 
 initialize_tools()
