@@ -61,6 +61,7 @@ describe("createStreamCallbacks", () => {
       answer_id: 2,
       question_time: "2025-01-01T00:00:00Z",
       tag: "general",
+      file_url: null,
     };
 
     callbacks.onInitial(initialData);
@@ -91,6 +92,7 @@ describe("createStreamCallbacks", () => {
       answer_id: 2,
       question_time: "2025-01-01T00:00:00Z",
       tag: "general",
+      file_url: null,
     };
 
     callbacks.onInitial(initialData);
@@ -132,6 +134,7 @@ describe("createStreamCallbacks", () => {
       answer_id: 2,
       question_time: "2025-01-01T00:00:00Z",
       tag: "general",
+      file_url: null,
     };
 
     callbacks.onInitial(initialData);
@@ -154,6 +157,7 @@ describe("createStreamCallbacks", () => {
       answer_id: 2,
       question_time: "2025-01-01T00:00:00Z",
       tag: "general",
+      file_url: null,
     };
 
     callbacks.onInitial(initialData);
@@ -201,6 +205,7 @@ describe("createStreamCallbacks", () => {
       answer_id: 2,
       question_time: "2025-01-01T00:00:01Z",
       tag: "general",
+      file_url: null,
     };
 
     callbacks.onInitial(initialData);
@@ -227,6 +232,7 @@ describe("createStreamCallbacks", () => {
       answer_id: 2,
       question_time: "2025-01-01T00:00:00Z",
       tag: "general",
+      file_url: null,
     };
 
     callbacks.onInitial(initialData);
@@ -262,6 +268,7 @@ describe("createStreamCallbacks", () => {
       answer_id: 2,
       question_time: "2025-01-01T00:00:00Z",
       tag: "general",
+      file_url: null,
     };
 
     callbacks.onInitial(initialData);
