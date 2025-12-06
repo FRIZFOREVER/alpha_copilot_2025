@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 async def workflow_collected(payload: MessagePayload) -> tuple[str, Tag]:
-    output_stream, tag = await workflow(payload)
+    output_stream, tag, _ = await workflow(payload)
 
     collected_chunks: list[str] = []
 
@@ -93,7 +93,7 @@ async def workflow_collected(payload: MessagePayload) -> tuple[str, Tag]:
     return collected_response, tag
 
 
-async def workflow(payload: MessagePayload) -> tuple[AsyncIterator[dict[str, Any]], Tag]:
+async def workflow(payload: MessagePayload) -> tuple[AsyncIterator[dict[str, Any]], Tag, str | None]:
     initial_state = GraphState(
         chat_id=payload.chat_id,
         chat=payload.messages,
@@ -134,4 +134,8 @@ async def workflow(payload: MessagePayload) -> tuple[AsyncIterator[dict[str, Any
     if not isinstance(validated_state.meta.tag, Tag):
         raise TypeError("Workflow state meta.tag is not a Tag enum value")
 
-    return output_stream, validated_state.meta.tag
+    file_url = validated_state.file_url
+    if file_url is not None and not isinstance(file_url, str):
+        raise TypeError("Workflow state file_url is not a string or None")
+
+    return output_stream, validated_state.meta.tag, file_url
