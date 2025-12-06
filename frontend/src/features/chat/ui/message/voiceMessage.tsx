@@ -173,7 +173,10 @@ export const VoiceMessage = ({
       }
 
       // Для относительных путей загружаем через axios с авторизацией
-      const response = await axiosAuth.get(audioUrl, {
+      // Получаем базовый экземпляр axios для прямого доступа
+      const axiosInstance = (axiosAuth as any).baseQueryV1Instance;
+      
+      const response = await axiosInstance.get(audioUrl, {
         responseType: "blob",
       });
 
@@ -182,7 +185,8 @@ export const VoiceMessage = ({
         URL.revokeObjectURL(blobUrlRef.current);
       }
 
-      const blobUrl = URL.createObjectURL(response.data);
+      const blob = response.data as Blob;
+      const blobUrl = URL.createObjectURL(blob);
       blobUrlRef.current = blobUrl;
       
       if (audioRef.current) {
@@ -217,18 +221,6 @@ export const VoiceMessage = ({
       setError("Не удалось воспроизвести аудио");
       setIsPlaying(false);
     }
-  };
-
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef.current || !duration) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percentage = x / rect.width;
-    const newTime = percentage * duration;
-
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
   };
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
