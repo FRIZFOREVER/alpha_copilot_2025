@@ -7,7 +7,7 @@ import (
 
 func Cors(allowOrigins string) fiber.Handler {
 	return cors.New(cors.Config{
-		AllowOrigins:     allowOrigins,                                  // Разрешенные источники
+		AllowOrigins:     "*",                                           // Разрешенные источники
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",                 // Разрешенные методы (добавлен OPTIONS для preflight)
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization", // Разрешенные заголовки
 		AllowCredentials: true,
