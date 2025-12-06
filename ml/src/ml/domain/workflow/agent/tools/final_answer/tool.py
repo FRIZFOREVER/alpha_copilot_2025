@@ -42,13 +42,21 @@ class FinalAnswerTool(BaseTool):
         final_chat.add_or_change_system(system_prompt)
 
         evidence_text = format_research_observations(evidence)
-        evidence_prefix = "Собранные наблюдения отсутствуют." if not evidence_text else "Собранные наблюдения:\n"
-        final_chat.add_assistant(f"{evidence_prefix}{evidence_text}")
+        evidence_prefix = (
+            "Собранные наблюдения отсутствуют."
+            if not evidence_text
+            else "Собранные наблюдения:\n"
+        )
+
+        assistant_message_parts = [f"{evidence_prefix}{evidence_text}"]
 
         if answer_hint:
-            final_chat.add_assistant(
+            assistant_message_parts.append(
                 "Рекомендуемый ответ или важные пункты, которые нужно раскрыть:\n"
                 f"{answer_hint}"
             )
+
+        combined_assistant_message = "\n\n".join(assistant_message_parts)
+        final_chat.add_assistant(combined_assistant_message)
 
         return ToolResult(success=True, data={"final_prompt": final_chat})

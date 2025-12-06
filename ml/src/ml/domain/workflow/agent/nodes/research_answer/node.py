@@ -28,7 +28,7 @@ async def research_answer(state: GraphState) -> GraphState:
     details_prefix = "Research observations:"
     observations_suffix = observations_text if observations_text else "none collected"
 
-    final_prompt.add_assistant(
+    final_prompt.add_user(
         f"{details_prefix}\n{observations_suffix}\nOriginal request: {user_request}"
     )
 
