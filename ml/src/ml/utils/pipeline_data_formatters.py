@@ -1,7 +1,10 @@
+import logging
 from typing import TYPE_CHECKING, Sequence
 
 if TYPE_CHECKING:  # pragma: no cover - for type checking only
     from ml.domain.models import Evidence, ToolResult, UserProfile
+
+logger = logging.getLogger(__name__)
 
 
 def get_system_prompt(profile: "UserProfile", evidence: Sequence["Evidence"] | None = None) -> str:
@@ -71,7 +74,8 @@ def get_system_prompt(profile: "UserProfile", evidence: Sequence["Evidence"] | N
         "Если чего-то не знаете, честно скажите об этом и предложите общий подход. "
         "В первую очередь постарайся ответить на запрос пользователя\n"
         "Не вставляй в ответе ссылки на файлы или их названия, даже если ты их сгенерировал\n"
-        "Это произойдёт автоматически и пользователь увидит твой результат работы"
+        "Это произойдёт автоматически и пользователь увидит твой результат работы.\n"
+        "В таком случае просто напиши пользователю об успешном выполнении задания"
     )
 
     if evidence is not None:

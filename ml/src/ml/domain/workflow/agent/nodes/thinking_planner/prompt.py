@@ -25,9 +25,7 @@ def get_thinking_plan_prompt(
     system_prompt_parts: list[str] = [get_system_prompt(profile)]
 
     evidence_block = (
-        "Наблюдений пока нет."
-        if not evidence_list
-        else format_research_observations(evidence_list)
+        "Наблюдений пока нет." if not evidence_list else format_research_observations(evidence_list)
     )
 
     planning_instructions = (
@@ -36,6 +34,7 @@ def get_thinking_plan_prompt(
         "Доступные инструменты:\n"
         f"{_format_available_tools(available_tools)}\n"
         "Всегда возвращай JSON с полями thought, chosen_tool, tool_args.\n"
+        "Не вызывай создание файла, если ты его уже создал\n"
         "Учти текущие наблюдения — каждый пункт содержит источник (tool_name => результат).\n"
         f"Текущие наблюдения:\n{evidence_block}\n"
         f"Осталось шагов до обязательного завершения: {remaining_steps}."

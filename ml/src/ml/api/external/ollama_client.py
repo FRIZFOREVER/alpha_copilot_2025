@@ -36,9 +36,7 @@ class ReasoningModelClient:
             provider_base_url = get_provider_base_url(self.mode)
             provider_api_key = get_provider_api_key(self.mode)
 
-        self.settings: ReasoningClientSettings = self._resolve_settings(
-            settings, provider_base_url
-        )
+        self.settings: ReasoningClientSettings = self._resolve_settings(settings, provider_base_url)
 
         logger.debug(
             "initiated Reasoning client with mode=%s and settings: \n%s",
@@ -244,6 +242,7 @@ class ReasoningModelClient:
 
         return settings.model_copy(update={"base_url": provider_base_url})
 
+
 class EmbeddingModelClient:
     _instance: ClassVar[EmbeddingModelClient | None] = None
 
@@ -256,9 +255,7 @@ class EmbeddingModelClient:
             provider_base_url = get_provider_base_url(self.mode)
             provider_api_key = get_provider_api_key(self.mode)
 
-        self.settings: EmbeddingClientSettings = self._resolve_settings(
-            settings, provider_base_url
-        )
+        self.settings: EmbeddingClientSettings = self._resolve_settings(settings, provider_base_url)
         logger.debug(
             "initiated Embedding client with mode=%s and settings: \n%s",
             self.mode.value,
