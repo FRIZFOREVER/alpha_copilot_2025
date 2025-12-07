@@ -5,6 +5,7 @@ interface CapabilityCardProps {
   description: string;
   imageSrc: string;
   imageAlt: string;
+  videoSrc?: string;
   className?: string;
 }
 
@@ -13,6 +14,7 @@ export const CapabilityCard = ({
   description,
   imageSrc,
   imageAlt,
+  videoSrc,
   className,
 }: CapabilityCardProps) => {
   return (
@@ -30,9 +32,21 @@ export const CapabilityCard = ({
           className="w-full h-full object-contain"
         />
       </div>
-      <div className="p-5 flex-1 bg-white rounded-4xl">
+      <div className="p-5 flex-1 bg-white rounded-4xl flex flex-col">
         <h3 className="font-bold text-lg text-[#EF3124] mb-3">{title}</h3>
-        <p className="text-sm text-zinc-600 leading-relaxed">{description}</p>
+        <p className="text-sm text-zinc-600 leading-relaxed mb-4">{description}</p>
+        {videoSrc && (
+          <div className="mt-auto rounded-xl overflow-hidden bg-gray-50 shadow-sm border border-gray-100">
+            <video
+              src={videoSrc}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-auto max-h-80 object-cover"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

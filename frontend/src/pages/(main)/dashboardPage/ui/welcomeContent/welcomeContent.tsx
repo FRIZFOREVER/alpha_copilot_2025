@@ -13,32 +13,32 @@ const TOTAL_STEPS = 3;
 
 const CAPABILITIES = [
   {
-    title: "Документы и письма",
-    description:
-      "Пишет и редактирует письма и документы, резюмирует переписку и встречи, собирает черновые презентации и таблицы.",
+    title: "Теги",
+    description: "Используйте теги для структурирования информации по темам",
     imageSrc: "/images/people-maskot-4.png",
-    imageAlt: "Документы и письма",
+    imageAlt: "Теги",
+    videoSrc: "/video/IMG_3065.MOV",
   },
   {
-    title: "Экономия времени",
-    description:
-      "У владельцев бизнеса уходит меньше времени на операционные задачи и больше - на стратегию и работу с людьми.",
+    title: "Интеграции",
+    description: "Подключите Todoist и telegram в личном кабинете",
     imageSrc: "/images/people-maskot-2.png",
-    imageAlt: "Экономия времени",
+    imageAlt: "Интеграции",
+    videoSrc: "/video/IMG_3076.MOV",
   },
   {
-    title: "Маркетинг и аналитика",
-    description:
-      "Помогает с маркетингом (посты, промомеханики). Анализирует операционные данные (продажи, остатки, платежи) и рекомендует следующие шаги.",
+    title: "Todoist",
+    description: "Создавайте задачи прямо из чата",
     imageSrc: "/images/people-maskot-6.png",
-    imageAlt: "Маркетинг и аналитика",
+    imageAlt: "Todoist",
+    videoSrc: "/video/IMG_3080.MOV",
   },
   {
-    title: "Юридические вопросы",
-    description:
-      "Отвечает на типовые юридические и финансовые вопросы, предлагает шаблоны и чек-листы.",
+    title: "Telegram",
+    description: "Генерируйте и отправляйте сообщения контактам",
     imageSrc: "/images/people-maskot-3.png",
-    imageAlt: "Юридические вопросы",
+    imageAlt: "Telegram",
+    videoSrc: "/video/IMG_3086.MOV",
   },
 ] as const;
 
@@ -152,6 +152,7 @@ export const WelcomeContent = () => {
                 description={capability.description}
                 imageSrc={capability.imageSrc}
                 imageAlt={capability.imageAlt}
+                videoSrc={capability.videoSrc}
               />
             ))}
           </div>
