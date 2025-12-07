@@ -35,7 +35,7 @@
 - S3 - Minio
 - БД - Postgres
 - STT - AssemblyAI, Whisper
-- Протоколы - https(sse), webscoket
+- Протоколы - https(sse), websocket
 
 ### Архетиктура модели
 
