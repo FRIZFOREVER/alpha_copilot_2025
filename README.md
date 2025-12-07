@@ -134,6 +134,6 @@ docker compose -f compose.localrelease.yml up --build
 - <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @egoryaaa, Яровицын Егор - Frontend-developer</h3>
 - <h4><img align="center" height="25" src="https://user-images.githubusercontent.com/51875349/198863127-837491f2-b57f-4c75-9840-6a4b01236c7a.png">: @Llaceyne, Гулария Лана - UI/UX Designer </h3>
 
-## `<a name="7">`Скринкаст `</a>`
-
-- [Cсылка на скринкаст](https://youtu.be/UypCoDZtJKo?si=_nhtPIP5xlJcuEwv)&nbsp;
+## `<a name="7">`Скринкасты `</a>`
+- [Cсылка на скринкаст(новейшая версия)](https://drive.google.com/file/d/1SE9raPyHq1FoK2rMCA61GYbVXh98aD-R/view?usp=drive_link)&nbsp;
+- [Cсылка на скринкаст(прошлая версия)](https://youtu.be/UypCoDZtJKo?si=_nhtPIP5xlJcuEwv)&nbsp;
