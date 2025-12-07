@@ -167,10 +167,14 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 		}
 
 		var builder strings.Builder
-		var file_url string
+		var content, file_url string
 		builder.Grow(1024)
+
 		// Обрабатываем поток сообщений
 		for message := range messageChan {
+			if len(message.Choices) != 0 {
+				content = message.Choices[0].Delta.Content
+			}
 			if message != nil {
 				var chunkOut streamChunckOut
 				if message.FileURL != nil {
@@ -200,11 +204,11 @@ func (sh *Stream) Handler(c *fiber.Ctx) error {
 					break
 				}
 
-				builder.WriteString(message.Choices[0].Delta.Content)
+				builder.WriteString(content)
 
 				// Отправляем чанк
 				chunkOut = streamChunckOut{
-					Content: message.Choices[0].Delta.Content,
+					Content: content,
 					Time:    time.Now().UTC(),
 					Done:    false,
 				}
