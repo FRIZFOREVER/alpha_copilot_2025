@@ -32,10 +32,10 @@
 - Frontend - TypeScript + React
 - Ml - LangGraph + FastAPI
 - Ollama
-- Minio - S3
-- Postgres
-- AssemblyAI - Whisper
-- Migrations
+- S3 - Minio
+- БД - Postgres
+- STT - AssemblyAI, Whisper
+- Протоколы - https(sse), webscoket
 
 ### Архетиктура модели
 
