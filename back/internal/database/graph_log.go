@@ -59,6 +59,7 @@ func (s *GraphLogService) GetGraphLog(answerID int) ([]GraphLog, error) {
 		}
 	}()
 
+	// цикл в котором преобразуем данные из бд в структуры go.
 	var logs []GraphLog
 	for rows.Next() {
 		var log GraphLog
